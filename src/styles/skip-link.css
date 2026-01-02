@@ -1,0 +1,101 @@
+/**
+ * Skip Link Styles
+ *
+ * Provides accessible skip navigation for keyboard users.
+ * The link is visually hidden until focused, then appears prominently
+ * to allow users to skip repetitive navigation.
+ */
+
+@layer components {
+  /**
+   * Skip Link
+   *
+   * Usage:
+   * <a href="#main-content" class="skip-link">Skip to main content</a>
+   *
+   * Then add id="main-content" to your main content area.
+   */
+  .skip-link {
+    /* Visually hidden by default */
+    position: absolute;
+    top: -100%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+
+    /* Styling */
+    padding: 0.75rem 1.5rem;
+    background-color: var(--skip-link-bg, hsl(222 47% 11%));
+    color: var(--skip-link-color, hsl(0 0% 100%));
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-decoration: none;
+    border-radius: 0 0 0.5rem 0.5rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+
+    /* Transition for smooth appearance */
+    transition: top 0.2s ease-in-out;
+  }
+
+  /* When focused, show the skip link */
+  .skip-link:focus,
+  .skip-link:focus-visible {
+    top: 0;
+    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, hsl(217 91% 60%));
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
+
+  /* Dark theme adjustments */
+  .dark .skip-link,
+  [data-theme="dark"] .skip-link {
+    --skip-link-bg: hsl(217 91% 60%);
+    --skip-link-color: hsl(222 47% 11%);
+  }
+
+  /* High contrast mode */
+  @media (prefers-contrast: more) {
+    .skip-link {
+      border: 2px solid currentColor;
+    }
+
+    .skip-link:focus,
+    .skip-link:focus-visible {
+      outline-width: 3px;
+    }
+  }
+
+  /* Reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    .skip-link {
+      transition: none;
+    }
+  }
+}
+
+@layer utilities {
+  /* Screen reader only - alternative to skip link when needed */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Show on focus - pairs with sr-only for focusable skip links */
+  .sr-only-focusable:focus,
+  .sr-only-focusable:focus-visible {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: inherit;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+}

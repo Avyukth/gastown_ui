@@ -1,0 +1,12 @@
+/**
+ * Gas Town UI - Global Styles
+ *
+ * Import this file in your app entry point to load all base styles.
+ * Styles are organized using CSS @layer for proper cascade ordering.
+ */
+
+/* Focus visible styles for accessibility */
+@import './focus.css';
+
+/* Skip link for keyboard navigation */
+@import './skip-link.css';

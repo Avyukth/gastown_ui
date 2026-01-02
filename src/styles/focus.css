@@ -1,0 +1,159 @@
+/**
+ * Focus Visible Styles
+ *
+ * Provides accessible focus indicators for keyboard navigation.
+ * Uses :focus-visible to only show focus rings on keyboard navigation,
+ * not mouse clicks.
+ */
+
+@layer base {
+  /* CSS Custom Properties for focus styles */
+  :root {
+    /* Light theme focus colors */
+    --focus-ring-color: hsl(217 91% 60%); /* Blue-500 */
+    --focus-ring-offset: 2px;
+    --focus-ring-width: 2px;
+    --focus-ring-offset-color: hsl(0 0% 100%); /* White offset */
+  }
+
+  /* Dark theme adjustments */
+  .dark,
+  [data-theme="dark"] {
+    --focus-ring-color: hsl(217 91% 65%); /* Slightly lighter blue for dark mode */
+    --focus-ring-offset-color: hsl(222 47% 11%); /* Dark background offset */
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: more) {
+    :root {
+      --focus-ring-color: hsl(0 0% 0%);
+      --focus-ring-width: 3px;
+    }
+
+    .dark,
+    [data-theme="dark"] {
+      --focus-ring-color: hsl(0 0% 100%);
+    }
+  }
+}
+
+@layer components {
+  /**
+   * Base focus-visible styles for all interactive elements.
+   * Applied to buttons, links, inputs, and other focusable elements.
+   */
+
+  /* Remove default outline, we'll use our custom ring */
+  :focus {
+    outline: none;
+  }
+
+  /* Focus visible ring - only shows on keyboard navigation */
+  :focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  /* Buttons and button-like elements */
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  .btn:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+    box-shadow: 0 0 0 calc(var(--focus-ring-offset) + var(--focus-ring-width) + 1px) var(--focus-ring-offset-color);
+  }
+
+  /* Links */
+  a:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+    border-radius: 2px;
+  }
+
+  /* Text inputs and textareas */
+  input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 0;
+    border-color: var(--focus-ring-color);
+  }
+
+  /* Checkboxes and radio buttons */
+  input[type="checkbox"]:focus-visible,
+  input[type="radio"]:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  /* Custom checkbox/radio styling (when using custom components) */
+  [role="checkbox"]:focus-visible,
+  [role="radio"]:focus-visible,
+  [role="switch"]:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  /* Menu items and list items */
+  [role="menuitem"]:focus-visible,
+  [role="option"]:focus-visible,
+  [role="listitem"]:focus-visible,
+  [role="treeitem"]:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: -2px; /* Inset for list items */
+    background-color: color-mix(in srgb, var(--focus-ring-color) 10%, transparent);
+  }
+
+  /* Tab navigation */
+  [role="tab"]:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+    z-index: 1; /* Ensure focus ring is visible above siblings */
+  }
+
+  /* Dialog and modal focus */
+  [role="dialog"]:focus-visible,
+  [role="alertdialog"]:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  /* Cards and interactive containers */
+  .card:focus-visible,
+  [role="article"]:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+    box-shadow: 0 0 0 calc(var(--focus-ring-offset) + var(--focus-ring-width) + 2px) var(--focus-ring-offset-color);
+  }
+
+  /* Skip link (for accessibility) */
+  .skip-link:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+}
+
+@layer utilities {
+  /* Utility class to apply focus ring styling */
+  .focus-ring {
+    --tw-ring-offset-width: var(--focus-ring-offset);
+    --tw-ring-offset-color: var(--focus-ring-offset-color);
+    --tw-ring-color: var(--focus-ring-color);
+  }
+
+  .focus-ring:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  /* Remove focus ring when needed (use sparingly) */
+  .focus-ring-none:focus-visible {
+    outline: none;
+  }
+
+  /* Inset focus ring variant */
+  .focus-ring-inset:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: calc(var(--focus-ring-offset) * -1);
+  }
+}
