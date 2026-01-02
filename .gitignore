@@ -1,0 +1,58 @@
+# Gas Town HQ .gitignore
+# Track: Role context, handoff docs, beads config/data, rig configs
+# Ignore: Git worktrees (polecats) and clones (mayor/refinery rigs), runtime state
+
+# =============================================================================
+# Runtime state files (transient)
+# =============================================================================
+**/state.json
+**/*.lock
+**/registry.json
+
+# =============================================================================
+# Rig git worktrees (recreate with 'gt sling' or 'gt rig add')
+# =============================================================================
+
+# Polecats - worker worktrees
+**/polecats/
+
+# Mayor rig clones
+**/mayor/rig/
+
+# Refinery working clones
+**/refinery/rig/
+
+# Crew workspaces (user-managed)
+**/crew/
+
+# =============================================================================
+# Runtime state directories (gitignored ephemeral data)
+# =============================================================================
+**/.runtime/
+
+# =============================================================================
+# Rig .beads symlinks (point to ignored mayor/rig/.beads, recreated on setup)
+# =============================================================================
+# Add rig-specific symlinks here, e.g.:
+# gastown/.beads
+
+# =============================================================================
+# Rigs directory (clones created by 'gt rig add')
+# =============================================================================
+/rigs/*/
+
+# =============================================================================
+# OS and editor files
+# =============================================================================
+.DS_Store
+*~
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# =============================================================================
+# Explicitly track (override above patterns)
+# =============================================================================
+# Note: .beads/ has its own .gitignore that handles SQLite files
+# and keeps issues.jsonl, metadata.json, config file as source of truth
