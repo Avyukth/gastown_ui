@@ -31,7 +31,7 @@
 	/**
 	 * Props type derived from variant definitions
 	 */
-	export type StatusIndicatorProps = VariantProps<typeof statusVariants> & {
+	type StatusIndicatorProps = VariantProps<typeof statusVariants> & {
 		class?: string;
 		label?: string;
 	};

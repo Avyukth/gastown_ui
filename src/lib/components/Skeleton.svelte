@@ -38,7 +38,7 @@
 	/**
 	 * Props type derived from variant definitions
 	 */
-	export type SkeletonProps = VariantProps<typeof skeletonVariants> & {
+	type SkeletonProps = VariantProps<typeof skeletonVariants> & {
 		class?: string;
 		label?: string;
 	};
