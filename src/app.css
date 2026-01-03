@@ -399,6 +399,40 @@
 	[class*="stagger-"] {
 		animation-delay: 0ms !important;
 	}
+
+	/* Show static alternatives for animated elements */
+	.motion-safe\\:hidden {
+		display: block !important;
+	}
+
+	.motion-safe\\:block {
+		display: none !important;
+	}
+
+	/* Replace blur animations with opacity fade */
+	[class*="blur-fade"] {
+		filter: none !important;
+		animation: fade-in 0.01ms !important;
+	}
+
+	/* Disable shimmer effect */
+	.animate-shimmer {
+		animation: none !important;
+		background-position: 0% 0% !important;
+	}
+
+	/* Replace glow pulse with static glow */
+	.animate-glow-pulse {
+		animation: none !important;
+		box-shadow: 0 0 20px 0 hsl(var(--primary) / 0.3) !important;
+	}
+}
+
+/* Utility classes for motion-aware components */
+@media (prefers-reduced-motion: no-preference) {
+	.motion-reduce\\:hidden {
+		display: none;
+	}
 }
 
 /* === Scrollbar Styling === */
