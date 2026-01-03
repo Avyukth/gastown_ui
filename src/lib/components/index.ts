@@ -4,6 +4,7 @@ export { default as SkipLink } from './SkipLink.svelte';
 // UI components
 export { default as NumberCounter } from './NumberCounter.svelte';
 export { default as ProgressBar } from './ProgressBar.svelte';
+export { default as ShimmerText } from './ShimmerText.svelte';
 export { default as StatusIndicator } from './StatusIndicator.svelte';
 export type { StatusIndicatorProps } from './StatusIndicator.svelte';
 
