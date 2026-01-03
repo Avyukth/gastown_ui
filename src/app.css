@@ -80,8 +80,9 @@
 		--shadow-glow: 0 0 20px -5px hsl(var(--primary) / 0.4);
 		--shadow-focus: 0 0 0 3px hsl(var(--ring) / 0.25);
 
-		/* === Touch Target === */
-		--touch-target-min: 44px;
+		/* === Touch Target (WCAG 2.5.5 AAA: 44px, enhanced: 48px) === */
+		--touch-target-min: 48px;
+		--touch-gap-min: 8px;
 	}
 
 	.dark {
@@ -197,10 +198,41 @@
 		background-color: hsl(var(--status-idle));
 	}
 
-	/* Touch target enforcement */
+	/* Touch target enforcement (48px minimum) */
 	.touch-target {
 		min-height: var(--touch-target-min);
 		min-width: var(--touch-target-min);
+	}
+
+	/* Touch target with active state feedback */
+	.touch-target-interactive {
+		min-height: var(--touch-target-min);
+		min-width: var(--touch-target-min);
+		@apply relative active:scale-95 transition-transform duration-75;
+	}
+
+	/* Touch-friendly gap between interactive elements */
+	.touch-gap {
+		gap: var(--touch-gap-min);
+	}
+
+	/* Thumb zone positioning (bottom of screen) */
+	.thumb-zone {
+		@apply fixed bottom-0 left-0 right-0 pb-safe;
+	}
+
+	/* Touch ripple effect */
+	.touch-ripple {
+		@apply relative overflow-hidden;
+	}
+
+	.touch-ripple::after {
+		content: '';
+		@apply absolute inset-0 bg-current opacity-0 transition-opacity duration-150;
+	}
+
+	.touch-ripple:active::after {
+		@apply opacity-10;
 	}
 
 	/* Focus visible ring */
