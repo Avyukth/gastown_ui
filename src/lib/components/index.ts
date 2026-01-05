@@ -42,3 +42,7 @@ export { default as ConnectionLost } from './ConnectionLost.svelte';
 
 // Search components
 export { default as GlobalSearch } from './GlobalSearch.svelte';
+
+// Error handling components
+export { default as ErrorBoundary } from './ErrorBoundary.svelte';
+export { default as ApiError } from './ApiError.svelte';
