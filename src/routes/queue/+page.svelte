@@ -1,43 +1,34 @@
 <script lang="ts">
 	import { QueueLayout } from '$lib/components';
+	import type { PageData } from './$types';
 
-	// Mock queue items - matching QueueItem interface
-	const queueItems: Array<{
-		id: string;
-		title: string;
-		priority: 0 | 1 | 2 | 3 | 4;
-		assignee?: string;
-		status?: string;
-	}> = [
-		{
-			id: 'mr-1',
-			title: 'Code Splitting Implementation',
-			priority: 2,
-			assignee: 'Nux',
-			status: 'polecat/nux-ga-6vy • pending'
-		},
-		{
-			id: 'mr-2',
-			title: 'Authentication Flow',
-			priority: 1,
-			assignee: 'Rux',
-			status: 'polecat/rux-feature-auth • testing'
-		},
-		{
-			id: 'mr-3',
-			title: 'Critical Bug Fix',
-			priority: 0,
-			assignee: 'Vux',
-			status: 'polecat/vux-hotfix • ready'
-		},
-		{
-			id: 'mr-4',
-			title: 'Documentation Update',
-			priority: 3,
-			assignee: 'Lux',
-			status: 'polecat/lux-docs • pending'
-		}
-	];
+	let { data }: { data: PageData } = $props();
+
+	// Transform items to add status indicator based on statusType
+	const queueItems = $derived(
+		data.items.map((item) => ({
+			...item,
+			status: formatStatus(item.status ?? 'pending', item.statusType)
+		}))
+	);
+
+	/**
+	 * Format status with color indicator
+	 * Green circle = ready, Yellow circle = pending, Red circle = conflict
+	 */
+	function formatStatus(status: string, statusType: string): string {
+		const indicator =
+			statusType === 'ready' ? '\u{1F7E2}' : statusType === 'conflict' ? '\u{1F534}' : '\u{1F7E1}';
+		return `${indicator} ${status}`;
+	}
 </script>
 
-<QueueLayout title="Merge Queue" items={queueItems} />
+<QueueLayout title="Merge Queue" items={queueItems}>
+	<svelte:fragment slot="actions">
+		{#if data.error}
+			<span class="text-sm text-destructive">{data.error}</span>
+		{:else if data.items.length === 0}
+			<span class="text-sm text-muted-foreground">Queue empty</span>
+		{/if}
+	</svelte:fragment>
+</QueueLayout>
