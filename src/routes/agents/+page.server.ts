@@ -13,6 +13,8 @@ interface Agent {
 	status: AgentStatus;
 	progress: number;
 	meta: string;
+	uptime?: string;
+	errorMessage?: string;
 }
 
 interface GtAgent {
@@ -75,14 +77,29 @@ function formatAgentName(agent: GtAgent): string {
 	return roleNames[agent.role] || agent.name;
 }
 
+function getAgentUptime(agent: GtAgent): string | undefined {
+	if (!agent.running) return undefined;
+	// Mock uptime for now - in production would come from session start time
+	return agent.session ? '2h 34m' : undefined;
+}
+
+function getAgentErrorMessage(agent: GtAgent): string | undefined {
+	if (agent.state === 'dead') return 'Agent process terminated unexpectedly';
+	if (!agent.running && agent.has_work) return 'Agent stopped while work was pending';
+	return undefined;
+}
+
 function transformAgent(agent: GtAgent, hook?: GtHook): Agent {
+	const status = mapAgentStatus(agent);
 	return {
 		id: agent.address.replace(/\//g, '-').replace(/-$/, '') || agent.name,
 		name: formatAgentName(agent),
 		task: getAgentTask(agent, hook),
-		status: mapAgentStatus(agent),
+		status,
 		progress: agent.has_work ? 50 : 0,
-		meta: agent.address || agent.name
+		meta: agent.address || agent.name,
+		uptime: getAgentUptime(agent),
+		errorMessage: status === 'error' ? getAgentErrorMessage(agent) : undefined
 	};
 }
 

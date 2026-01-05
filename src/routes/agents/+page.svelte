@@ -1,7 +1,18 @@
 <script lang="ts">
 	import { AgentCard, GridPattern } from '$lib/components';
+	import { goto } from '$app/navigation';
 
 	const { data } = $props();
+
+	// Handler functions for agent actions
+	function handleInspect(agentId: string) {
+		goto(`/agents/${agentId}`);
+	}
+
+	function handleReboot(agentId: string) {
+		// TODO: Implement reboot API call
+		console.log('Rebooting agent:', agentId);
+	}
 </script>
 
 <div class="relative min-h-screen bg-background">
@@ -26,15 +37,35 @@
 					<p class="text-muted-foreground">No agents found</p>
 				</div>
 			{:else}
+				<!-- Mobile: Expandable cards, Desktop: Clickable grid -->
 				<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
 					{#each data.agents as agent}
-						<a href="/agents/{agent.id}" class="block transition-transform hover:scale-[1.02]">
+						<!-- Mobile view: Expandable with actions -->
+						<div class="md:hidden">
 							<AgentCard
 								name={agent.name}
 								task={agent.task}
 								status={agent.status}
 								progress={agent.progress}
 								meta={agent.meta}
+								uptime={agent.uptime}
+								errorMessage={agent.errorMessage}
+								expandable={true}
+								onInspect={() => handleInspect(agent.id)}
+								onReboot={() => handleReboot(agent.id)}
+							/>
+						</div>
+						<!-- Desktop view: Clickable card -->
+						<a href="/agents/{agent.id}" class="hidden md:block transition-transform hover:scale-[1.02]">
+							<AgentCard
+								name={agent.name}
+								task={agent.task}
+								status={agent.status}
+								progress={agent.progress}
+								meta={agent.meta}
+								uptime={agent.uptime}
+								errorMessage={agent.errorMessage}
+								compact={true}
 							/>
 						</a>
 					{/each}
