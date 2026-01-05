@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-	import { SkipLink, Announcer, BottomNav } from '$lib/components';
+	import { SkipLink, Announcer, BottomNav, GlobalSearch } from '$lib/components';
 	import { preloadRoute } from '$lib/preload';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
@@ -100,6 +100,19 @@
 
 <!-- Screen reader announcements -->
 <Announcer />
+
+<!-- Global search (always rendered, handles its own visibility) -->
+{#if !hideNav}
+	<!-- Desktop: Fixed in top-right corner -->
+	<div class="hidden md:block fixed top-4 right-4 z-40">
+		<GlobalSearch />
+	</div>
+
+	<!-- Mobile: Floating action button above bottom nav -->
+	<div class="md:hidden fixed bottom-24 right-4 z-40">
+		<GlobalSearch class="rounded-full p-3 shadow-lg" />
+	</div>
+{/if}
 
 <!-- Main content area -->
 <div id="main-content" tabindex="-1" class="min-h-screen {hideNav ? '' : 'pb-20 md:pb-0'}">
