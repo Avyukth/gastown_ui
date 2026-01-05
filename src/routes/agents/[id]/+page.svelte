@@ -1,10 +1,48 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import { AgentDetailLayout, LogEntry } from '$lib/components';
-	import type { PageData } from './$types';
+	import type { PageData, ActionData } from './$types';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	const agent = $derived(data.agent);
+
+	// Nudge input state
+	let nudgeMessage = $state('');
+	let isSubmitting = $state(false);
+
+	// Show success/error feedback
+	let feedbackMessage = $state('');
+	let feedbackType = $state<'success' | 'error'>('success');
+
+	function showFeedback(message: string, type: 'success' | 'error' = 'success') {
+		feedbackMessage = message;
+		feedbackType = type;
+		setTimeout(() => {
+			feedbackMessage = '';
+		}, 3000);
+	}
+
+	// Handle form submission results
+	$effect(() => {
+		if (form?.success) {
+			if (form.action === 'nudge') {
+				nudgeMessage = '';
+				showFeedback('Nudge sent successfully');
+			} else if (form.action === 'start') {
+				showFeedback('Session started');
+			} else if (form.action === 'stop') {
+				showFeedback('Session stopped');
+			} else if (form.action === 'restart') {
+				showFeedback('Session restarted');
+			} else if (form.action === 'peek') {
+				showFeedback('Output refreshed');
+			}
+		} else if (form?.error) {
+			showFeedback(form.error, 'error');
+		}
+	});
 
 	// Format role for display
 	const displayRole = $derived(() => {
@@ -101,6 +139,29 @@
 		{/if}
 	</svelte:fragment>
 
+	<svelte:fragment slot="log-actions">
+		<form
+			method="POST"
+			action="?/peek"
+			use:enhance={() => {
+				isSubmitting = true;
+				return async ({ update }) => {
+					await update();
+					await invalidateAll();
+					isSubmitting = false;
+				};
+			}}
+		>
+			<button
+				type="submit"
+				disabled={isSubmitting}
+				class="px-2 py-1 text-xs bg-muted hover:bg-muted/80 rounded transition-colors disabled:opacity-50"
+			>
+				{isSubmitting ? 'Refreshing...' : 'Refresh'}
+			</button>
+		</form>
+	</svelte:fragment>
+
 	<svelte:fragment slot="actions">
 		<a
 			href="/agents"
@@ -109,9 +170,107 @@
 			Back
 		</a>
 		{#if agent.unreadMail > 0}
-			<button class="px-3 py-1.5 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded transition-colors">
+			<a
+				href="/mail"
+				class="px-3 py-1.5 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded transition-colors"
+			>
 				View Mail ({agent.unreadMail})
-			</button>
+			</a>
 		{/if}
+
+		<!-- Session controls dropdown/buttons -->
+		<div class="flex items-center gap-1">
+			{#if agent.status === 'running' || agent.status === 'idle'}
+				<form method="POST" action="?/stop" use:enhance={() => {
+					isSubmitting = true;
+					return async ({ update }) => {
+						await update();
+						await invalidateAll();
+						isSubmitting = false;
+					};
+				}}>
+					<button
+						type="submit"
+						disabled={isSubmitting}
+						class="px-3 py-1.5 text-sm bg-destructive/10 text-destructive hover:bg-destructive/20 rounded transition-colors disabled:opacity-50"
+					>
+						Stop
+					</button>
+				</form>
+				<form method="POST" action="?/restart" use:enhance={() => {
+					isSubmitting = true;
+					return async ({ update }) => {
+						await update();
+						await invalidateAll();
+						isSubmitting = false;
+					};
+				}}>
+					<button
+						type="submit"
+						disabled={isSubmitting}
+						class="px-3 py-1.5 text-sm bg-warning/10 text-warning hover:bg-warning/20 rounded transition-colors disabled:opacity-50"
+					>
+						Restart
+					</button>
+				</form>
+			{:else}
+				<form method="POST" action="?/start" use:enhance={() => {
+					isSubmitting = true;
+					return async ({ update }) => {
+						await update();
+						await invalidateAll();
+						isSubmitting = false;
+					};
+				}}>
+					<button
+						type="submit"
+						disabled={isSubmitting}
+						class="px-3 py-1.5 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded transition-colors disabled:opacity-50"
+					>
+						Start
+					</button>
+				</form>
+			{/if}
+		</div>
+	</svelte:fragment>
+
+	<svelte:fragment slot="footer">
+		<!-- Feedback toast -->
+		{#if feedbackMessage}
+			<div
+				class="fixed bottom-4 right-4 px-4 py-2 rounded-md shadow-lg z-50 transition-opacity {feedbackType === 'success' ? 'bg-green-600 text-white' : 'bg-destructive text-destructive-foreground'}"
+			>
+				{feedbackMessage}
+			</div>
+		{/if}
+
+		<!-- Nudge input -->
+		<form
+			method="POST"
+			action="?/nudge"
+			class="flex gap-2"
+			use:enhance={() => {
+				isSubmitting = true;
+				return async ({ update }) => {
+					await update();
+					isSubmitting = false;
+				};
+			}}
+		>
+			<input
+				type="text"
+				name="message"
+				bind:value={nudgeMessage}
+				placeholder="Send message to session..."
+				class="flex-1 px-3 py-2 text-sm bg-muted border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+			/>
+			<button
+				type="submit"
+				disabled={isSubmitting || !nudgeMessage.trim()}
+				class="px-4 py-2 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+			>
+				{isSubmitting ? 'Sending...' : 'Nudge'}
+			</button>
+		</form>
 	</svelte:fragment>
 </AgentDetailLayout>

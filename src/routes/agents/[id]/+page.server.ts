@@ -1,8 +1,8 @@
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { resolve } from 'path';
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad, Actions } from './$types';
 
 const execAsync = promisify(exec);
 
@@ -167,5 +167,142 @@ export const load: PageServerLoad = async ({ params }) => {
 		}
 		console.error('Failed to load agent data:', err);
 		error(500, { message: 'Failed to load agent data' });
+	}
+};
+
+/**
+ * Build agent target from URL ID
+ * Converts URL IDs like "gastown_ui-polecat-furiosa" to "gastown_ui/furiosa"
+ */
+function buildAgentTarget(urlId: string): string | null {
+	const parts = urlId.split('-');
+	if (parts.length < 2) return null;
+
+	// Polecat format: rig-polecat-name → rig/name
+	if (parts.length >= 3 && parts[1] === 'polecat') {
+		const rigName = parts[0];
+		const polecatName = parts.slice(2).join('-');
+		return `${rigName}/${polecatName}`;
+	}
+
+	// Rig agent format: rig-role → rig/role
+	const rigName = parts[0];
+	const roleName = parts.slice(1).join('-');
+	return `${rigName}/${roleName}`;
+}
+
+export const actions: Actions = {
+	nudge: async ({ params, request }) => {
+		const { id } = params;
+		const gtRoot = getGtRoot();
+		const target = buildAgentTarget(id);
+
+		if (!target) {
+			return fail(400, { error: 'Invalid agent ID' });
+		}
+
+		const formData = await request.formData();
+		const message = formData.get('message')?.toString().trim();
+
+		if (!message) {
+			return fail(400, { error: 'Message is required' });
+		}
+
+		try {
+			// Escape the message for shell safety
+			const escapedMessage = message.replace(/'/g, "'\\''");
+			await execAsync(`gt nudge ${target} '${escapedMessage}'`, {
+				cwd: gtRoot,
+				timeout: 10000
+			});
+			return { success: true, action: 'nudge' };
+		} catch (err) {
+			console.error('Nudge failed:', err);
+			return fail(500, { error: 'Failed to send nudge' });
+		}
+	},
+
+	peek: async ({ params }) => {
+		const { id } = params;
+		const gtRoot = getGtRoot();
+		const target = buildAgentTarget(id);
+
+		if (!target) {
+			return fail(400, { error: 'Invalid agent ID' });
+		}
+
+		try {
+			const { stdout } = await execAsync(`gt peek ${target}`, {
+				cwd: gtRoot,
+				timeout: 5000
+			});
+			return { success: true, action: 'peek', output: stdout.slice(0, 4000) };
+		} catch (err) {
+			console.error('Peek failed:', err);
+			return fail(500, { error: 'Failed to peek session' });
+		}
+	},
+
+	start: async ({ params }) => {
+		const { id } = params;
+		const gtRoot = getGtRoot();
+		const target = buildAgentTarget(id);
+
+		if (!target) {
+			return fail(400, { error: 'Invalid agent ID' });
+		}
+
+		try {
+			await execAsync(`gt session start ${target}`, {
+				cwd: gtRoot,
+				timeout: 30000
+			});
+			return { success: true, action: 'start' };
+		} catch (err) {
+			console.error('Session start failed:', err);
+			return fail(500, { error: 'Failed to start session' });
+		}
+	},
+
+	stop: async ({ params }) => {
+		const { id } = params;
+		const gtRoot = getGtRoot();
+		const target = buildAgentTarget(id);
+
+		if (!target) {
+			return fail(400, { error: 'Invalid agent ID' });
+		}
+
+		try {
+			await execAsync(`gt session stop ${target}`, {
+				cwd: gtRoot,
+				timeout: 10000
+			});
+			return { success: true, action: 'stop' };
+		} catch (err) {
+			console.error('Session stop failed:', err);
+			return fail(500, { error: 'Failed to stop session' });
+		}
+	},
+
+	restart: async ({ params }) => {
+		const { id } = params;
+		const gtRoot = getGtRoot();
+		const target = buildAgentTarget(id);
+
+		if (!target) {
+			return fail(400, { error: 'Invalid agent ID' });
+		}
+
+		try {
+			await execAsync(`gt session restart ${target}`, {
+				cwd: gtRoot,
+				timeout: 30000
+			});
+			return { success: true, action: 'restart' };
+		} catch (err) {
+			console.error('Session restart failed:', err);
+			return fail(500, { error: 'Failed to restart session' });
+		}
 	}
 };
