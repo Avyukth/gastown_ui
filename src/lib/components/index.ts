@@ -5,6 +5,7 @@ export { default as SkipLink } from './SkipLink.svelte';
 
 // UI components
 export { default as AgentCard } from './AgentCard.svelte';
+export { default as Badge, badgeVariants, type BadgeVariant, type BadgeSize, type BadgeProps } from './Badge.svelte';
 export { default as BottomNav } from './BottomNav.svelte';
 export { default as Button } from './Button.svelte';
 export { default as GridPattern } from './GridPattern.svelte';
@@ -13,7 +14,7 @@ export { default as LogEntry } from './LogEntry.svelte';
 export { default as NumberCounter } from './NumberCounter.svelte';
 export { default as ProgressBar } from './ProgressBar.svelte';
 export { default as ShimmerText } from './ShimmerText.svelte';
-export { default as StatusIndicator } from './StatusIndicator.svelte';
+export { default as StatusIndicator, statusIndicatorVariants, type StatusIndicatorStatus, type StatusIndicatorSize, type StatusIndicatorProps } from './StatusIndicator.svelte';
 
 // Layout components
 export { default as AgentDetailLayout } from './AgentDetailLayout.svelte';

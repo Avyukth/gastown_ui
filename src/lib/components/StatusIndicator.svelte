@@ -1,12 +1,17 @@
-<script lang="ts">
+<script context="module" lang="ts">
 	import { tv, type VariantProps } from 'tailwind-variants';
-	import { cn } from '$lib/utils';
 
 	/**
 	 * Status indicator variant definitions using tailwind-variants
 	 * Uses glow-pulse-effect for GPU-accelerated glow animation (opacity instead of box-shadow)
+	 *
+	 * Status colors use semantic tokens:
+	 * - running/complete: --status-online (green)
+	 * - idle: --status-idle (gray)
+	 * - error: --status-offline (red)
+	 * - warning/pending/processing: --status-pending (amber)
 	 */
-	const statusVariants = tv({
+	export const statusIndicatorVariants = tv({
 		base: 'w-2 h-2 rounded-full inline-block flex-shrink-0',
 		variants: {
 			status: {
@@ -29,13 +34,17 @@
 		}
 	});
 
-	/**
-	 * Props type derived from variant definitions
-	 */
-	type StatusIndicatorProps = VariantProps<typeof statusVariants> & {
+	export type StatusIndicatorStatus = VariantProps<typeof statusIndicatorVariants>['status'];
+	export type StatusIndicatorSize = VariantProps<typeof statusIndicatorVariants>['size'];
+
+	export type StatusIndicatorProps = VariantProps<typeof statusIndicatorVariants> & {
 		class?: string;
 		label?: string;
 	};
+</script>
+
+<script lang="ts">
+	import { cn } from '$lib/utils';
 
 	// Component props
 	let {
@@ -60,7 +69,7 @@
 </script>
 
 <span
-	class={cn(statusVariants({ status, size }), className)}
+	class={cn(statusIndicatorVariants({ status, size }), className)}
 	role="status"
 	aria-label={accessibleLabel}
 	title={accessibleLabel}
