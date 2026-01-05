@@ -10,7 +10,7 @@
 		class?: string;
 	}
 
-	let { position = 'top-center', class: className = '' }: Props = $props();
+	let { position = 'bottom-right', class: className = '' }: Props = $props();
 
 	const positionClasses: Record<NonNullable<Props['position']>, string> = {
 		'top-center': 'top-4 left-1/2 -translate-x-1/2',

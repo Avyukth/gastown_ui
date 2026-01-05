@@ -7,7 +7,7 @@
  * - Queue management with max visible limit
  */
 
-export type ToastType = 'info' | 'success' | 'warning' | 'error';
+export type ToastType = 'default' | 'info' | 'success' | 'warning' | 'error';
 
 export interface Toast {
 	id: string;
@@ -46,7 +46,7 @@ class ToastStore {
 		const toast: Toast = {
 			id: crypto.randomUUID(),
 			message,
-			type: options.type ?? 'info',
+			type: options.type ?? 'default',
 			duration: options.duration ?? DEFAULT_DURATION,
 			dismissible: options.dismissible ?? true,
 			timestamp: Date.now()

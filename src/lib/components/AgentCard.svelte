@@ -8,10 +8,14 @@
 	export const agentCardVariants = tv({
 		slots: {
 <<<<<<< HEAD
+<<<<<<< HEAD
 			card: 'bg-card text-card-foreground border border-border rounded-lg shadow-sm transition-all duration-200 hover:shadow-lg hover:border-accent/50 overflow-hidden',
 =======
 			card: 'bg-card/80 backdrop-blur-xl border border-border rounded-lg shadow-sm transition-all duration-200 hover:shadow-lg hover:border-accent/50 overflow-hidden',
 >>>>>>> polecat/cheedo-mk1qula2
+=======
+			card: 'panel-glass transition-all duration-200 hover:shadow-lg hover:border-accent/50 overflow-hidden',
+>>>>>>> polecat/furiosa-mk1ppoio
 			hero: 'flex items-center justify-center p-4 bg-gradient-to-br',
 			heroIcon: 'w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-md',
 			content: 'p-4 space-y-3',
