@@ -118,10 +118,10 @@
 								<div class="flex items-center gap-2 flex-shrink-0">
 									<span
 										class="text-xs font-medium px-2 py-0.5 rounded-full {config.color === 'success'
-											? 'bg-green-500/10 text-green-500'
+											? 'bg-success/10 text-success'
 											: config.color === 'warning'
-												? 'bg-amber-500/10 text-amber-500'
-												: 'bg-red-500/10 text-red-500'}"
+												? 'bg-warning/10 text-warning'
+												: 'bg-destructive/10 text-destructive'}"
 									>
 										{config.label}
 									</span>

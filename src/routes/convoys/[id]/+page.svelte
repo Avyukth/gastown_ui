@@ -10,29 +10,29 @@
 			color: 'success' as const,
 			indicatorStatus: 'running' as const,
 			label: 'Active',
-			borderClass: 'border-status-online/30',
-			bgClass: 'bg-green-500/10 text-green-500'
+			borderClass: 'border-success/30',
+			bgClass: 'bg-success/10 text-success'
 		},
 		stale: {
 			color: 'warning' as const,
 			indicatorStatus: 'idle' as const,
 			label: 'Stale',
-			borderClass: 'border-amber-500/30',
-			bgClass: 'bg-amber-500/10 text-amber-500'
+			borderClass: 'border-warning/30',
+			bgClass: 'bg-warning/10 text-warning'
 		},
 		stuck: {
 			color: 'error' as const,
 			indicatorStatus: 'error' as const,
 			label: 'Stuck',
-			borderClass: 'border-status-offline/30',
-			bgClass: 'bg-red-500/10 text-red-500'
+			borderClass: 'border-destructive/30',
+			bgClass: 'bg-destructive/10 text-destructive'
 		},
 		complete: {
 			color: 'success' as const,
 			indicatorStatus: 'complete' as const,
 			label: 'Complete',
-			borderClass: 'border-status-online/30',
-			bgClass: 'bg-green-500/10 text-green-500'
+			borderClass: 'border-success/30',
+			bgClass: 'bg-success/10 text-success'
 		}
 	};
 
@@ -68,13 +68,13 @@
 	function getIssueStatusBg(status: string): string {
 		switch (status) {
 			case 'in_progress':
-				return 'bg-green-500/10';
+				return 'bg-success/10';
 			case 'closed':
 				return 'bg-muted/50';
 			case 'blocked':
-				return 'bg-red-500/10';
+				return 'bg-destructive/10';
 			default:
-				return 'bg-amber-500/10';
+				return 'bg-warning/10';
 		}
 	}
 

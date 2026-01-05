@@ -238,7 +238,7 @@
 		<!-- Feedback toast -->
 		{#if feedbackMessage}
 			<div
-				class="fixed bottom-4 right-4 px-4 py-2 rounded-md shadow-lg z-50 transition-opacity {feedbackType === 'success' ? 'bg-green-600 text-white' : 'bg-destructive text-destructive-foreground'}"
+				class="fixed bottom-4 right-4 px-4 py-2 rounded-md shadow-lg z-50 transition-opacity {feedbackType === 'success' ? 'bg-success text-success-foreground' : 'bg-destructive text-destructive-foreground'}"
 			>
 				{feedbackMessage}
 			</div>

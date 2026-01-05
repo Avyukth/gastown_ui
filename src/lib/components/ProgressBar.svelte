@@ -27,9 +27,9 @@
 			},
 			color: {
 				default: { indicator: 'bg-accent' },
-				success: { indicator: 'bg-green-500' },
-				warning: { indicator: 'bg-amber-500' },
-				error: { indicator: 'bg-red-500' }
+				success: { indicator: 'bg-success' },
+				warning: { indicator: 'bg-warning' },
+				error: { indicator: 'bg-destructive' }
 			},
 			mode: {
 				determinate: { indicator: '' },

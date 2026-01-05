@@ -3,44 +3,51 @@
 @tailwind utilities;
 
 /**
- * Gas Town Design System - CSS Custom Properties
+ * === DESIGN TOKEN USAGE GUIDE ===
  *
- * This file implements shadcn/ui design tokens for SvelteKit.
- * All colors use HSL format without the hsl() wrapper for Tailwind alpha support.
+ * This file defines CSS custom properties following shadcn conventions.
+ * All components should use these semantic tokens instead of hardcoded colors.
  *
- * Token Categories:
- * ─────────────────────────────────────────────────────────────────────────────
- * CORE SEMANTIC (shadcn standard):
- *   --background, --foreground      Base surface and text colors
- *   --card, --card-foreground       Card surfaces
- *   --popover, --popover-foreground Floating elements
- *   --primary, --primary-foreground Brand/action color
- *   --secondary, --secondary-foreground Secondary actions
- *   --muted, --muted-foreground     Subtle backgrounds/text
- *   --accent, --accent-foreground   Highlights/hover states
- *   --destructive, --destructive-foreground Error/danger states
- *   --border                        Default border color
- *   --input                         Form input borders
- *   --ring                          Focus ring color
- *   --radius                        Default border radius
+ * COLOR TOKEN CATEGORIES:
  *
- * EXTENDED (Gas Town specific):
- *   --success, --warning, --info    Semantic feedback colors
- *   --status-online/offline/pending/idle  Agent status indicators
- *   --shadow-*                      Elevation shadows
- *   --duration-*, --ease-*          Animation tokens
- *   --space-*                       Spacing scale (4px grid)
- *   --touch-target-min              WCAG 2.5.5 touch target (48px)
+ * 1. CORE SEMANTIC (use for UI elements):
+ *    - bg-background / text-foreground    → Page/app background and text
+ *    - bg-card / text-card-foreground     → Card surfaces
+ *    - bg-popover / text-popover-foreground → Floating elements (dropdowns, tooltips)
+ *    - bg-muted / text-muted-foreground   → Subtle backgrounds, secondary text
+ *    - bg-accent / text-accent-foreground → Hover states, emphasis (NOT for status)
+ *    - border-border                      → All borders
+ *    - bg-input                           → Form input backgrounds
+ *    - ring-ring                          → Focus rings
  *
- * Theme Switching:
- *   Light theme: :root selector
- *   Dark theme: .dark class (toggled via JS)
+ * 2. INTERACTIVE (use for buttons, links):
+ *    - bg-primary / text-primary-foreground → Primary actions (CTA buttons)
+ *    - bg-secondary / text-secondary-foreground → Secondary actions
  *
- * Usage in Components:
- *   - Use Tailwind classes: bg-background, text-foreground, border-border
- *   - Or CSS: background: hsl(var(--background));
- *   - Never use hardcoded hex/rgb values in components
- * ─────────────────────────────────────────────────────────────────────────────
+ * 3. FEEDBACK/STATUS (use for state indication):
+ *    - bg-success / text-success          → Completed, active, positive
+ *    - bg-warning / text-warning          → Pending, caution, needs attention
+ *    - bg-info / text-info                → Informational, in-progress
+ *    - bg-destructive / text-destructive  → Errors, critical, blocked
+ *
+ * 4. AGENT STATUS (use for agent indicators):
+ *    - bg-status-online                   → Running/active agents
+ *    - bg-status-offline                  → Stopped/error agents
+ *    - bg-status-pending                  → Starting/transitioning
+ *    - bg-status-idle                     → Idle/waiting agents
+ *
+ * USAGE EXAMPLES:
+ *    ❌ bg-green-500 text-green-500       → Hardcoded, won't adapt to themes
+ *    ✅ bg-success text-success           → Uses semantic tokens
+ *
+ *    ❌ bg-red-500/10 text-red-500        → Hardcoded
+ *    ✅ bg-destructive/10 text-destructive → Semantic with opacity
+ *
+ *    ❌ border-amber-500                  → Hardcoded
+ *    ✅ border-warning                    → Semantic
+ *
+ * All tokens support opacity via Tailwind: bg-success/10, text-warning/80, etc.
+ * Tokens are defined in both :root (light) and .dark (dark) for theme support.
  */
 
 @layer base {

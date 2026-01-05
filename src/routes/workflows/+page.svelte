@@ -242,13 +242,13 @@
 	function getTypeColor(type: string): string {
 		switch (type) {
 			case 'workflow':
-				return 'bg-blue-500/20 text-blue-400';
+				return 'bg-info/20 text-info';
 			case 'convoy':
-				return 'bg-purple-500/20 text-purple-400';
+				return 'bg-accent/20 text-accent';
 			case 'aspect':
-				return 'bg-amber-500/20 text-amber-400';
+				return 'bg-warning/20 text-warning';
 			case 'expansion':
-				return 'bg-green-500/20 text-green-400';
+				return 'bg-success/20 text-success';
 			default:
 				return 'bg-muted text-muted-foreground';
 		}
@@ -258,11 +258,11 @@
 	function getPhaseColor(phase: string): string {
 		switch (phase) {
 			case 'liquid':
-				return 'bg-blue-500/20 text-blue-400';
+				return 'bg-info/20 text-info';
 			case 'vapor':
-				return 'bg-purple-500/20 text-purple-400';
+				return 'bg-accent/20 text-accent';
 			case 'solid':
-				return 'bg-gray-500/20 text-gray-400';
+				return 'bg-muted/50 text-muted-foreground';
 			default:
 				return 'bg-muted text-muted-foreground';
 		}
@@ -334,7 +334,7 @@
 			</div>
 			<div class="panel-glass p-4 rounded-lg">
 				<div class="text-sm text-muted-foreground">Stale</div>
-				<div class="text-2xl font-semibold text-amber-400 mt-1">
+				<div class="text-2xl font-semibold text-warning mt-1">
 					{loadingMolecules ? '...' : (molecules?.stale.total_count ?? 0)}
 				</div>
 			</div>
@@ -347,13 +347,13 @@
 			</div>
 			<div class="panel-glass p-4 rounded-lg">
 				<div class="text-sm text-muted-foreground">Workflows</div>
-				<div class="text-2xl font-semibold text-blue-400 mt-1">
+				<div class="text-2xl font-semibold text-info mt-1">
 					{loadingFormulas ? '...' : formulas.filter((f) => f.type === 'workflow').length}
 				</div>
 			</div>
 			<div class="panel-glass p-4 rounded-lg">
 				<div class="text-sm text-muted-foreground">Convoys</div>
-				<div class="text-2xl font-semibold text-purple-400 mt-1">
+				<div class="text-2xl font-semibold text-accent mt-1">
 					{loadingFormulas ? '...' : formulas.filter((f) => f.type === 'convoy').length}
 				</div>
 			</div>
@@ -365,19 +365,19 @@
 		<!-- Stale molecules section (if any) -->
 		{#if molecules?.stale.stale_molecules && molecules.stale.stale_molecules.length > 0}
 			<section class="space-y-4">
-				<h2 class="text-lg font-medium text-amber-400 flex items-center gap-2">
+				<h2 class="text-lg font-medium text-warning flex items-center gap-2">
 					<StatusIndicator status="warning" size="sm" />
 					Stale Molecules
 				</h2>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 					{#each molecules.stale.stale_molecules as molecule}
-						<div class="panel-glass p-4 rounded-lg border-l-4 border-amber-500/50">
+						<div class="panel-glass p-4 rounded-lg border-l-4 border-warning/50">
 							<div class="flex items-start justify-between gap-2">
 								<div>
 									<code class="text-xs text-muted-foreground">{molecule.id}</code>
 									<h3 class="font-medium text-foreground">{molecule.title}</h3>
 								</div>
-								<span class="text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-400">
+								<span class="text-xs px-2 py-1 rounded-full bg-warning/20 text-warning">
 									stale
 								</span>
 							</div>
@@ -474,8 +474,8 @@
 					{/each}
 				</div>
 			{:else if error}
-				<div class="panel-glass p-4 rounded-lg border-l-4 border-red-500">
-					<p class="text-red-400">{error}</p>
+				<div class="panel-glass p-4 rounded-lg border-l-4 border-destructive">
+					<p class="text-destructive">{error}</p>
 				</div>
 			{:else if formulas.length === 0}
 				<div class="panel-glass p-8 rounded-lg text-center">
@@ -650,7 +650,7 @@
 							class={cn(
 								'p-3 rounded-lg text-sm',
 								actionMessage.type === 'success'
-									? 'bg-green-500/10 text-green-400 border border-green-500/30'
+									? 'bg-success/10 text-success border border-success/30'
 									: 'bg-destructive/10 text-destructive border border-destructive/30'
 							)}
 						>

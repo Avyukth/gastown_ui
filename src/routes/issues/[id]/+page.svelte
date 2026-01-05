@@ -15,26 +15,26 @@
 		open: {
 			indicatorStatus: 'warning',
 			label: 'Open',
-			bgClass: 'bg-amber-500/10 text-amber-500',
-			borderClass: 'border-amber-500/30'
+			bgClass: 'bg-warning/10 text-warning',
+			borderClass: 'border-warning/30'
 		},
 		in_progress: {
 			indicatorStatus: 'running',
 			label: 'In Progress',
-			bgClass: 'bg-blue-500/10 text-blue-500',
-			borderClass: 'border-blue-500/30'
+			bgClass: 'bg-info/10 text-info',
+			borderClass: 'border-info/30'
 		},
 		blocked: {
 			indicatorStatus: 'error',
 			label: 'Blocked',
-			bgClass: 'bg-red-500/10 text-red-500',
-			borderClass: 'border-red-500/30'
+			bgClass: 'bg-destructive/10 text-destructive',
+			borderClass: 'border-destructive/30'
 		},
 		completed: {
 			indicatorStatus: 'complete',
 			label: 'Completed',
-			bgClass: 'bg-green-500/10 text-green-500',
-			borderClass: 'border-green-500/30'
+			bgClass: 'bg-success/10 text-success',
+			borderClass: 'border-success/30'
 		}
 	};
 
@@ -42,10 +42,10 @@
 
 	// Priority labels
 	const priorityLabels: Record<number, { label: string; class: string }> = {
-		0: { label: 'P0 Critical', class: 'text-red-500 bg-red-500/10' },
-		1: { label: 'P1 High', class: 'text-orange-500 bg-orange-500/10' },
-		2: { label: 'P2 Medium', class: 'text-amber-500 bg-amber-500/10' },
-		3: { label: 'P3 Low', class: 'text-blue-500 bg-blue-500/10' },
+		0: { label: 'P0 Critical', class: 'text-destructive bg-destructive/10' },
+		1: { label: 'P1 High', class: 'text-warning bg-warning/10' },
+		2: { label: 'P2 Medium', class: 'text-warning/80 bg-warning/10' },
+		3: { label: 'P3 Low', class: 'text-info bg-info/10' },
 		4: { label: 'P4 Backlog', class: 'text-muted-foreground bg-muted' }
 	};
 
@@ -63,11 +63,11 @@
 
 	function getActivityColor(type: ActivityEvent['type']): string {
 		switch (type) {
-			case 'status_change': return 'text-blue-500';
-			case 'assignment': return 'text-green-500';
+			case 'status_change': return 'text-info';
+			case 'assignment': return 'text-success';
 			case 'comment': return 'text-muted-foreground';
-			case 'created': return 'text-amber-500';
-			case 'convoy_added': return 'text-purple-500';
+			case 'created': return 'text-warning';
+			case 'convoy_added': return 'text-accent';
 			default: return 'text-muted-foreground';
 		}
 	}
@@ -220,12 +220,12 @@
 							<div class="space-y-4">
 								{#if issue.blocked_by.length > 0}
 									<div>
-										<h3 class="text-xs font-medium text-red-500 mb-2">Blocked By ({issue.blocked_by.length})</h3>
+										<h3 class="text-xs font-medium text-destructive mb-2">Blocked By ({issue.blocked_by.length})</h3>
 										<div class="flex flex-wrap gap-2">
 											{#each issue.blocked_by as blockerId}
 												<a
 													href="/issues/{blockerId}"
-													class="px-2 py-1 text-xs font-mono bg-red-500/10 text-red-500 rounded hover:bg-red-500/20 transition-colors"
+													class="px-2 py-1 text-xs font-mono bg-destructive/10 text-destructive rounded hover:bg-destructive/20 transition-colors"
 												>
 													{blockerId}
 												</a>
@@ -235,12 +235,12 @@
 								{/if}
 								{#if issue.blocking.length > 0}
 									<div>
-										<h3 class="text-xs font-medium text-amber-500 mb-2">Blocking ({issue.blocking.length})</h3>
+										<h3 class="text-xs font-medium text-warning mb-2">Blocking ({issue.blocking.length})</h3>
 										<div class="flex flex-wrap gap-2">
 											{#each issue.blocking as blockingId}
 												<a
 													href="/issues/{blockingId}"
-													class="px-2 py-1 text-xs font-mono bg-amber-500/10 text-amber-500 rounded hover:bg-amber-500/20 transition-colors"
+													class="px-2 py-1 text-xs font-mono bg-warning/10 text-warning rounded hover:bg-warning/20 transition-colors"
 												>
 													{blockingId}
 												</a>
@@ -318,13 +318,13 @@
 							</button>
 							{#if issue.status !== 'completed'}
 								<button
-									class="w-full px-4 py-2 text-sm bg-green-500/10 text-green-500 hover:bg-green-500/20 rounded-lg transition-colors text-left"
+									class="w-full px-4 py-2 text-sm bg-success/10 text-success hover:bg-success/20 rounded-lg transition-colors text-left"
 								>
 									Close Issue
 								</button>
 							{:else}
 								<button
-									class="w-full px-4 py-2 text-sm bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 rounded-lg transition-colors text-left"
+									class="w-full px-4 py-2 text-sm bg-warning/10 text-warning hover:bg-warning/20 rounded-lg transition-colors text-left"
 								>
 									Reopen Issue
 								</button>

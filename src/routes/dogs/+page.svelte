@@ -135,7 +135,7 @@
 							<div class="flex items-center gap-2">
 								<h2 class="text-xl font-semibold">Boot</h2>
 								<span
-									class="px-2 py-0.5 rounded text-xs font-medium bg-amber-500/10 text-amber-500"
+									class="px-2 py-0.5 rounded text-xs font-medium bg-warning/10 text-warning"
 								>
 									Watchdog
 								</span>
@@ -189,7 +189,7 @@
 								: data.dogs.boot.lastTriage === 'WAKE'
 									? 'border-l-status-pending bg-status-pending/5'
 									: data.dogs.boot.lastTriage === 'NUDGE'
-										? 'border-l-blue-500 bg-blue-500/5'
+										? 'border-l-info bg-info/5'
 										: 'border-l-border bg-background/50'}"
 						>
 							<div class="flex items-center gap-3">
