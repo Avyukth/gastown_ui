@@ -5,10 +5,12 @@
  * - Session extraction from HttpOnly cookies
  * - Security headers (CSP, HSTS, etc.)
  * - Request authentication
+ * - CSRF token generation and validation
  */
 
-import type { Handle } from '@sveltejs/kit';
+import { json, type Handle } from '@sveltejs/kit';
 import { getAccessToken, getRefreshToken } from '$lib/auth/cookies';
+import { ensureCsrfToken, checkCsrfProtection, CSRF_HEADER } from '$lib/auth/csrf.server';
 import type { SessionData } from '$lib/auth/types';
 
 // Extend App.Locals with session data
@@ -116,6 +118,26 @@ function extractSession(cookies: import('@sveltejs/kit').Cookies): SessionData {
 export const handle: Handle = async ({ event, resolve }) => {
 	// Extract session from cookies
 	event.locals.session = extractSession(event.cookies);
+
+	// Ensure CSRF token exists for all requests
+	ensureCsrfToken(event.cookies);
+
+	// Validate CSRF token for state-changing requests to API routes
+	if (event.url.pathname.startsWith('/api/')) {
+		const csrfResult = checkCsrfProtection(
+			event.request.method,
+			event.url.pathname,
+			event.cookies,
+			event.request.headers.get(CSRF_HEADER)
+		);
+
+		if (!csrfResult.valid) {
+			return json(
+				{ error: csrfResult.error ?? 'CSRF validation failed' },
+				{ status: 403 }
+			);
+		}
+	}
 
 	// Resolve the request
 	const response = await resolve(event);

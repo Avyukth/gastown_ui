@@ -42,3 +42,9 @@ export {
 	refreshToken,
 	createAuthStore
 } from './store.svelte';
+
+// CSRF constants (safe for client-side import)
+export { CSRF_COOKIES, CSRF_HEADER } from './csrf.constants';
+
+// Note: Server-only CSRF functions (generateCsrfToken, validateCsrfToken, etc.)
+// should be imported directly from '$lib/auth/csrf.server' in server-side code

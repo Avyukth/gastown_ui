@@ -19,6 +19,26 @@ import type {
 	RateLimiterState
 } from './types';
 import { DEFAULT_CLIENT_CONFIG } from './types';
+import { CSRF_COOKIES, CSRF_HEADER } from '$lib/auth/csrf.constants';
+
+/** HTTP methods that require CSRF token */
+const CSRF_REQUIRED_METHODS: HttpMethod[] = ['POST', 'PUT', 'PATCH', 'DELETE'];
+
+/**
+ * Get CSRF token from client-accessible cookie
+ */
+function getCsrfTokenFromCookie(): string | null {
+	if (typeof document === 'undefined') return null;
+
+	const cookies = document.cookie.split(';');
+	for (const cookie of cookies) {
+		const [name, value] = cookie.trim().split('=');
+		if (name === CSRF_COOKIES.CSRF_TOKEN_CLIENT) {
+			return decodeURIComponent(value);
+		}
+	}
+	return null;
+}
 
 /**
  * Create an ApiError from various error sources
@@ -201,6 +221,14 @@ export class ApiClient {
 			const token = await this.#config.getToken();
 			if (token) {
 				requestHeaders['Authorization'] = `Bearer ${token}`;
+			}
+		}
+
+		// Add CSRF token for state-changing requests
+		if (CSRF_REQUIRED_METHODS.includes(method)) {
+			const csrfToken = getCsrfTokenFromCookie();
+			if (csrfToken) {
+				requestHeaders[CSRF_HEADER] = csrfToken;
 			}
 		}
 
