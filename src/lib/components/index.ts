@@ -40,3 +40,7 @@ export { default as OfflineIndicator } from './OfflineIndicator.svelte';
 
 // Search components
 export { default as GlobalSearch } from './GlobalSearch.svelte';
+
+// Error handling components
+export { default as ErrorBoundary } from './ErrorBoundary.svelte';
+export { default as ApiError } from './ApiError.svelte';
