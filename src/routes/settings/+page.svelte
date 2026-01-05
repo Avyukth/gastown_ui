@@ -13,6 +13,10 @@
 	let newAgentName = $state('');
 	let newAgentCommand = $state('');
 
+	// Patrol mute dialog state
+	let muteDialogPatrolId = $state<string | null>(null);
+	let muteReason = $state('');
+
 	// Initialize theme from localStorage
 	$effect(() => {
 		if (browser) {
@@ -279,6 +283,134 @@
 						</div>
 					{/each}
 				</div>
+			</section>
+
+			<!-- Patrol Controls -->
+			<section class="panel-glass p-6">
+				<div class="flex items-center gap-3 mb-4">
+					<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+						<span class="text-xl">🚨</span>
+					</div>
+					<div>
+						<h2 class="text-lg font-semibold text-foreground">Patrol Controls</h2>
+						<p class="text-sm text-muted-foreground">Manage agent patrol state (mute/unmute)</p>
+					</div>
+				</div>
+
+				{#if data.patrols.length === 0}
+					<p class="text-sm text-muted-foreground">No patrol molecules found.</p>
+				{:else}
+					<div class="space-y-3">
+						{#each data.patrols as patrol}
+							<div class="flex items-center justify-between p-4 rounded-lg bg-card border border-border">
+								<div class="flex-1 min-w-0">
+									<div class="flex items-center gap-2">
+										<p class="font-medium text-foreground">{patrol.title}</p>
+										<span
+											class={cn(
+												'text-xs px-2 py-0.5 rounded-full',
+												patrol.state === 'active'
+													? 'bg-status-active/20 text-status-active'
+													: patrol.state === 'muted'
+														? 'bg-status-offline/20 text-status-offline'
+														: 'bg-muted/20 text-muted-foreground'
+											)}
+										>
+											{patrol.state === 'active' ? 'Active' : patrol.state === 'muted' ? 'Muted' : 'Unknown'}
+										</span>
+									</div>
+									<p class="text-sm text-muted-foreground mt-0.5">{patrol.description}</p>
+									{#if patrol.state === 'muted' && patrol.muteReason}
+										<p class="text-xs text-status-offline mt-1">
+											Reason: {patrol.muteReason}
+										</p>
+									{/if}
+									<p class="text-xs text-muted-foreground/60 font-mono mt-1">{patrol.id}</p>
+								</div>
+								<div class="flex items-center gap-2 ml-4">
+									{#if patrol.state === 'active' || patrol.state === 'unknown'}
+										<button
+											type="button"
+											onclick={() => {
+												muteDialogPatrolId = patrol.id;
+												muteReason = '';
+											}}
+											class="px-3 py-1.5 text-sm font-medium rounded-md bg-status-offline/10 text-status-offline hover:bg-status-offline/20 transition-all"
+										>
+											Mute
+										</button>
+									{:else}
+										<form method="POST" action="?/unmutePatrol" use:enhance>
+											<input type="hidden" name="patrolId" value={patrol.id} />
+											<button
+												type="submit"
+												class="px-3 py-1.5 text-sm font-medium rounded-md bg-status-active/10 text-status-active hover:bg-status-active/20 transition-all"
+											>
+												Unmute
+											</button>
+										</form>
+									{/if}
+								</div>
+							</div>
+						{/each}
+					</div>
+				{/if}
+
+				<!-- Mute Dialog -->
+				{#if muteDialogPatrolId}
+					<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+						<div class="bg-card border border-border rounded-lg p-6 w-full max-w-md mx-4 shadow-xl">
+							<h3 class="text-lg font-semibold text-foreground mb-2">Mute Patrol</h3>
+							<p class="text-sm text-muted-foreground mb-4">
+								Provide a reason for muting this patrol. The patrol will stop monitoring until unmuted.
+							</p>
+							<form
+								method="POST"
+								action="?/mutePatrol"
+								use:enhance={() => {
+									return async ({ update }) => {
+										await update();
+										muteDialogPatrolId = null;
+										muteReason = '';
+									};
+								}}
+							>
+								<input type="hidden" name="patrolId" value={muteDialogPatrolId} />
+								<div class="mb-4">
+									<label for="mute-reason" class="block text-sm font-medium text-muted-foreground mb-1">
+										Reason
+									</label>
+									<input
+										id="mute-reason"
+										type="text"
+										name="reason"
+										bind:value={muteReason}
+										placeholder="e.g., Investigating issue, maintenance..."
+										class="w-full h-10 px-3 bg-input border border-border rounded-md text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
+									/>
+								</div>
+								<div class="flex justify-end gap-2">
+									<button
+										type="button"
+										onclick={() => {
+											muteDialogPatrolId = null;
+											muteReason = '';
+										}}
+										class="px-4 py-2 text-sm font-medium rounded-md border border-border hover:bg-accent/10 transition-all"
+									>
+										Cancel
+									</button>
+									<button
+										type="submit"
+										class="px-4 py-2 text-sm font-medium rounded-md bg-status-offline text-white hover:bg-status-offline/90 transition-all"
+									>
+										Mute Patrol
+									</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				{/if}
 			</section>
 
 			<!-- Info Section -->
