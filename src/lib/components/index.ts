@@ -31,3 +31,8 @@ export { default as PullToRefresh } from './PullToRefresh.svelte';
 
 // PWA components
 export { default as UpdatePrompt } from './UpdatePrompt.svelte';
+
+// Notification components
+export { default as Toast } from './Toast.svelte';
+export { default as ToastContainer } from './ToastContainer.svelte';
+export { default as OfflineIndicator } from './OfflineIndicator.svelte';
