@@ -97,7 +97,7 @@
 					>
 						<span class="relative">
 							{#if item.icon}
-								<span class="text-xl" aria-hidden="true">{item.icon}</span>
+								<span class="w-6 h-6 flex items-center justify-center text-xl" aria-hidden="true">{item.icon}</span>
 							{:else}
 								<span class="w-6 h-6 rounded-full bg-current opacity-20" aria-hidden="true"></span>
 							{/if}
@@ -178,7 +178,7 @@
 				aria-label="More navigation options"
 			>
 				<span class="relative">
-					<span class="text-xl" aria-hidden="true">{showOverflow ? '✕' : '⋯'}</span>
+					<span class="w-6 h-6 flex items-center justify-center text-xl" aria-hidden="true">{showOverflow ? '✕' : '⋯'}</span>
 					{#if activeInOverflow && !showOverflow}
 						<span
 							class="absolute -top-1 -right-2 w-2 h-2 bg-primary rounded-full"

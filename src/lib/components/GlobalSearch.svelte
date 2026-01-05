@@ -14,6 +14,7 @@
 	let query = $state('');
 	let selectedIndex = $state(0);
 	let inputRef = $state<HTMLInputElement | null>(null);
+	let dialogRef = $state<HTMLDivElement | null>(null);
 
 	// Detect OS for keyboard shortcut display
 	let isMac = $state(false);
@@ -269,6 +270,34 @@
 					allResults[selectedIndex].action();
 				}
 				break;
+			case 'Tab':
+				// Focus trap: keep Tab within dialog
+				handleFocusTrap(e);
+				break;
+		}
+	}
+
+	function handleFocusTrap(e: KeyboardEvent) {
+		if (!dialogRef) return;
+
+		const focusableElements = dialogRef.querySelectorAll<HTMLElement>(
+			'input, button, [tabindex]:not([tabindex="-1"])'
+		);
+		const firstElement = focusableElements[0];
+		const lastElement = focusableElements[focusableElements.length - 1];
+
+		if (e.shiftKey) {
+			// Shift+Tab: if on first element, go to last
+			if (document.activeElement === firstElement) {
+				e.preventDefault();
+				lastElement?.focus();
+			}
+		} else {
+			// Tab: if on last element, go to first
+			if (document.activeElement === lastElement) {
+				e.preventDefault();
+				firstElement?.focus();
+			}
 		}
 	}
 
@@ -355,7 +384,10 @@
 		<div class="absolute inset-0 bg-background/80 backdrop-blur-sm" aria-hidden="true"></div>
 
 		<!-- Modal content -->
-		<div class="relative w-full max-w-xl bg-popover border border-border rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+		<div
+			bind:this={dialogRef}
+			class="relative w-full max-w-xl bg-popover border border-border rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+		>
 			<!-- Search input -->
 			<div class="flex items-center gap-3 px-4 py-3 border-b border-border">
 				<label for="global-search-input" class="sr-only" id="search-dialog-title">
