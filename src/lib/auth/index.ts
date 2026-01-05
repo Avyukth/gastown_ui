@@ -40,5 +40,7 @@ export {
 	login,
 	logout,
 	refreshToken,
+	forceRefresh,
+	getAuthHealth,
 	createAuthStore
 } from './store.svelte';
