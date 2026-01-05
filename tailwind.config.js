@@ -93,8 +93,9 @@ export default {
 			},
 
 			fontFamily: {
-				sans: ['Inter', 'system-ui', '-apple-system', ...fontFamily.sans],
-				mono: ['JetBrains Mono', 'SF Mono', 'Fira Code', ...fontFamily.mono]
+				sans: ['Inter', 'sans-serif'],
+				display: ['Space Grotesk', 'sans-serif'],
+				mono: ['JetBrains Mono', 'monospace']
 			},
 
 			fontSize: {

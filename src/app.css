@@ -30,8 +30,9 @@
 		--radius: 0.5rem;
 
 		/* === Typography === */
-		--font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-		--font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+		--font-sans: 'Inter', sans-serif;
+		--font-display: 'Space Grotesk', sans-serif;
+		--font-mono: 'JetBrains Mono', monospace;
 
 		/* === Spacing Scale (based on 4px grid) === */
 		--space-1: 0.25rem;  /* 4px */
@@ -133,6 +134,12 @@
 		@apply bg-background text-foreground;
 		font-family: var(--font-sans);
 		font-feature-settings: 'rlig' 1, 'calt' 1;
+	}
+
+	/* Headers use Space Grotesk display font */
+	h1, h2, h3, h4, h5, h6, .font-display {
+		font-family: var(--font-display);
+		font-weight: 600;
 	}
 
 	code, pre, .font-mono {
