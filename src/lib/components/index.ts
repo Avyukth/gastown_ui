@@ -17,6 +17,7 @@ export { default as StatusIndicator } from './StatusIndicator.svelte';
 export { default as AgentDetailLayout } from './AgentDetailLayout.svelte';
 export { default as DashboardLayout } from './DashboardLayout.svelte';
 export { default as LogsLayout } from './LogsLayout.svelte';
+export { default as MobileDashboard } from './MobileDashboard.svelte';
 export { default as QueueLayout } from './QueueLayout.svelte';
 export { default as WorkflowLayout } from './WorkflowLayout.svelte';
 
@@ -27,6 +28,7 @@ export { default as LogEntrySkeleton } from './LogEntrySkeleton.svelte';
 
 // Interactive components
 export { default as SwipeableItem } from './SwipeableItem.svelte';
+export { default as SwipeableTabs } from './SwipeableTabs.svelte';
 export { default as PullToRefresh } from './PullToRefresh.svelte';
 
 // PWA components
