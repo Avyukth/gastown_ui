@@ -24,6 +24,7 @@ export { default as EmptyState, emptyStateVariants, emptyStatePresets, type Empt
 export { default as AgentDetailLayout } from './AgentDetailLayout.svelte';
 export { default as DashboardLayout } from './DashboardLayout.svelte';
 export { default as LogsLayout } from './LogsLayout.svelte';
+export { default as PageHeader, pageHeaderVariants, type BreadcrumbItem, type LiveCount, type PageHeaderProps, type PageHeaderVariants } from './PageHeader.svelte';
 export { default as QueueLayout } from './QueueLayout.svelte';
 export { default as WorkflowLayout } from './WorkflowLayout.svelte';
 
