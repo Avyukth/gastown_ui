@@ -18,6 +18,7 @@ export { default as ProgressBar } from './ProgressBar.svelte';
 export { default as ShimmerText } from './ShimmerText.svelte';
 export { default as StatusIndicator, statusIndicatorVariants, type StatusIndicatorStatus, type StatusIndicatorSize, type StatusIndicatorProps } from './StatusIndicator.svelte';
 export { default as StatusBadge, statusBadgeVariants, type StatusBadgeProps, type StatusBadgeVariants } from './StatusBadge.svelte';
+export { default as EmptyState, emptyStateVariants, emptyStatePresets, type EmptyStatePreset, type EmptyStateProps, type EmptyStateVariants } from './EmptyState.svelte';
 
 // Layout components
 export { default as AgentDetailLayout } from './AgentDetailLayout.svelte';
