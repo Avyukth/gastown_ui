@@ -1,4 +1,12 @@
 <script lang="ts">
+	/**
+	 * GlobalSearch Component - Enhanced Command Palette
+	 *
+	 * Design tokens used:
+	 * - Animation: ease-out-expo for open, ease-spring for item hover
+	 * - Typography: label-sm for hints, body-sm for sublabels
+	 * - Shadows: shadow-2xl for modal elevation
+	 */
 	import { cn } from '$lib/utils';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
@@ -17,7 +25,12 @@
 		Dog,
 		Zap,
 		FileText,
-		FolderOpen
+		FolderOpen,
+		Clock,
+		Sparkles,
+		ArrowUp,
+		ArrowDown,
+		CornerDownLeft
 	} from 'lucide-svelte';
 	import type { ComponentType } from 'svelte';
 
@@ -91,11 +104,19 @@
 		{ id: 'refresh', label: 'Refresh', description: 'Reload current page', action: () => window.location.reload() }
 	];
 
-	// Recent items (simulated)
+	// Recent items (simulated) - shown with clock icon at 60% opacity
 	const recentItems = [
 		{ type: 'agent', id: 'polecat-morsov', label: 'Polecat Morsov', path: '/agents/polecat-morsov' },
 		{ type: 'issue', id: 'hq-7vsv', label: 'Global Search', path: '/work' },
 		{ type: 'route', id: 'convoys', label: 'Convoys', path: '/convoys' }
+	];
+
+	// Search suggestions for empty state
+	const searchSuggestions = [
+		{ query: 'running agents', description: 'Find active agents' },
+		{ query: 'P1 issues', description: 'High priority issues' },
+		{ query: '>new issue', description: 'Create a new issue' },
+		{ query: 'convoy', description: 'View convoy status' }
 	];
 
 	// Filter results based on query
@@ -168,7 +189,7 @@
 
 		const results: SearchResult[] = [];
 
-		// Show recent items when no query
+		// Show recent items when no query (with Clock icon, will be styled at 60% opacity)
 		if (!searchQuery) {
 			recentItems.forEach(item => {
 				results.push({
@@ -176,7 +197,7 @@
 					id: item.id,
 					label: item.label,
 					sublabel: `Recent ${item.type}`,
-					icon: item.type === 'agent' ? Bot : item.type === 'issue' ? FileText : FolderOpen,
+					icon: Clock, // Clock icon for all recent items
 					action: () => { goto(item.path); close(); }
 				});
 			});
@@ -405,13 +426,22 @@
 		onclick={handleBackdropClick}
 		onkeydown={(e) => e.key === 'Escape' && close()}
 	>
-		<!-- Backdrop -->
-		<div class="absolute inset-0 bg-background/80 backdrop-blur-sm" aria-hidden="true"></div>
+		<!-- Backdrop with fade animation -->
+		<div
+			class="absolute inset-0 bg-background/80 backdrop-blur-sm animate-fade-in"
+			aria-hidden="true"
+		></div>
 
-		<!-- Modal content -->
+		<!-- Modal content with scale + fade from trigger -->
 		<div
 			bind:this={dialogRef}
-			class="relative w-full max-w-xl bg-popover border border-border rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+			class={cn(
+				'relative w-full max-w-xl',
+				'bg-popover border border-border rounded-xl',
+				'shadow-2xl overflow-hidden',
+				// Scale + fade animation using design tokens
+				'animate-scale-in origin-top'
+			)}
 		>
 			<!-- Search input -->
 			<div class="flex items-center gap-3 px-4 py-3 border-b border-border">
@@ -439,51 +469,88 @@
 			<!-- Results -->
 			<div class="max-h-[60vh] overflow-y-auto overscroll-contain">
 				{#if allResults.length === 0}
-					<div class="px-4 py-8 text-center text-muted-foreground">
+					<div class="px-4 py-8 text-center">
 						{#if searchQuery}
-							<p>No results found for "{searchQuery}"</p>
-							<p class="text-sm mt-1">Try a different search term or type &gt; for commands</p>
+							<!-- No results found -->
+							<div class="text-muted-foreground">
+								<Search class="w-10 h-10 mx-auto mb-3 opacity-40" />
+								<p class="font-medium">No results for "{searchQuery}"</p>
+								<p class="text-body-sm mt-1">Try a different search term or type <kbd class="px-1.5 py-0.5 text-xs font-mono bg-muted rounded">&gt;</kbd> for commands</p>
+							</div>
 						{:else if isCommandMode}
-							<p>Type to search commands</p>
+							<!-- Command mode empty -->
+							<div class="text-muted-foreground">
+								<Zap class="w-10 h-10 mx-auto mb-3 opacity-40" />
+								<p class="font-medium">Type to search commands</p>
+							</div>
 						{:else}
-							<p>Start typing to search</p>
+							<!-- Empty state with suggestions -->
+							<div class="space-y-4">
+								<div class="text-muted-foreground">
+									<Sparkles class="w-10 h-10 mx-auto mb-3 opacity-40" />
+									<p class="font-medium">Try searching for:</p>
+								</div>
+								<div class="flex flex-wrap justify-center gap-2">
+									{#each searchSuggestions as suggestion}
+										<button
+											type="button"
+											class="inline-flex items-center gap-1.5 px-3 py-1.5 text-body-sm text-muted-foreground bg-muted/50 hover:bg-muted rounded-full transition-colors duration-fast"
+											onclick={() => query = suggestion.query}
+										>
+											<Search class="w-3 h-3" />
+											{suggestion.query}
+										</button>
+									{/each}
+								</div>
+							</div>
 						{/if}
 					</div>
 				{:else}
 					<div class="py-2">
 						{#each Object.entries(groupedResults) as [groupKey, items]}
 							<div class="px-2">
-								<div class="px-2 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+								<!-- Group header with icon -->
+								<div class="flex items-center gap-2 px-2 py-1.5 text-label-sm text-muted-foreground uppercase tracking-wider">
+									{#if groupKey === 'recent'}
+										<Clock class="w-3.5 h-3.5" />
+									{/if}
 									{groupLabels[groupKey] || groupKey}
 								</div>
 								{#each items as item, itemIndex}
 									{@const flatIndex = getFlatIndex(groupKey, itemIndex)}
+									{@const isRecent = item.type === 'recent'}
 									<button
 										type="button"
 										class={cn(
-											'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors',
+											'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left',
+											'transition-all duration-fast ease-out-expo',
 											flatIndex === selectedIndex
-												? 'bg-accent text-accent-foreground'
-												: 'hover:bg-muted/50'
+												? 'bg-accent text-accent-foreground shadow-sm'
+												: 'hover:bg-muted/50',
+											// Recent items at 60% opacity
+											isRecent && flatIndex !== selectedIndex && 'opacity-60'
 										)}
 										onclick={() => item.action()}
 										onmouseenter={() => selectedIndex = flatIndex}
 									>
-										<span class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+										<span class={cn(
+											'w-6 h-6 flex items-center justify-center flex-shrink-0 rounded-md',
+											flatIndex === selectedIndex ? 'text-accent-foreground' : 'text-muted-foreground'
+										)}>
 											{#if item.icon}
-												<item.icon size={20} strokeWidth={2} />
+												<item.icon size={18} strokeWidth={2} />
 											{/if}
 										</span>
 										<div class="flex-1 min-w-0">
 											<div class="font-medium truncate">{item.label}</div>
 											{#if item.sublabel}
-												<div class="text-sm text-muted-foreground truncate">{item.sublabel}</div>
+												<div class="text-body-sm text-muted-foreground truncate">{item.sublabel}</div>
 											{/if}
 										</div>
 										{#if flatIndex === selectedIndex}
-											<kbd class="hidden sm:inline-flex items-center px-1.5 py-0.5 text-xs font-mono text-muted-foreground bg-background rounded border border-border">
-												↵
-											</kbd>
+											<div class="flex items-center gap-1 text-muted-foreground">
+												<CornerDownLeft class="w-3.5 h-3.5" />
+											</div>
 										{/if}
 									</button>
 								{/each}
