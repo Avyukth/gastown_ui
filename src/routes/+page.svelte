@@ -8,7 +8,6 @@
 	const agentsList = $derived(data.agents);
 	const statsData = $derived(data.stats);
 	const systemStatus = $derived(data.systemStatus);
-	const townName = $derived(data.townName);
 	const error = $derived(data.error);
 
 	// Mock workflow and queue data (would come from API in real app)
@@ -32,7 +31,7 @@
 	]);
 </script>
 
-<DashboardLayout title={(townName ?? 'gastown').replace(/_exp$/i, '')} {systemStatus}>
+<DashboardLayout title="GASTOWN" {systemStatus}>
 	<!-- Left Column: Agents -->
 	{#snippet agents()}
 		{#if error}
