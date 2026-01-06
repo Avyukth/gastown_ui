@@ -89,9 +89,14 @@ function formatAgentName(agent: GtAgent): string {
 	return name;
 }
 
+function sanitizeTaskSubject(subject: string): string {
+	const trimmed = subject.trim().replace(/^[^\w]+/, '');
+	return trimmed.replace(/^work:\s*/i, '');
+}
+
 function getTaskDescription(agent: GtAgent): string {
 	if (agent.first_subject) {
-		return agent.first_subject;
+		return sanitizeTaskSubject(agent.first_subject);
 	}
 	if (agent.state === 'dead') {
 		return 'Session ended';
