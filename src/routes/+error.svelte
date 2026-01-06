@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { cn } from '$lib/utils';
+	import { AlertTriangle, Lock, Search, Wrench, XCircle } from 'lucide-svelte';
 
 	// Error info from SvelteKit
 	const status = $derived($page.status);
@@ -14,35 +15,35 @@
 				return {
 					title: 'Page Not Found',
 					description: 'The page you\'re looking for doesn\'t exist or has been moved.',
-					icon: '🔍',
+					icon: Search,
 					suggestion: 'Check the URL or navigate back to the dashboard.'
 				};
 			case 403:
 				return {
 					title: 'Access Denied',
 					description: 'You don\'t have permission to view this resource.',
-					icon: '🔒',
+					icon: Lock,
 					suggestion: 'Contact an administrator if you believe this is an error.'
 				};
 			case 500:
 				return {
 					title: 'Server Error',
 					description: 'Something went wrong on our end.',
-					icon: '⚠️',
+					icon: AlertTriangle,
 					suggestion: 'Try refreshing the page or come back later.'
 				};
 			case 503:
 				return {
 					title: 'Service Unavailable',
 					description: 'The server is temporarily overloaded or under maintenance.',
-					icon: '🔧',
+					icon: Wrench,
 					suggestion: 'Please try again in a few minutes.'
 				};
 			default:
 				return {
 					title: 'Error',
 					description: message,
-					icon: '❌',
+					icon: XCircle,
 					suggestion: 'Try refreshing the page or go back to the dashboard.'
 				};
 		}
@@ -80,9 +81,12 @@
 
 			<!-- Error icon and status -->
 			<div class="text-center mb-6">
-				<span class="text-6xl block mb-4" role="img" aria-label={errorInfo.title}>
-					{errorInfo.icon}
-				</span>
+				<svelte:component
+					this={errorInfo.icon}
+					class="w-12 h-12 text-destructive mx-auto mb-4"
+					strokeWidth={2}
+					aria-label={errorInfo.title}
+				/>
 				<div class="inline-flex items-center gap-2 px-3 py-1 bg-destructive/10 text-destructive rounded-full text-sm font-mono">
 					<span class="w-2 h-2 bg-destructive rounded-full animate-pulse"></span>
 					ERROR {status}
