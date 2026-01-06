@@ -369,17 +369,26 @@
 	type="button"
 	onclick={open}
 	class={cn(
-		'flex items-center gap-2 px-3 py-2 rounded-lg transition-colors',
-		'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground',
-		'border border-border/50 hover:border-border',
-		'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+		// Base layout and sizing
+		'flex items-center justify-center gap-2 min-h-[44px] min-w-[44px] px-3 py-2',
+		'rounded-lg transition-all duration-200',
+		// Colors and background - industrial aesthetic
+		'bg-card/80 backdrop-blur-sm text-muted-foreground',
+		'border border-border/60',
+		// Hover state with subtle glow
+		'hover:bg-card hover:text-foreground hover:border-primary/40',
+		'hover:shadow-[0_0_12px_-3px_hsl(var(--primary)/0.3)]',
+		// Focus state for accessibility
+		'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+		// Active state
+		'active:scale-[0.98] active:shadow-inner',
 		className
 	)}
-	aria-label="Open search"
+	aria-label="Open search (Press {isMac ? '⌘' : 'Ctrl'}+K)"
 >
-	<Search class="w-4 h-4" />
-	<span class="hidden sm:inline text-sm">Search...</span>
-	<kbd class="hidden md:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-mono bg-background rounded border border-border">
+	<Search class="w-4 h-4 flex-shrink-0" />
+	<span class="hidden sm:inline text-sm font-medium">Search...</span>
+	<kbd class="hidden md:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-mono font-medium bg-muted/80 text-muted-foreground rounded border border-border/80 shadow-sm">
 		{isMac ? '⌘' : 'Ctrl'}K
 	</kbd>
 </button>
@@ -391,7 +400,7 @@
 		class="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4"
 		role="dialog"
 		aria-modal="true"
-		aria-labelledby="search-dialog-title"
+		aria-label="Global search"
 		tabindex="-1"
 		onclick={handleBackdropClick}
 		onkeydown={(e) => e.key === 'Escape' && close()}
