@@ -53,7 +53,7 @@
 	});
 
 	// Parse recent output into log entries
-	const logs = $derived.by(() => {
+	const logEntries = $derived.by(() => {
 		if (!agent.recentOutput) return [];
 
 		const lines = agent.recentOutput.split('\n').filter((line) => line.trim());
@@ -89,7 +89,7 @@
 	task={agent.hasWork ? agent.firstSubject || 'Working...' : 'No active work'}
 	meta={agent.address}
 >
-	<svelte:fragment slot="details">
+	{#snippet details()}
 		<dl class="space-y-2 text-sm">
 			<div class="flex justify-between">
 				<dt class="text-muted-foreground">Agent ID</dt>
@@ -120,15 +120,15 @@
 				</div>
 			{/if}
 		</dl>
-	</svelte:fragment>
+	{/snippet}
 
-	<svelte:fragment slot="logs">
-		{#if logs.length > 0}
-			{#each logs as log, i (log.id)}
+	{#snippet logs()}
+		{#if logEntries.length > 0}
+			{#each logEntries as entry, i (entry.id)}
 				<LogEntry
-					timestamp={log.timestamp}
-					level={log.level}
-					message={log.message}
+					timestamp={entry.timestamp}
+					level={entry.level}
+					message={entry.message}
 					delay={i * 20}
 				/>
 			{/each}
@@ -137,9 +137,9 @@
 				<p>No recent output available</p>
 			</div>
 		{/if}
-	</svelte:fragment>
+	{/snippet}
 
-	<svelte:fragment slot="log-actions">
+	{#snippet logActions()}
 		<form
 			method="POST"
 			action="?/peek"
@@ -160,9 +160,9 @@
 				{isSubmitting ? 'Refreshing...' : 'Refresh'}
 			</button>
 		</form>
-	</svelte:fragment>
+	{/snippet}
 
-	<svelte:fragment slot="actions">
+	{#snippet actions()}
 		<a
 			href="/agents"
 			class="px-3 py-1.5 text-sm bg-muted hover:bg-muted/80 rounded transition-colors"
@@ -232,9 +232,9 @@
 				</form>
 			{/if}
 		</div>
-	</svelte:fragment>
+	{/snippet}
 
-	<svelte:fragment slot="footer">
+	{#snippet footer()}
 		<!-- Feedback toast -->
 		{#if feedbackMessage}
 			<div
@@ -272,5 +272,5 @@
 				{isSubmitting ? 'Sending...' : 'Nudge'}
 			</button>
 		</form>
-	</svelte:fragment>
+	{/snippet}
 </AgentDetailLayout>
