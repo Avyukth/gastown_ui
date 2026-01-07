@@ -23,12 +23,12 @@
 	}
 </script>
 
-<QueueLayout title="Merge Queue" items={queueItems}>
-	<svelte:fragment slot="actions">
-		{#if data.error}
-			<span class="text-sm text-destructive">{data.error}</span>
-		{:else if data.items.length === 0}
-			<span class="text-sm text-muted-foreground">Queue empty</span>
-		{/if}
-	</svelte:fragment>
-</QueueLayout>
+{#snippet actions()}
+	{#if data.error}
+		<span class="text-sm text-destructive">{data.error}</span>
+	{:else if data.items.length === 0}
+		<span class="text-sm text-muted-foreground">Queue empty</span>
+	{/if}
+{/snippet}
+
+<QueueLayout title="Merge Queue" items={queueItems} {actions} />
