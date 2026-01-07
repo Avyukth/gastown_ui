@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { AgentCard, GridPattern } from '$lib/components';
+	import { AgentCard, GridPattern, SwipeableItem } from '$lib/components';
 	import { goto } from '$app/navigation';
+	import { Search, RefreshCw } from 'lucide-svelte';
 
 	const { data } = $props();
 
@@ -40,20 +41,40 @@
 				<!-- Mobile: Expandable cards, Desktop: Clickable grid -->
 				<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
 					{#each data.agents as agent}
-						<!-- Mobile view: Expandable with actions -->
+						<!-- Mobile view: Swipeable + Expandable with actions -->
 						<div class="md:hidden">
-							<AgentCard
-								name={agent.name}
-								task={agent.task}
-								status={agent.status}
-								progress={agent.progress}
-								meta={agent.meta}
-								uptime={agent.uptime}
-								errorMessage={agent.errorMessage}
-								expandable={true}
-								onInspect={() => handleInspect(agent.id)}
-								onReboot={() => handleReboot(agent.id)}
-							/>
+							<SwipeableItem
+								variant="card"
+								onSwipeLeft={() => handleInspect(agent.id)}
+								onSwipeRight={() => handleReboot(agent.id)}
+								threshold={60}
+								maxReveal={80}
+							>
+								<AgentCard
+									name={agent.name}
+									task={agent.task}
+									status={agent.status}
+									progress={agent.progress}
+									meta={agent.meta}
+									uptime={agent.uptime}
+									errorMessage={agent.errorMessage}
+									expandable={true}
+									onInspect={() => handleInspect(agent.id)}
+									onReboot={() => handleReboot(agent.id)}
+								/>
+								{#snippet leftActions()}
+									<div class="flex items-center gap-2 px-4 text-white">
+										<Search class="w-5 h-5" />
+										<span class="text-sm font-medium">Inspect</span>
+									</div>
+								{/snippet}
+								{#snippet rightActions()}
+									<div class="flex items-center gap-2 px-4 text-white">
+										<RefreshCw class="w-5 h-5" />
+										<span class="text-sm font-medium">Reboot</span>
+									</div>
+								{/snippet}
+							</SwipeableItem>
 						</div>
 						<!-- Desktop view: Clickable card -->
 						<a href="/agents/{agent.id}" class="hidden md:block transition-transform hover:scale-[1.02]">

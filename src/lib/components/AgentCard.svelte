@@ -16,7 +16,9 @@
 			card: [
 				'panel-glass overflow-hidden',
 				'transition-all duration-normal ease-out-expo',
-				'hover:shadow-elevation-3 hover:border-accent/40 hover:-translate-y-0.5'
+				'hover:shadow-elevation-3 hover:border-accent/40 hover:-translate-y-0.5',
+				// Touch optimizations: ripple effect + press state scale(0.98)
+				'touch-ripple active:scale-[0.98]'
 			].join(' '),
 			hero: [
 				'relative flex items-center justify-center p-6',
@@ -43,7 +45,8 @@
 				'px-3 py-2.5 rounded-lg',
 				'text-label-md font-medium',
 				'transition-all duration-fast ease-out-expo',
-				'active:scale-95 min-h-touch'
+				// Touch optimizations: 56px min height, scale(0.98) press state
+				'active:scale-[0.98] min-h-14'
 			].join(' '),
 			progressWrapper: 'flex items-center gap-3',
 			progressLabel: 'text-label-sm tabular-nums text-muted-foreground min-w-[3ch]'
