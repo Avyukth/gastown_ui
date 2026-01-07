@@ -290,7 +290,7 @@
 </script>
 
 <DashboardLayout title="Workflows" systemStatus="running">
-	<svelte:fragment slot="stats">
+	{#snippet stats()}
 		<!-- Tab navigation -->
 		<div class="col-span-full flex gap-1 p-1 bg-muted/30 rounded-lg">
 			{#each tabs as tab}
@@ -359,7 +359,7 @@
 				</div>
 			</div>
 		{/if}
-	</svelte:fragment>
+	{/snippet}
 
 	<!-- Molecules Tab Content -->
 	{#if activeTab === 'molecules'}
