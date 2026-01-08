@@ -5,7 +5,12 @@
 	 * LogEntry variant definitions using tailwind-variants
 	 */
 	export const logEntryVariants = tv({
-		base: 'flex items-start gap-3 py-2 px-3 border-b border-border animate-blur-fade-up',
+		base: [
+			'flex items-start gap-3 py-2 px-3 border-b border-border',
+			'animate-blur-fade-up',
+			'transition-colors duration-150',
+			'hover:bg-muted/30'
+		],
 		variants: {
 			level: {
 				INF: '',
