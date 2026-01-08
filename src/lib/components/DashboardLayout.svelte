@@ -120,7 +120,7 @@
 							{#if stats}
 								<div class="space-y-4">
 									<h2 class="text-lg font-semibold text-foreground">System Stats</h2>
-									<div class="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-1 gap-4">
+									<div class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 scrollbar-none xl:grid xl:grid-cols-1 xl:overflow-visible xl:snap-none xl:mx-0 xl:px-0">
 										{@render stats()}
 									</div>
 								</div>
@@ -175,3 +175,14 @@
 		{/if}
 	</div>
 </div>
+
+<style>
+	/* Hide scrollbar for horizontal stats scroll */
+	.scrollbar-none {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+	.scrollbar-none::-webkit-scrollbar {
+		display: none;
+	}
+</style>

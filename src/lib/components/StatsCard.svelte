@@ -12,7 +12,10 @@
 				'panel-glass p-6 rounded-lg',
 				'transition-all duration-200 ease-out',
 				'hover:scale-[1.02] hover:shadow-lg',
-				'cursor-default'
+				'cursor-default',
+				// Mobile horizontal scroll support
+				'min-w-[280px] flex-shrink-0 snap-center',
+				'xl:min-w-0 xl:flex-shrink xl:snap-align-none'
 			],
 			label: [
 				'text-xs text-muted-foreground uppercase tracking-wide'
