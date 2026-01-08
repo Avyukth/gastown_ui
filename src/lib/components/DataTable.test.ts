@@ -8,7 +8,7 @@ import { render, screen, fireEvent } from '@testing-library/svelte';
 import DataTable from './DataTable.svelte';
 
 // Sample data for tests
-interface TestRow {
+interface TestRow extends Record<string, unknown> {
 	id: string;
 	name: string;
 	status: string;
