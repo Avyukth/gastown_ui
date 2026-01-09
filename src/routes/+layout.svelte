@@ -115,11 +115,45 @@
 		}
 	}
 
-	// Poll for badge counts
+	// Apply theme on mount (persistence)
+	function applyStoredTheme() {
+		const stored = localStorage.getItem('gastown-theme') as 'light' | 'dark' | 'system' | null;
+		const theme = stored ?? 'system';
+		
+		let effectiveTheme: 'light' | 'dark';
+		if (theme === 'system') {
+			effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+		} else {
+			effectiveTheme = theme;
+		}
+		
+		const root = document.documentElement;
+		root.classList.remove('light', 'dark');
+		root.classList.add(effectiveTheme);
+	}
+
+	// Poll for badge counts and apply theme
 	onMount(() => {
+		// Apply stored theme immediately
+		applyStoredTheme();
+		
+		// Listen for system theme changes
+		const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+		const handleThemeChange = () => {
+			const stored = localStorage.getItem('gastown-theme');
+			if (stored === 'system') {
+				applyStoredTheme();
+			}
+		};
+		mediaQuery.addEventListener('change', handleThemeChange);
+		
 		fetchBadgeCounts();
 		const interval = setInterval(fetchBadgeCounts, 30000); // Poll every 30s
-		return () => clearInterval(interval);
+		
+		return () => {
+			clearInterval(interval);
+			mediaQuery.removeEventListener('change', handleThemeChange);
+		};
 	});
 
 	// Focus management and route announcements on navigation

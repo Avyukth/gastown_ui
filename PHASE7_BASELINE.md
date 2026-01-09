@@ -162,6 +162,69 @@ Current estimate based on bundle size:
 
 ---
 
+## Code Splitting Analysis
+
+### Current Architecture
+- **Framework**: SvelteKit 2.0 with `@sveltejs/adapter-static`
+- **Build Mode**: Static Site Generation (SSG)
+- **Bundle Strategy**: Single HTML file with JavaScript chunks
+- **SvelteKit Routing**: 26 routes defined (automatic code splitting at source)
+
+### Bundle Structure Findings
+
+**JavaScript Chunks** (22 total):
+- Main app chunk: 176 KB (D4opDtL5.js) - contains layout + hydration
+- Icon library: 52 KB (lucide-svelte)
+- App utilities: 44 KB + 40 KB (various utilities)
+- Route-specific: 8KB-10KB each (smaller chunks)
+
+**Analysis**: 
+- SvelteKit automatically creates chunks per route
+- Static adapter combines them into precompressed bundles
+- Precompression (gzip/brotli) is working ✅
+- Main bundle contains layout which is necessary for all routes
+
+### Optimization Constraints with Static Adapter
+
+With the static adapter (`fallback: 'index.html'`):
+- All routes render to single `index.html` (SPA mode)
+- Route code splitting at bundle level doesn't provide benefit
+- Code must be downloaded upfront for client-side routing
+- **Constraint**: Cannot do route-based lazy loading like SSR
+
+### Optimization Opportunities (Applicable)
+
+1. ✅ **Component Lazy Loading** (Svelte 5 native)
+   - Use `lazy()` for rarely-accessed modal components
+   - Example: Workflows modal, advanced filters
+   - Expected: 2-5% reduction
+   - Status: Identified, implementation candidate
+
+2. ✅ **Icon Library Optimization**
+   - Current: 52 KB (all lucide-svelte icons)
+   - Opportunity: Tree-shake unused icons
+   - Expected: 5-10% reduction
+   - Status: Needs analysis
+
+3. ✅ **Dynamic Imports for Heavy Utilities**
+   - Current: All utilities bundled upfront
+   - Opportunity: Defer non-critical utilities
+   - Expected: 3-7% reduction
+   - Status: Identified
+
+4. ⚠️ **CSS Optimization** (Limited)
+   - Current: 14.58 KB (already well-optimized by Tailwind)
+   - Opportunity: Critical CSS extraction (minimal gain)
+   - Expected: <1% reduction
+   - Status: Not recommended (diminishing returns)
+
+5. ⚠️ **Route-Level Code Splitting** (Not Applicable)
+   - Not viable with static adapter (SPA mode)
+   - Would only benefit SSR or hydrid rendering
+   - Status: Deferred to potential future SSR migration
+
+---
+
 ## Next Steps
 
 ### Phase 7.1.1: Code Splitting (Immediate)
