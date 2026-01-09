@@ -14,7 +14,7 @@
 	export const agentCardVariants = tv({
 		slots: {
 			card: [
-				'panel-glass overflow-hidden',
+				'panel-glass overflow-hidden border-l-4 border-l-transparent',
 				'transition-all duration-normal ease-out-expo',
 				'hover:shadow-elevation-3 hover:border-accent/40 hover:-translate-y-0.5',
 				// Touch optimizations: ripple effect + press state scale(0.98)
@@ -86,6 +86,14 @@
 					badgeDot: 'bg-status-online'
 				}
 			},
+			role: {
+				coordinator: { card: 'border-l-info' },
+				'health-check': { card: 'border-l-success' },
+				witness: { card: 'border-l-[#8B5CF6]' },
+				refinery: { card: 'border-l-primary' },
+				crew: { card: 'border-l-muted-foreground' },
+				undefined: {}
+			},
 			expanded: {
 				true: { details: 'max-h-96 opacity-100' },
 				false: { details: 'max-h-0 opacity-0' }
@@ -98,21 +106,31 @@
 		defaultVariants: {
 			status: 'idle',
 			expanded: false,
-			compact: false
+			compact: false,
+			role: 'undefined'
 		}
 	});
+
+	/**
+	 * Agent role type for color-coded left borders
+	 */
+	export type AgentRole = 'coordinator' | 'health-check' | 'witness' | 'refinery' | 'crew' | undefined;
 
 	/**
 	 * Props type derived from variant definitions
 	 */
 	export type AgentCardProps = VariantProps<typeof agentCardVariants> & {
 		name: string;
+		role?: AgentRole;
 		task?: string;
 		meta?: string;
 		progress?: number;
 		class?: string;
-		// Mobile-rich props
+		// Enhanced card display props
 		uptime?: string;
+		uptimePercent?: number;
+		efficiency?: number;
+		lastSeen?: string;
 		errorMessage?: string;
 		expandable?: boolean;
 		onInspect?: () => void;
@@ -136,7 +154,16 @@
 		Zap,
 		Moon,
 		AlertCircle,
-		CheckCircle2
+		CheckCircle2,
+		// Role icons
+		Briefcase,
+		Heart,
+		Shield,
+		Flame,
+		Users,
+		// Metric icons
+		TrendingUp,
+		Eye
 	} from 'lucide-svelte';
 
 	// Component props with slot snippets
@@ -148,13 +175,17 @@
 
 	let {
 		name,
+		role,
 		status = 'idle',
 		task = '',
 		meta = '',
 		progress = 0,
 		class: className = '',
-		// Mobile-rich props
+		// Enhanced card display props
 		uptime = '',
+		uptimePercent,
+		efficiency,
+		lastSeen = '',
 		errorMessage = '',
 		expandable = false,
 		compact = false,
@@ -170,7 +201,7 @@
 	let isExpanded = $state(false);
 
 	// Derived styles
-	const styles = $derived(agentCardVariants({ status, expanded: isExpanded, compact }));
+	const styles = $derived(agentCardVariants({ status, expanded: isExpanded, compact, role: role || 'undefined' }));
 
 	// Map status to StatusIndicator status type
 	const statusIndicatorMap = {
@@ -206,6 +237,27 @@
 
 	// Get the icon component for current status
 	const StatusIcon = $derived(statusIcons[status ?? 'idle']);
+
+	// Role icon mapping
+	const roleIcons: Record<string, typeof Briefcase> = {
+		coordinator: Briefcase,
+		'health-check': Heart,
+		witness: Shield,
+		refinery: Flame,
+		crew: Users
+	};
+
+	// Get the icon component for current role
+	const RoleIcon = $derived(role && roleIcons[role] ? roleIcons[role] : undefined);
+
+	// Role label mapping for display
+	const roleLabels: Record<string, string> = {
+		coordinator: 'Coordinator',
+		'health-check': 'Health Check',
+		witness: 'Witness',
+		refinery: 'Refinery',
+		crew: 'Crew'
+	};
 
 	// Toggle expanded state
 	function toggleExpanded() {
@@ -245,7 +297,7 @@
 		<header class={styles.header()}>
 			<div class="flex items-center gap-2 min-w-0">
 				<StatusIndicator status={statusIndicatorMap[status ?? 'idle']} size="md" />
-				<h3 class="font-medium text-foreground truncate">{name}</h3>
+				<h3 class="text-base font-semibold text-foreground truncate">{name}</h3>
 			</div>
 			<div class="flex items-center gap-2 flex-shrink-0">
 				<span class={styles.badge()}>
@@ -261,8 +313,16 @@
 			</div>
 		</header>
 
+		<!-- Role Display (with icon) -->
+		{#if RoleIcon}
+			<div class="flex items-center gap-1.5 text-xs text-muted-foreground">
+				<svelte:component this={RoleIcon} class="w-3 h-3" strokeWidth={1.5} />
+				<span>{roleLabels[role || '']}</span>
+			</div>
+		{/if}
+
 		<!-- Body: Task + Metadata -->
-		{#if task || meta || uptime}
+		{#if task || meta || uptime || uptimePercent || efficiency || lastSeen}
 			<div class="space-y-2">
 				{#if task}
 					<p class="text-sm text-foreground/80 line-clamp-2">{task}</p>
@@ -278,6 +338,27 @@
 						<span class="flex items-center gap-1">
 							<Clock class="w-3.5 h-3.5" />
 							{uptime}
+						</span>
+					{/if}
+				</div>
+				<!-- Metrics row: Uptime %, Efficiency, Last Seen -->
+				<div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground pt-1">
+					{#if uptimePercent !== undefined}
+						<span class="flex items-center gap-1">
+							<TrendingUp class="w-3.5 h-3.5" />
+							{uptimePercent.toFixed(1)}% uptime
+						</span>
+					{/if}
+					{#if efficiency !== undefined}
+						<span class="flex items-center gap-1">
+							<Zap class="w-3.5 h-3.5" />
+							{efficiency}% efficient
+						</span>
+					{/if}
+					{#if lastSeen}
+						<span class="flex items-center gap-1">
+							<Eye class="w-3.5 h-3.5" />
+							{lastSeen}
 						</span>
 					{/if}
 				</div>

@@ -1,7 +1,7 @@
 /**
  * Mail Inbox API Endpoint
  *
- * Fetches mail inbox data from gt mail command.
+ * Fetches mail inbox data from bd list command.
  * Returns messages with parsed type information.
  */
 
@@ -12,17 +12,19 @@ import { promisify } from 'node:util';
 
 const execAsync = promisify(exec);
 
-interface GtMailMessage {
+interface BdMailBead {
 	id: string;
-	from: string;
-	to: string;
-	subject: string;
-	body: string;
-	timestamp: string;
-	read: boolean;
-	priority: string;
-	type: string;
-	thread_id: string;
+	title: string;
+	description: string;
+	status: string;
+	priority: number;
+	issue_type: string;
+	assignee: string;
+	created_at: string;
+	created_by: string;
+	updated_at: string;
+	labels: string[];
+	ephemeral: boolean;
 }
 
 interface MailMessage {
@@ -57,34 +59,40 @@ function parseMessageType(subject: string): string {
 }
 
 /**
- * Transform raw mail message to display format
+ * Extract thread ID from labels
  */
-function transformMessage(msg: GtMailMessage): MailMessage {
+function getThreadId(labels: string[]): string {
+	const threadLabel = labels.find((l) => l.startsWith('thread:'));
+	return threadLabel ? threadLabel.replace('thread:', '') : '';
+}
+
+/**
+ * Transform bd list bead to mail message format
+ */
+function transformBead(bead: BdMailBead): MailMessage {
 	return {
-		id: msg.id,
-		from: msg.from,
-		subject: msg.subject,
-		body: msg.body,
-		timestamp: msg.timestamp,
-		read: msg.read,
-		priority: msg.priority,
-		messageType: parseMessageType(msg.subject),
-		threadId: msg.thread_id
+		id: bead.id,
+		from: bead.created_by,
+		subject: bead.title,
+		body: bead.description || '',
+		timestamp: bead.created_at,
+		read: bead.status !== 'open', // open = unread
+		priority: bead.priority === 1 ? 'high' : bead.priority === 3 ? 'low' : 'normal',
+		messageType: parseMessageType(bead.title),
+		threadId: getThreadId(bead.labels || [])
 	};
 }
 
 export const GET: RequestHandler = async () => {
 	try {
-		const { stdout } = await execAsync('gt mail inbox --json', {
-			timeout: 5000
-		});
+		// Use bd list directly since gt mail inbox hangs in Node.js child_process
+		const { stdout } = await execAsync('bd list --type=message --status=open --json');
 
-		const rawMessages: GtMailMessage[] | null = JSON.parse(stdout);
-		const messages = (rawMessages ?? []).map(transformMessage);
+		const rawBeads: BdMailBead[] = JSON.parse(stdout) || [];
+		const messages = rawBeads.map(transformBead);
 
-		// Sort: unread first, then by timestamp descending
+		// Sort by timestamp descending (newest first)
 		messages.sort((a, b) => {
-			if (a.read !== b.read) return a.read ? 1 : -1;
 			return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
 		});
 

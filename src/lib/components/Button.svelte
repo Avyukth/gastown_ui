@@ -14,11 +14,11 @@
 			'font-medium text-sm',
 			'rounded-md',
 			'ring-offset-background',
-			'transition-all duration-150 ease-out',
+			'transition-all duration-300 ease-out',
 			'hover:-translate-y-px hover:shadow-sm',
 			'active:translate-y-0 active:shadow-none',
 			'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-			'disabled:pointer-events-none disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none',
+			'disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none',
 			'[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0'
 		],
 		variants: {
@@ -27,6 +27,13 @@
 					'bg-primary text-primary-foreground',
 					'hover:bg-primary/90',
 					'active:bg-primary/80'
+				],
+				primary: [
+					'bg-primary text-primary-foreground',
+					'rounded-xl',
+					'hover:bg-gradient-to-br hover:from-primary hover:to-primary/80 hover:shadow-md',
+					'active:bg-primary/80',
+					'focus-visible:ring-primary'
 				],
 				destructive: [
 					'bg-destructive text-destructive-foreground',
@@ -57,7 +64,8 @@
 				default: 'h-10 px-4 py-2',
 				sm: 'h-9 rounded-md px-3',
 				lg: 'h-11 rounded-md px-8',
-				icon: 'h-12 w-12 min-h-touch min-w-touch'
+				icon: 'h-12 w-12 min-h-touch min-w-touch',
+				cta: 'h-12 px-6 md:h-11'
 			},
 			fullWidth: {
 				true: 'w-full',
@@ -85,12 +93,14 @@
 
 <script lang="ts">
 	import { cn } from '$lib/utils';
+	import { hapticLight } from '$lib/utils/haptics';
 	import type { Snippet } from 'svelte';
 
 	interface Props extends Omit<HTMLButtonAttributes, keyof ButtonProps>, ButtonProps {
 		children?: Snippet;
 		iconLeft?: Snippet;
 		iconRight?: Snippet;
+		haptic?: boolean;
 	}
 
 	let {
@@ -104,6 +114,8 @@
 		children,
 		iconLeft,
 		iconRight,
+		haptic = true,
+		onclick,
 		...restProps
 	}: Props = $props();
 
@@ -117,6 +129,14 @@
 	const ariaLabel = $derived(
 		loading ? 'Loading...' : restProps['aria-label']
 	);
+
+	// Handle click with haptic feedback
+	function handleClick(event: MouseEvent & { currentTarget: HTMLButtonElement }) {
+		if (haptic && !isDisabled) {
+			hapticLight();
+		}
+		onclick?.(event);
+	}
 </script>
 
 <button
@@ -126,6 +146,7 @@
 	aria-disabled={isDisabled}
 	aria-label={ariaLabel}
 	aria-busy={loading}
+	onclick={handleClick}
 	{...restProps}
 >
 	{#if loading}

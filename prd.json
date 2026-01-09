@@ -1,0 +1,847 @@
+{
+  "projectName": "Gas Town UI - Design Improvements Phase 1",
+  "projectDescription": "Comprehensive UI/UX improvements across desktop, tablet, and mobile based on design audit.",
+  "branchName": "feat/ui-improvements-phase-1",
+  "createdAt": "2026-01-09",
+  "phases": {
+    "phase1": "Critical Fixes (Mobile & Responsive Layout)",
+    "phase2": "Design System (Icons, Colors, Typography)",
+    "phase3": "Component Improvements",
+    "phase4": "Mobile UX Polish"
+  },
+  "userStories": [
+    {
+      "id": "UI-001",
+      "title": "Fix Floating Search Button Position on Mobile",
+      "priority": "P0-Critical",
+      "phase": "phase1",
+      "category": "Responsive Layout",
+      "scope": "Apply CSS fix to position floating search button correctly on mobile (avoid content overlap). Move to bottom: calc(80px + env(safe-area-inset-bottom))",
+      "passes": true,
+      "estimatedPoints": 2,
+      "acceptanceCriteria": [
+        "Search button positioned above bottom nav on mobile",
+        "Button doesn't overlap content on small screens",
+        "Safe area insets respected on iOS (notch, home indicator)",
+        "Button visible on all viewport sizes (375px+)",
+        "Verified with dev-browser skill (375x667 mobile viewport)"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "npm run check",
+        "npm run test",
+        "dev-browser: navigate to http://localhost:5173, verify search button position at 375x667"
+      ]
+    },
+    {
+      "id": "UI-002",
+      "title": "Hide Sidebar on Mobile, Implement Drawer",
+      "priority": "P0-Critical",
+      "phase": "phase1",
+      "category": "Responsive Layout",
+      "scope": "Hide sidebar on mobile (max-width: 768px), make it a sliding drawer that opens from left. Apply CSS transitions and backdrop.",
+      "passes": true,
+      "estimatedPoints": 4,
+      "acceptanceCriteria": [
+        "Sidebar hidden on screens ≤768px",
+        "Main content spans full width on mobile",
+        "Sidebar slides in from left when toggled",
+        "Backdrop dims content when sidebar open",
+        "Tap backdrop closes sidebar",
+        "Sidebar toggle button visible on mobile",
+        "Smooth CSS transitions (0.3s ease)",
+        "Verified responsive: desktop (1920x1080), tablet (768x1024), mobile (375x667)"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: test at 375x667, 768x1024, 1920x1080 viewports"
+      ]
+    },
+    {
+      "id": "UI-003",
+      "title": "Increase Bottom Navigation Touch Targets",
+      "priority": "P0-Critical",
+      "phase": "phase1",
+      "category": "Responsive Layout",
+      "scope": "Bottom nav height to 64px, nav items minimum 48px height, adequate padding. All touch targets ≥44x44px.",
+      "passes": true,
+      "estimatedPoints": 2,
+      "acceptanceCriteria": [
+        "Bottom nav height: 64px (including safe area)",
+        "Each nav item: minimum 48px height",
+        "Touch target size: ≥44x44px",
+        "Padding balanced (8px vertical, 12px horizontal)",
+        "Content doesn't overlap nav",
+        "Verified on iOS (safe-area-inset-bottom) and Android"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: verify touch targets on mobile (375x667)"
+      ]
+    },
+    {
+      "id": "UI-004",
+      "title": "Icon System Overhaul - Replace with Lucide Icons",
+      "priority": "P1-High",
+      "phase": "phase2",
+      "category": "Global Design System",
+      "scope": "Replace all sidebar icons: Work (target→briefcase-list), Workflows (flask→git-branch), Dogs (gear→shield), Rigs (chart→server). Ensure consistent 20px size, 1.5px stroke, orange active state (#F97316).",
+      "passes": true,
+      "estimatedPoints": 5,
+      "acceptanceCriteria": [
+        "All icons from Lucide library (already installed)",
+        "Work icon changed to briefcase-list or checkbox-list",
+        "Workflows icon changed to git-branch",
+        "Dogs icon changed to shield",
+        "Rigs icon changed to server",
+        "All icons: 20px size, 1.5px stroke weight",
+        "Active state: #F97316 (orange) fill/stroke",
+        "Inactive state: #6B7280 (gray)",
+        "Hover state: smooth 200ms color transition",
+        "All icons have aria-labels",
+        "Verified in browser at desktop, tablet, mobile"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: verify icons on all breakpoints"
+      ]
+    },
+    {
+      "id": "UI-005",
+      "title": "Page Title Standardization Across All Pages",
+      "priority": "P1-High",
+      "phase": "phase2",
+      "category": "Global Design System",
+      "scope": "Standardize page titles: use Title Case, 24px semi-bold on desktop/20px on mobile, consistent left alignment, remove orange accent bar or apply consistently.",
+      "passes": true,
+      "estimatedPoints": 4,
+      "acceptanceCriteria": [
+        "All page titles use Title Case (e.g., 'Mail Inbox', not 'MAIL INBOX')",
+        "Title font: 24px semi-bold (desktop), 20px semi-bold (mobile)",
+        "All titles left-aligned",
+        "Orange accent bar: either removed OR applied consistently to all pages",
+        "Subtitle/description: 14px muted gray (#6B7280)",
+        "Consistent spacing above/below titles",
+        "Verified on: Dashboard, Mail, Work, Agents, Workflows, Rigs, Queue, Convoys"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: verify all main pages for title consistency"
+      ]
+    },
+    {
+      "id": "UI-006",
+      "title": "Color System Enhancement - Status Colors",
+      "priority": "P1-High",
+      "phase": "phase2",
+      "category": "Global Design System",
+      "scope": "Define and apply status colors globally. Success: #22C55E, Warning: #F59E0B, Error: #EF4444, Info: #3B82F6. Primary CTA: #F97316. Apply to badges, indicators, buttons.",
+      "passes": true,
+      "estimatedPoints": 4,
+      "acceptanceCriteria": [
+        "Status colors defined in CSS/Tailwind theme",
+        "Success states use #22C55E",
+        "Warning states use #F59E0B",
+        "Error states use #EF4444",
+        "Info states use #3B82F6",
+        "Primary CTAs use #F97316",
+        "Unread indicators: bold blue dot (8px) + semi-bold text",
+        "Status colors applied to: badges, buttons, indicators, spinners",
+        "Colors verified for contrast (WCAG AA minimum 4.5:1)",
+        "Verified across light mode"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: verify color consistency across components"
+      ]
+    },
+    {
+      "id": "UI-007",
+      "title": "Typography Scale Implementation",
+      "priority": "P2-Medium",
+      "phase": "phase2",
+      "category": "Global Design System",
+      "scope": "Define typography scale. H1: 24px/1.2 semi-bold, H2: 20px/1.3 semi-bold, H3: 16px/1.4 medium, Body: 14px/1.5, Small: 12px/1.4, Code: JetBrains Mono 13px.",
+      "passes": true,
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "Heading 1: 24px, line-height 1.2, font-weight 600",
+        "Heading 2: 20px, line-height 1.3, font-weight 600",
+        "Heading 3: 16px, line-height 1.4, font-weight 500",
+        "Body text: 14px, line-height 1.5, font-weight 400",
+        "Small/Caption: 12px, line-height 1.4, font-weight 400",
+        "Code/Monospace: JetBrains Mono, 13px",
+        "Section labels: 10px, uppercase, letter-spacing 0.1em, muted",
+        "Scale applied consistently across all pages"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: verify typography on all pages"
+      ]
+    },
+    {
+      "id": "UI-008",
+      "title": "Agent Cards Enhancement - Visual Hierarchy",
+      "priority": "P1-High",
+      "phase": "phase3",
+      "category": "Dashboard",
+      "scope": "Redesign agent cards: agent name (16px semi-bold), role icon (12px muted), status badge with pulse animation for running, role-specific left border (4px) with color coding (Coordinator: Blue, Health-check: Green, Witness: Purple, Refinery: Orange, Crew: Gray).",
+      "passes": true,
+      "estimatedPoints": 5,
+      "acceptanceCriteria": [
+        "Agent name: 16px, semi-bold, primary text",
+        "Role: displayed with icon (12px, muted color)",
+        "Status badge: shows IDLE/RUNNING with appropriate colors",
+        "Running agents: green pulse animation on status dot",
+        "Cards have hover state: subtle elevation increase",
+        "Left border: 4px, color-coded by role",
+        "Coordinator border: blue (#3B82F6)",
+        "Health-check border: green (#22C55E)",
+        "Witness border: purple (#8B5CF6)",
+        "Refinery border: orange (#F97316)",
+        "Crew border: gray (#6B7280)",
+        "Verified on Dashboard page at all breakpoints"
+      ],
+      "dependencies": [
+        "UI-004"
+      ],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: navigate to Dashboard, verify agent cards"
+      ]
+    },
+    {
+      "id": "UI-009",
+      "title": "Work Page Form Layout Optimization",
+      "priority": "P1-High",
+      "phase": "phase3",
+      "category": "Work Page",
+      "scope": "Optimize form: max-width 640px, centered, required fields marked with red asterisk, distinct dropdown styling with chevron icon, 24px vertical section spacing, 12px field spacing.",
+      "passes": true,
+      "estimatedPoints": 4,
+      "acceptanceCriteria": [
+        "Form container: max-width 640px",
+        "Form centered with adequate margins",
+        "Required fields: marked with red asterisk (*)",
+        "Select dropdowns: chevron-down icon visible",
+        "Select styling: distinct from text inputs (border/background)",
+        "Section spacing: 24px vertical",
+        "Field spacing within sections: 12px vertical",
+        "Form sections logically grouped in cards",
+        "Responsive: works on mobile (375px+), tablet, desktop",
+        "Verified on Work page"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: navigate to Work page, test form at multiple breakpoints"
+      ]
+    },
+    {
+      "id": "UI-010",
+      "title": "CTA Button Enhancement - Primary Actions",
+      "priority": "P1-High",
+      "phase": "phase3",
+      "category": "Work Page",
+      "scope": "Enhance primary CTA buttons: background #F97316 with white text, hover (darken 10%), active (darken 15%), loading spinner state, disabled (50% opacity), minimum 120px width, 12px 24px padding.",
+      "passes": true,
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "Primary CTA: #F97316 background, white text",
+        "Hover state: 10% darker (#E85A1A or similar)",
+        "Active state: 15% darker (#DC4D14 or similar)",
+        "Loading state: spinner icon, text hidden",
+        "Disabled state: 50% opacity",
+        "Minimum width: 120px",
+        "Padding: 12px 24px",
+        "Smooth transitions (200ms)",
+        "Applied to: Create Issue, Submit, etc.",
+        "Verified on Work page and across app"
+      ],
+      "dependencies": [
+        "UI-006"
+      ],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: test button states on Work page"
+      ]
+    },
+    {
+      "id": "UI-011",
+      "title": "Issue Type Selection Component Enhancement",
+      "priority": "P2-Medium",
+      "phase": "phase3",
+      "category": "Work Page",
+      "scope": "Enhance issue type checkboxes: hover background (#F3F4F6), selected items have orange left border (3px), checkmarks orange, grouped in card with border, descriptive icons.",
+      "passes": true,
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "Checkbox items: hover background #F3F4F6",
+        "Selected items: 3px orange (#F97316) left border",
+        "Checkmarks: orange color",
+        "Grouped in card with subtle border",
+        "Each issue type has descriptive icon",
+        "Icons from Lucide library",
+        "Good visual hierarchy and feedback",
+        "Verified on Work page"
+      ],
+      "dependencies": [
+        "UI-004",
+        "UI-006"
+      ],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: navigate to Work page, test issue type selection"
+      ]
+    },
+    {
+      "id": "UI-012",
+      "title": "Workflow Progress Visualization - Circular Indicators",
+      "priority": "P2-Medium",
+      "phase": "phase3",
+      "category": "Dashboard",
+      "scope": "Add circular progress rings for workflow items: 24px diameter, brand orange fill, clock icon for 'Pending', checkmark for 'Completed', hover tooltip, clickable to navigate.",
+      "passes": true,
+      "estimatedPoints": 4,
+      "acceptanceCriteria": [
+        "Percentage workflows: circular progress ring (24px diameter)",
+        "Progress ring: brand orange (#F97316) fill",
+        "Pending status: clock icon + yellow dot",
+        "Completed status: checkmark icon + green dot",
+        "Hover: tooltip with workflow details",
+        "Clickable: navigates to workflow detail",
+        "Icons from Lucide library",
+        "Smooth animations",
+        "Verified on Dashboard"
+      ],
+      "dependencies": [
+        "UI-004",
+        "UI-006"
+      ],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: navigate to Dashboard, verify workflow progress"
+      ]
+    },
+    {
+      "id": "UI-013",
+      "title": "System Stats Cards - Icon & Sparkline",
+      "priority": "P2-Medium",
+      "phase": "phase3",
+      "category": "Dashboard",
+      "scope": "Enhance stats cards: include descriptive icon, stat value 32px bold, up/down arrow indicator for changes, tooltip for comparison period, 48px wide sparkline showing 7-day trend, clickable navigation.",
+      "passes": true,
+      "estimatedPoints": 5,
+      "acceptanceCriteria": [
+        "Each stat card: descriptive icon (12px, muted)",
+        "Stat value: 32px, bold",
+        "Percentage change: up/down arrow indicator",
+        "Tooltip: explains comparison ('vs. yesterday', 'vs. last week')",
+        "Sparkline: 48px wide, 24px tall, 7-day trend line",
+        "Sparkline color: matches stat type (success/warning/error)",
+        "Cards clickable: navigate to detail page",
+        "Responsive on all breakpoints",
+        "Verified on Dashboard"
+      ],
+      "dependencies": [
+        "UI-004",
+        "UI-006"
+      ],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: navigate to Dashboard, verify stats cards"
+      ]
+    },
+    {
+      "id": "UI-014",
+      "title": "Agents Page - Card Redesign with Role Icons",
+      "priority": "P1-High",
+      "phase": "phase3",
+      "category": "Agents Page",
+      "scope": "Redesign agent cards: display avatar/icon (40px), role-specific icons, status labels clear, uptime percentage with label, efficiency score, last seen timestamp, all with consistent styling.",
+      "passes": true,
+      "estimatedPoints": 5,
+      "acceptanceCriteria": [
+        "Card displays agent avatar/icon (40px)",
+        "Role displayed with icon (role-specific)",
+        "Status: clear label and color coding",
+        "Uptime: percentage with label ('99.5% uptime')",
+        "Efficiency: score with visual indicator",
+        "Last seen: timestamp or relative time",
+        "Consistent styling with agent cards enhancement",
+        "Hover state: subtle elevation",
+        "Responsive on all breakpoints",
+        "Verified on Agents page"
+      ],
+      "dependencies": [
+        "UI-004",
+        "UI-008"
+      ],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: navigate to Agents page, verify card redesign"
+      ]
+    },
+    {
+      "id": "UI-015",
+      "title": "Mail Page - Split View Layout on Desktop",
+      "priority": "P0-Critical",
+      "phase": "phase1",
+      "category": "Mail Page",
+      "scope": "Implement split-view layout for desktop: list on left (30%), content on right (70%), draggable divider, responsive collapse on tablet/mobile.",
+      "passes": true,
+      "estimatedPoints": 4,
+      "acceptanceCriteria": [
+        "Desktop (≥1024px): list left (30%), content right (70%)",
+        "List: scrollable independently",
+        "Content: scrollable independently",
+        "Draggable divider: resize columns (min 200px list, min 400px content)",
+        "Column widths persist (localStorage or session)",
+        "Tablet (768px-1023px): stack vertically or hide list",
+        "Mobile (≤767px): full-width list view, swipe to detail",
+        "Smooth transitions when resizing",
+        "Verified on Mail page at all breakpoints"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: test Mail page at 1920x1080, 768x1024, 375x667"
+      ]
+    },
+    {
+      "id": "UI-016",
+      "title": "Unread Indicators Enhancement - Bold Blue Dots",
+      "priority": "P1-High",
+      "phase": "phase3",
+      "category": "Global UI Elements",
+      "scope": "Enhance unread indicators: bold blue dot (8px) + semi-bold text, applied consistently across Mail, Messages, Notifications. Clear when item marked as read.",
+      "passes": true,
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "Unread items: bold blue dot (8px, #3B82F6)",
+        "Text: semi-bold (#600 weight)",
+        "Indicator on left or right (consistent per page)",
+        "Fades/removes when marked as read",
+        "Applied to: Mail, Messages, Notifications, Comments",
+        "Matches color system (#3B82F6 for info/unread)",
+        "Verified on relevant pages"
+      ],
+      "dependencies": [
+        "UI-006"
+      ],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: verify unread indicators on Mail page"
+      ]
+    },
+    {
+      "id": "UI-017",
+      "title": "Remove or Reduce Background Dot Patterns",
+      "priority": "P2-Medium",
+      "phase": "phase2",
+      "category": "Global Design System",
+      "scope": "Remove or reduce opacity of background dot patterns to <5%. Replace with subtle elevation (shadow-sm) on cards instead.",
+      "passes": true,
+      "estimatedPoints": 2,
+      "acceptanceCriteria": [
+        "Background dot patterns removed OR opacity <5%",
+        "Card backgrounds: use shadow-sm for elevation",
+        "Clean, minimal aesthetic",
+        "Verified across all pages"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: verify no distracting dot patterns"
+      ]
+    },
+    {
+      "id": "UI-018",
+      "title": "Bottom Navigation 'More' Menu - Slide-Up Sheet",
+      "priority": "P1-High",
+      "phase": "phase4",
+      "category": "Mobile Navigation",
+      "scope": "Implement 'More' menu as slide-up sheet: backdrop dims content, tap backdrop closes, swipe down closes, menu items 52px+ height, active page highlighted, focus trap, Escape closes.",
+      "passes": true,
+      "estimatedPoints": 6,
+      "acceptanceCriteria": [
+        "More menu slides up smoothly from bottom",
+        "Backdrop dims content behind menu",
+        "Tap backdrop closes menu",
+        "Menu items: minimum 52px height",
+        "Active page highlighted in More menu",
+        "More button shows indicator when active page in menu",
+        "Swipe down gesture closes menu",
+        "Menu respects safe area insets",
+        "Focus trap within open menu",
+        "Escape key closes menu",
+        "Smooth CSS transitions",
+        "Verified on mobile (375x667)"
+      ],
+      "dependencies": [
+        "UI-003"
+      ],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: test More menu on mobile, verify all interactions"
+      ]
+    },
+    {
+      "id": "UI-019",
+      "title": "Touch Target Sizing Across All Interactive Elements",
+      "priority": "P0-Critical",
+      "phase": "phase4",
+      "category": "Accessibility & Mobile",
+      "scope": "Ensure all interactive elements meet touch target minimums: Bottom nav 48x48px, Sidebar items 44x48px, Icon buttons 44x44px, List items 48px+, Form inputs 44px+, Checkboxes 44x44px tap area.",
+      "passes": true,
+      "estimatedPoints": 4,
+      "acceptanceCriteria": [
+        "Bottom nav items: 48x48px minimum",
+        "Sidebar nav items: 44x44px minimum (full width × 48px)",
+        "Icon buttons: 44x44px minimum",
+        "List items: 48px height minimum",
+        "Form inputs: 44px height minimum",
+        "Checkboxes: 44x44px tap area (visual smaller OK)",
+        "Radio buttons: 44x44px tap area",
+        "Close/dismiss buttons: 44x44px",
+        "Touch targets don't overlap (8px gap minimum)",
+        "Verified across mobile, tablet, desktop"
+      ],
+      "dependencies": [
+        "UI-002",
+        "UI-003"
+      ],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: verify touch targets on mobile"
+      ]
+    },
+    {
+      "id": "UI-020",
+      "title": "Loading States & Skeleton Loaders",
+      "priority": "P1-High",
+      "phase": "phase1",
+      "category": "UX Feedback",
+      "scope": "Implement skeleton loaders for async content. Show placeholder lines while loading. Apply to: agent cards, mail lists, work items, stats cards.",
+      "passes": true,
+      "estimatedPoints": 4,
+      "acceptanceCriteria": [
+        "Skeleton loaders for main content areas",
+        "Placeholder lines: varying widths (60%, 80%, 40%)",
+        "Loading state: subtle animation (pulsing or shimmer)",
+        "Applied to: agent cards, mail lists, work items, stats",
+        "Removed when real content loads",
+        "Fallback text: 'Loading...' if skeletons fail",
+        "Verified on Dashboard, Mail, Agents pages"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "npm run check",
+        "npm run test",
+        "dev-browser: verify loading states"
+      ]
+    },
+    {
+      "id": "UI-021",
+      "title": "Error States & Retry Buttons",
+      "priority": "P1-High",
+      "phase": "phase3",
+      "category": "UX Feedback",
+      "scope": "Implement error state designs: error icon, message text, retry button. Applied consistently across pages when data fetch fails.",
+      "passes": true,
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "Error state layout: icon + message + retry button",
+        "Error icon: #EF4444 (red) color",
+        "Message: clear description of what failed",
+        "Retry button: same styling as primary CTA",
+        "Applied to: agent cards, mail, work items, stats",
+        "User-friendly messages (avoid technical jargon)",
+        "Verified across pages"
+      ],
+      "dependencies": [
+        "UI-006",
+        "UI-010"
+      ],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: test error states"
+      ]
+    },
+    {
+      "id": "UI-022",
+      "title": "Empty State Designs & Illustrations",
+      "priority": "P2-Medium",
+      "phase": "phase3",
+      "category": "UX Feedback",
+      "scope": "Design and implement empty states for pages with no data: Mail (no messages), Agents (none running), Workflows (no workflows). Include icon, message, and optional CTA.",
+      "passes": true,
+      "estimatedPoints": 4,
+      "acceptanceCriteria": [
+        "Empty state layouts: icon + message + optional CTA",
+        "Icons: illustrative, 64px size",
+        "Message: friendly and helpful",
+        "CTA: suggests next action (e.g., 'Create First Workflow')",
+        "Applied to: Mail, Agents, Workflows, Queue, etc.",
+        "Consistent styling across pages",
+        "Verified on all major pages"
+      ],
+      "dependencies": [
+        "UI-004"
+      ],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: verify empty states"
+      ]
+    },
+    {
+      "id": "UI-023",
+      "title": "Responsive Layout Bug Fixes - Content Overflow",
+      "priority": "P0-Critical",
+      "phase": "phase1",
+      "category": "Responsive Layout",
+      "scope": "Fix content overflow issues: page-content min-width 0 & overflow-x hidden, card max-width 100% & overflow hidden, ensure no horizontal scroll on mobile.",
+      "passes": true,
+      "estimatedPoints": 2,
+      "acceptanceCriteria": [
+        "Page content: min-width 0, overflow-x hidden",
+        "Cards: max-width 100%, overflow hidden",
+        "No horizontal scroll on mobile",
+        "All content visible and properly constrained",
+        "Tables/code blocks: horizontal scroll within container (not page)",
+        "Verified on mobile (375x667)"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: test on 375x667 mobile viewport"
+      ]
+    },
+    {
+      "id": "UI-024",
+      "title": "Terminology Consistency - Alerts vs Escalations",
+      "priority": "P1-High",
+      "phase": "phase2",
+      "category": "Global UX",
+      "scope": "Audit and standardize terminology across app: decide on 'Alerts' vs 'Escalations', apply consistently in sidebar, pages, buttons, help text.",
+      "passes": true,
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "Terminology decision documented in AGENTS.md",
+        "Consistent term used across: sidebar, pages, buttons",
+        "Updated in all help text and descriptions",
+        "Verified across entire app"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "npm run check",
+        "grep -r 'Alert' src/ && grep -r 'Escalation' src/"
+      ]
+    },
+    {
+      "id": "UI-025",
+      "title": "Haptic Feedback for Mobile Actions",
+      "priority": "P2-Medium",
+      "phase": "phase4",
+      "category": "Mobile UX",
+      "scope": "Add haptic feedback (vibration) for important actions: button clicks, form submission, error states. Light feedback for normal actions, success/error patterns.",
+      "passes": true,
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "Light haptic on button clicks",
+        "Medium haptic on form submission",
+        "Error haptic pattern on failures",
+        "Success haptic pattern on completion",
+        "Only on devices that support vibration",
+        "Optional feature (gracefully degrades)",
+        "Verified on mobile device or emulator"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: test on mobile with vibration support"
+      ]
+    },
+    {
+      "id": "UI-026",
+      "title": "Gesture Support - Swipe Navigation & Pull-to-Refresh",
+      "priority": "P2-Medium",
+      "phase": "phase4",
+      "category": "Mobile UX",
+      "scope": "Implement gesture support: swipe-right to go back, swipe-left for next, pull-to-refresh on list pages. Create reusable swipe action.",
+      "passes": true,
+      "estimatedPoints": 4,
+      "acceptanceCriteria": [
+        "Swipe-right gesture: navigate back",
+        "Swipe-left gesture: navigate next (if applicable)",
+        "Pull-to-refresh on list pages (Mail, Agents, Queue)",
+        "Visual feedback during swipe",
+        "Only on mobile/touch devices",
+        "Tested on iOS and Android",
+        "Verified with dev-browser or real device"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: test gesture support on mobile"
+      ]
+    },
+    {
+      "id": "UI-027",
+      "title": "Compose Button Visibility & Accessibility",
+      "priority": "P1-High",
+      "phase": "phase1",
+      "category": "Global Navigation",
+      "scope": "Ensure compose/create button is always visible and accessible. On mobile: floating action button (FAB) or bottom nav item. On desktop: header or sidebar button.",
+      "passes": true,
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "Compose button visible on all pages",
+        "Desktop: prominent in header or sidebar",
+        "Mobile: FAB (56x56px) or bottom nav item",
+        "Button is 44x44px minimum touch target",
+        "Consistent styling and icon (Lucide edit/plus)",
+        "Navigates to appropriate compose/create page",
+        "Verified across all pages and devices"
+      ],
+      "dependencies": [
+        "UI-004"
+      ],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: test on desktop and mobile"
+      ]
+    },
+    {
+      "id": "UI-028",
+      "title": "Keyboard Navigation & Screen Reader Testing",
+      "priority": "P2-Medium",
+      "phase": "phase4",
+      "category": "Accessibility",
+      "scope": "Ensure all pages support keyboard navigation: Tab order logical, focus visible, no keyboard traps. Screen reader announces correctly: landmarks, headings, labels, status.",
+      "passes": true,
+      "estimatedPoints": 4,
+      "acceptanceCriteria": [
+        "Keyboard navigation: Tab through all interactive elements",
+        "Focus indicators: always visible (2px border or background)",
+        "No keyboard traps (can Tab out of all components)",
+        "Logical Tab order (left→right, top→bottom)",
+        "Screen reader: announces page landmarks",
+        "Screen reader: announces all headings",
+        "Screen reader: announces form labels and errors",
+        "Screen reader: announces dynamic status changes",
+        "ARIA labels: present where needed",
+        "Tested with keyboard and screen reader (NVDA/JAWS/VoiceOver)"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: test keyboard navigation on all pages"
+      ]
+    },
+    {
+      "id": "UI-029",
+      "title": "Dark Mode Appearance Verification",
+      "priority": "P2-Medium",
+      "phase": "phase4",
+      "category": "Visual Design",
+      "scope": "Verify all improvements look correct in dark mode. Check: colors have sufficient contrast, text readable, icons visible, no dark-on-dark or light-on-light.",
+      "passes": true,
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "All colors pass WCAG AA contrast (4.5:1 for text)",
+        "Text readable in dark mode",
+        "Icons visible and properly styled",
+        "No dark backgrounds with dark icons",
+        "No light backgrounds with light text",
+        "Consistent dark palette applied",
+        "Verified across all pages"
+      ],
+      "dependencies": [
+        "UI-006"
+      ],
+      "testCommands": [
+        "npm run check",
+        "dev-browser: toggle dark mode, verify all pages"
+      ]
+    },
+    {
+      "id": "UI-030",
+      "title": "Performance Verification - Load Time <3s",
+      "priority": "P2-Medium",
+      "phase": "phase4",
+      "category": "Performance",
+      "scope": "Verify all pages load in <3s on 3G connection. Check: bundle size, lazy loading, image optimization, CSS/JS metrics.",
+      "passes": true,
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "All pages load in <3s on 3G throttling",
+        "Bundle size within acceptable limits",
+        "Lighthouse score: ≥90",
+        "No console errors or warnings",
+        "Images optimized (WebP, lazy loading)",
+        "Code splitting applied",
+        "Verified on all main pages"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "npm run check",
+        "npm run build",
+        "dev-browser: check performance metrics"
+      ]
+    },
+    {
+      "id": "UI-031",
+      "title": "Test Coverage - Cross-Browser Compatibility",
+      "priority": "P1-High",
+      "phase": "phase4",
+      "category": "Quality Assurance",
+      "scope": "Verify all improvements work across browsers: Chrome, Safari, Firefox on desktop. iOS Safari, Android Chrome on mobile.",
+      "passes": true,
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "Works on Chrome (latest)",
+        "Works on Safari (latest)",
+        "Works on Firefox (latest)",
+        "Works on iOS Safari (iOS 14+)",
+        "Works on Android Chrome (latest)",
+        "No console errors on any browser",
+        "Visual design consistent across browsers",
+        "Performance acceptable on all platforms"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "npm run check",
+        "npm run test",
+        "dev-browser: test on multiple browsers"
+      ]
+    },
+    {
+      "id": "UI-032",
+      "title": "Update AGENTS.md with Discovered Patterns",
+      "priority": "P0-Critical",
+      "phase": "Continuous",
+      "category": "Documentation",
+      "scope": "After each iteration, document patterns discovered: icon usage, color conventions, responsive breakpoints, gotchas, component locations. Keep AGENTS.md updated for future iterations.",
+      "passes": true,
+      "estimatedPoints": 2,
+      "acceptanceCriteria": [
+        "Patterns documented in AGENTS.md",
+        "Gotchas noted (e.g., safe area insets on iOS)",
+        "Component locations documented",
+        "Useful commands added",
+        "AGENTS.md updated after each sprint"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "cat AGENTS.md | grep -i 'icon\\|color\\|responsive'"
+      ]
+    }
+  ]
+}

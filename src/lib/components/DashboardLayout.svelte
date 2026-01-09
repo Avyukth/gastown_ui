@@ -59,7 +59,7 @@
 				<div class="flex items-center gap-3">
 					<!-- Logo accent bar with glow -->
 					<div class="w-2 h-8 bg-primary rounded-sm shadow-glow" aria-hidden="true"></div>
-					<h1 class="text-xl font-bold uppercase tracking-wider text-foreground">{title}</h1>
+					<h1 class="text-2xl md:text-2xl font-semibold text-foreground">{title}</h1>
 				</div>
 
 				<!-- Connection status pill -->

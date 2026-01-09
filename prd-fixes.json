@@ -1,0 +1,303 @@
+{
+  "projectName": "Gastown UI - Critical Fixes from Review",
+  "projectDescription": "Fix identified gaps from Phase 1 implementation: error handling, form validation, loading states, testing verification",
+  "branchName": "feat/ui-critical-fixes",
+  "createdAt": "2026-01-09",
+  "phases": {
+    "phase1": "Error State Integration (Critical)",
+    "phase2": "Form Validation & Feedback",
+    "phase3": "Complete Loading States",
+    "phase4": "Testing Documentation"
+  },
+  "userStories": [
+    {
+      "id": "FIX-001",
+      "title": "Integrate ErrorState Component to Mail Page",
+      "priority": "P0-Critical",
+      "phase": "phase1",
+      "category": "Error Handling",
+      "scope": "Wire ErrorState component to Mail page data fetch. Show error state when email fetch fails, provide retry button.",
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "Mail page has try-catch around fetchMail()",
+        "ErrorState component displays on fetch failure",
+        "Retry button re-fetches mail data",
+        "Error state properly cleared on successful retry",
+        "Verified: Disable network, refresh page, see ErrorState appear"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "bun run check",
+        "Navigate to Mail page, open DevTools Network tab, set offline",
+        "Refresh page - ErrorState should appear with retry button"
+      ]
+    },
+    {
+      "id": "FIX-002",
+      "title": "Integrate ErrorState Component to Agents Page",
+      "priority": "P0-Critical",
+      "phase": "phase1",
+      "category": "Error Handling",
+      "scope": "Wire ErrorState to Agents page data fetch. Show error state when agent data fetch fails.",
+      "estimatedPoints": 2,
+      "acceptanceCriteria": [
+        "Agents page has try-catch around data fetch",
+        "ErrorState displays on fetch failure",
+        "Retry button re-fetches agent data",
+        "Verified: Offline mode shows ErrorState"
+      ],
+      "dependencies": ["FIX-001"],
+      "testCommands": [
+        "bun run check",
+        "Test same as FIX-001 but on Agents page"
+      ]
+    },
+    {
+      "id": "FIX-003",
+      "title": "Integrate ErrorState Component to Work Page",
+      "priority": "P0-Critical",
+      "phase": "phase1",
+      "category": "Error Handling",
+      "scope": "Wire ErrorState to Work page data fetch and form submissions. Handle both load failures and submit errors.",
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "Work page data fetch has try-catch",
+        "Form submission has error boundary",
+        "ErrorState shows for load failures",
+        "Form submission errors display error state with retry",
+        "Verified: Both load failure and form error states work"
+      ],
+      "dependencies": ["FIX-001"],
+      "testCommands": [
+        "bun run check",
+        "Test offline scenario (load error)",
+        "Test form submission to invalid endpoint (submit error)"
+      ]
+    },
+    {
+      "id": "FIX-004",
+      "title": "Add Form Validation to Work Page - Issue Creation",
+      "priority": "P1-High",
+      "phase": "phase2",
+      "category": "Form Validation",
+      "scope": "Add client-side validation to issue creation form. Mark required fields, show validation errors, prevent invalid submission.",
+      "estimatedPoints": 5,
+      "acceptanceCriteria": [
+        "Required fields marked with red asterisk",
+        "Form validation before submit (title required, type required)",
+        "Show inline error messages for invalid fields",
+        "Submit button disabled until form valid",
+        "Show success message on successful submission",
+        "Verified: Try submitting empty form - validation shows"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "bun run check",
+        "Navigate to Work page",
+        "Try submit with empty fields - validation errors appear",
+        "Fill all fields - submit button enables"
+      ]
+    },
+    {
+      "id": "FIX-005",
+      "title": "Add Form Validation to Work Page - Convoy Creation",
+      "priority": "P1-High",
+      "phase": "phase2",
+      "category": "Form Validation",
+      "scope": "Add client-side validation to convoy creation form.",
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "Convoy name required field validation",
+        "Error message displays for invalid input",
+        "Submit disabled until valid",
+        "Success feedback on completion"
+      ],
+      "dependencies": ["FIX-004"],
+      "testCommands": [
+        "bun run check",
+        "Test empty convoy name - validation shows"
+      ]
+    },
+    {
+      "id": "FIX-006",
+      "title": "Add Form Validation to Work Page - Sling Work",
+      "priority": "P1-High",
+      "phase": "phase2",
+      "category": "Form Validation",
+      "scope": "Add validation to sling work form.",
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "Required field validation",
+        "Error messages display",
+        "Form disables submit when invalid"
+      ],
+      "dependencies": ["FIX-004"],
+      "testCommands": [
+        "bun run check",
+        "Test each form field validation"
+      ]
+    },
+    {
+      "id": "FIX-007",
+      "title": "Complete SkeletonLoader Application - Workflows Page",
+      "priority": "P2-Medium",
+      "phase": "phase3",
+      "category": "Loading States",
+      "scope": "Add skeleton loaders to Workflows page during data load. Show card skeletons while workflows data fetches.",
+      "estimatedPoints": 2,
+      "acceptanceCriteria": [
+        "Skeleton loaders show while workflows data loads",
+        "Correct number of skeletons (4-6)",
+        "Skeletons disappear when data arrives",
+        "Verified: Slow network shows skeletons"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "bun run check",
+        "Navigate to Dashboard Workflows section with throttled network",
+        "Skeletons should appear briefly"
+      ]
+    },
+    {
+      "id": "FIX-008",
+      "title": "Complete SkeletonLoader Application - Queue Page",
+      "priority": "P2-Medium",
+      "phase": "phase3",
+      "category": "Loading States",
+      "scope": "Add skeleton loaders to merge queue page.",
+      "estimatedPoints": 2,
+      "acceptanceCriteria": [
+        "Queue items show as skeletons while loading",
+        "5-6 skeleton items for queue",
+        "Skeletons clear when data loads"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "bun run check",
+        "Navigate to Queue page with throttled network"
+      ]
+    },
+    {
+      "id": "FIX-009",
+      "title": "Complete EmptyState Application - Expand Coverage",
+      "priority": "P2-Medium",
+      "phase": "phase3",
+      "category": "Empty States",
+      "scope": "Apply EmptyState component to additional pages: Rigs, Convoys, Health, Crew. Show appropriate empty state when no data.",
+      "estimatedPoints": 4,
+      "acceptanceCriteria": [
+        "Rigs page: 'No rigs configured' empty state",
+        "Convoys page: 'No convoys in progress' empty state",
+        "Health page: 'All systems healthy' empty state",
+        "Crew page: 'No crew members' empty state",
+        "Verified: Each page displays correct empty state"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "bun run check",
+        "Navigate to each page, verify empty states display when no data"
+      ]
+    },
+    {
+      "id": "FIX-010",
+      "title": "Create Testing Documentation - Keyboard Navigation",
+      "priority": "P1-High",
+      "phase": "phase4",
+      "category": "Testing",
+      "scope": "Document actual keyboard navigation testing procedure. Create checklist for Tab order, focus visibility, keyboard traps.",
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "Testing procedure document created",
+        "Keyboard navigation checklist: Tab order, focus rings, escape key",
+        "Screen reader testing procedure documented",
+        "Screenshots showing focus indicators"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "Create KEYBOARD_TESTING.md with detailed procedures",
+        "Document results for each page"
+      ]
+    },
+    {
+      "id": "FIX-011",
+      "title": "Create Testing Documentation - Dark Mode Contrast",
+      "priority": "P1-High",
+      "phase": "phase4",
+      "category": "Testing",
+      "scope": "Document dark mode contrast testing. Create procedure to audit colors with WAVE/axe tools.",
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "Dark mode testing procedure documented",
+        "Tool recommendations (WAVE, axe, axe DevTools)",
+        "Contrast ratio checklist (text, buttons, icons)",
+        "Screenshot evidence of testing"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "Create DARK_MODE_TESTING.md",
+        "Document testing procedure and tools"
+      ]
+    },
+    {
+      "id": "FIX-012",
+      "title": "Create Testing Documentation - Performance Metrics",
+      "priority": "P1-High",
+      "phase": "phase4",
+      "category": "Testing",
+      "scope": "Document performance testing procedure. Create Lighthouse audit checklist, Core Web Vitals measurement.",
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "Performance testing procedure documented",
+        "Lighthouse audit checklist created",
+        "Core Web Vitals measurement procedure",
+        "3G throttle testing documented"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "Create PERFORMANCE_TESTING.md",
+        "Document all testing procedures"
+      ]
+    },
+    {
+      "id": "FIX-013",
+      "title": "Create Testing Documentation - Cross-Browser Compatibility",
+      "priority": "P1-High",
+      "phase": "phase4",
+      "category": "Testing",
+      "scope": "Document cross-browser testing matrix. Create procedure for Chrome, Safari, Firefox, iOS Safari, Android Chrome.",
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "Testing matrix created (browsers × pages)",
+        "Test procedure documented",
+        "Screenshot templates for evidence",
+        "Compatibility issue reporting format"
+      ],
+      "dependencies": [],
+      "testCommands": [
+        "Create BROWSER_TESTING.md",
+        "Document complete testing matrix"
+      ]
+    },
+    {
+      "id": "FIX-014",
+      "title": "Update AGENTS.md with Critical Fixes & Testing Procedures",
+      "priority": "P0-Critical",
+      "phase": "phase4",
+      "category": "Documentation",
+      "scope": "Update AGENTS.md with error handling patterns, testing procedures, and all discoveries from critical fixes phase.",
+      "estimatedPoints": 3,
+      "acceptanceCriteria": [
+        "Error state integration pattern documented",
+        "Form validation pattern documented",
+        "Testing procedures linked",
+        "Component wiring checklist added",
+        "Known issues documented"
+      ],
+      "dependencies": ["FIX-001", "FIX-010"],
+      "testCommands": [
+        "bun run check",
+        "Verify AGENTS.md updated with all patterns"
+      ]
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { DashboardLayout, AgentCard, StatsCard, EmptyState, Button } from '$lib/components';
+	import { DashboardLayout, AgentCard, StatsCard, EmptyState, Button, CircularProgress } from '$lib/components';
+	import { Clock, CheckCircle, Zap, Layers, TrendingUp, Package } from 'lucide-svelte';
 
 	let { data } = $props();
 
@@ -66,19 +67,32 @@
 	<!-- Center Column: Workflows -->
 	{#snippet workflows()}
 		{#each workflowsList as workflow (workflow.id)}
-			<div class="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
-				<div class="flex items-center gap-3 min-w-0">
-					<span
-						class="w-2 h-2 rounded-full {workflow.status === 'running' ? 'bg-success animate-pulse' : workflow.status === 'completed' ? 'bg-success' : 'bg-muted-foreground'}"
-						aria-hidden="true"
-					></span>
+			<div class="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors cursor-pointer group">
+				<div class="flex items-center gap-3 min-w-0 flex-1">
 					<span class="text-sm font-medium text-foreground truncate">{workflow.name}</span>
 				</div>
-				{#if workflow.status === 'running'}
-					<span class="text-xs text-muted-foreground">{workflow.progress}%</span>
-				{:else}
-					<span class="text-xs text-muted-foreground capitalize">{workflow.status}</span>
-				{/if}
+				
+				<!-- Circular Progress Indicator -->
+				<div class="flex items-center gap-3 flex-shrink-0">
+					<div class="text-right">
+						{#if workflow.status === 'running'}
+							<span class="text-xs text-muted-foreground block">{workflow.progress}%</span>
+							<span class="text-xs text-muted-foreground text-muted-foreground/70">Running</span>
+						{:else if workflow.status === 'completed'}
+							<span class="text-xs text-success block">Complete</span>
+						{:else}
+							<span class="text-xs text-warning block">Pending</span>
+						{/if}
+					</div>
+					
+					<CircularProgress 
+						progress={workflow.progress}
+						diameter={24}
+						status={workflow.status as 'pending' | 'running' | 'completed'}
+						icon={workflow.status === 'pending' ? Clock : workflow.status === 'completed' ? CheckCircle : undefined}
+						ariaLabel="{workflow.name} progress: {workflow.progress}%"
+					/>
+				</div>
 			</div>
 		{/each}
 	{/snippet}
@@ -102,6 +116,7 @@
 		<StatsCard
 			label="Active Agents"
 			value={statsData.activeAgents}
+			icon={Zap}
 			trend="up"
 			trendValue={12}
 			comparisonText="from yesterday"
@@ -110,17 +125,20 @@
 		<StatsCard
 			label="Tasks Running"
 			value={statsData.tasksRunning}
+			icon={Layers}
 			trend="neutral"
 		/>
 		<StatsCard
 			label="Polecats"
 			value={statsData.queueDepth}
+			icon={Package}
 			trend={statsData.queueDepth > 5 ? 'up' : 'down'}
 			trendValue={statsData.queueDepth > 5 ? 8 : -3}
 		/>
 		<StatsCard
 			label="Completed Today"
 			value={statsData.completedToday}
+			icon={TrendingUp}
 			trend="up"
 			trendValue={25}
 			comparisonText="from yesterday"
@@ -129,7 +147,7 @@
 
 	<!-- Right Column: Actions -->
 	{#snippet actions()}
-		<Button variant="outline" fullWidth>
+		<Button variant="primary" fullWidth>
 			Create Agent
 		</Button>
 		<Button variant="ghost" fullWidth>

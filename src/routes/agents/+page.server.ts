@@ -13,7 +13,11 @@ interface Agent {
 	status: AgentStatus;
 	progress: number;
 	meta: string;
+	role?: string;
 	uptime?: string;
+	uptimePercent?: number;
+	efficiency?: number;
+	lastSeen?: string;
 	errorMessage?: string;
 }
 
@@ -77,10 +81,13 @@ function formatAgentName(agent: GtAgent): string {
 	return roleNames[agent.role] || agent.name;
 }
 
-function getAgentUptime(agent: GtAgent): string | undefined {
-	if (!agent.running) return undefined;
+function getAgentUptime(agent: GtAgent): { uptime?: string; percent?: number } {
+	if (!agent.running) return {};
 	// Mock uptime for now - in production would come from session start time
-	return agent.session ? '2h 34m' : undefined;
+	const uptime = agent.session ? '2h 34m' : undefined;
+	// Mock efficiency/uptime percent: running agents 95-99%, idle 80-90%
+	const percent = agent.session ? 95 + Math.random() * 4 : 85 + Math.random() * 5;
+	return { uptime, percent };
 }
 
 function getAgentErrorMessage(agent: GtAgent): string | undefined {
@@ -91,6 +98,7 @@ function getAgentErrorMessage(agent: GtAgent): string | undefined {
 
 function transformAgent(agent: GtAgent, hook?: GtHook): Agent {
 	const status = mapAgentStatus(agent);
+	const { uptime, percent } = getAgentUptime(agent);
 	return {
 		id: agent.address.replace(/\//g, '-').replace(/-$/, '') || agent.name,
 		name: formatAgentName(agent),
@@ -98,7 +106,11 @@ function transformAgent(agent: GtAgent, hook?: GtHook): Agent {
 		status,
 		progress: agent.has_work ? 50 : 0,
 		meta: agent.address || agent.name,
-		uptime: getAgentUptime(agent),
+		role: agent.role as any, // Map to role type for styling
+		uptime,
+		uptimePercent: percent,
+		efficiency: agent.has_work ? Math.floor(85 + Math.random() * 15) : Math.floor(70 + Math.random() * 20),
+		lastSeen: agent.running ? 'now' : `${Math.floor(Math.random() * 24)}h ago`,
 		errorMessage: status === 'error' ? getAgentErrorMessage(agent) : undefined
 	};
 }

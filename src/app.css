@@ -64,7 +64,7 @@
 		--card-foreground: 0 0% 1%;
 		--popover: 0 0% 100%;
 		--popover-foreground: 0 0% 1%;
-		--primary: 18 86% 56%;
+		--primary: 11 100% 50%;            /* #F97316 CTA orange */
 		--primary-foreground: 0 0% 100%;
 		--secondary: 220 10% 92%;
 		--secondary-foreground: 0 0% 1%;
@@ -72,7 +72,7 @@
 		--muted-foreground: 220 10% 40%;
 		--accent: 220 10% 46%;
 		--accent-foreground: 0 0% 100%;
-		--destructive: 0 84% 60%;
+		--destructive: 0 90% 56%;          /* #EF4444 error red */
 		--destructive-foreground: 0 0% 100%;
 		--border: 220 10% 85%;
 		--input: 220 10% 88%;
@@ -110,18 +110,19 @@
 		--delay-stagger: 50ms;
 
 		/* === Semantic Feedback Colors (HSL) === */
-		--success: 160 84% 39%;
+		/* Success: #22C55E, Warning: #F59E0B, Error: #EF4444, Info: #3B82F6 */
+		--success: 142 71% 45%;            /* #22C55E green */
 		--success-foreground: 0 0% 100%;
-		--warning: 38 92% 50%;
-		--warning-foreground: 0 0% 0%;
-		--info: 199 89% 48%;
+		--warning: 38 92% 50%;             /* #F59E0B amber */
+		--warning-foreground: 0 0% 1%;
+		--info: 217 91% 60%;               /* #3B82F6 blue */
 		--info-foreground: 0 0% 100%;
 
 		/* === Status Colors (HSL) === */
-		--status-online: 142 76% 36%;
-		--status-offline: 0 84% 60%;
-		--status-pending: 38 92% 50%;
-		--status-idle: 220 9% 46%;
+		--status-online: 142 71% 45%;      /* #22C55E green (success) */
+		--status-offline: 0 90% 56%;       /* #EF4444 red (error) */
+		--status-pending: 38 92% 50%;      /* #F59E0B amber (warning) */
+		--status-idle: 217 91% 60%;        /* #3B82F6 blue (info) */
 
 		/* === Shadow Tokens (5-Level System) === */
 		--shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.03);
@@ -155,7 +156,7 @@
 		--card-foreground: 0 0% 91%;       /* gas-text: #E8E8E8 */
 		--popover: 165 24% 10%;            /* gas-surface: #131F1C */
 		--popover-foreground: 0 0% 91%;    /* gas-text: #E8E8E8 */
-		--primary: 18 86% 56%;             /* gas-primary: #EF6F2E */
+		--primary: 11 100% 50%;            /* #F97316 CTA orange */
 		--primary-foreground: 168 33% 3%;  /* gas-black: #050a09 */
 		--secondary: 169 24% 13%;          /* gas-surfaceHighlight: #1A2A27 */
 		--secondary-foreground: 0 0% 91%;  /* gas-text: #E8E8E8 */
@@ -163,23 +164,23 @@
 		--muted-foreground: 220 10% 46%;   /* gas-muted: #6A7282 */
 		--accent: 217 91% 60%;             /* gas-accent: #3B82F6 */
 		--accent-foreground: 0 0% 91%;     /* gas-text: #E8E8E8 */
-		--destructive: 0 84% 60%;          /* gas-error: #EF4444 */
+		--destructive: 0 90% 56%;          /* #EF4444 error red */
 		--destructive-foreground: 0 0% 91%;
 		--border: 165 16% 20%;             /* gas-border: #2A3A36 */
 		--input: 169 24% 13%;              /* gas-surfaceHighlight: #1A2A27 */
-		--ring: 18 86% 56%;                /* gas-primary: #EF6F2E */
+		--ring: 11 100% 50%;               /* #F97316 CTA orange */
 
 		/* === Gas Town Industrial Tokens === */
 		--gas-surface: 0 0% 8%;
 		--gas-border: 0 0% 20%;
-		--gas-primary: 18 86% 58%;
-		--gas-error: 0 72% 45%;
+		--gas-primary: 11 100% 50%;        /* #F97316 */
+		--gas-error: 0 90% 56%;            /* #EF4444 */
 
-		--success: 160 84% 39%;
+		--success: 142 71% 45%;            /* #22C55E green */
 		--success-foreground: 0 0% 100%;
-		--warning: 38 92% 50%;
-		--warning-foreground: 0 0% 0%;
-		--info: 217 91% 60%;               /* Matches gas-accent: #3B82F6 */
+		--warning: 38 92% 50%;             /* #F59E0B amber */
+		--warning-foreground: 0 0% 1%;
+		--info: 217 91% 60%;               /* #3B82F6 blue */
 		--info-foreground: 0 0% 100%;
 
 		/* === Dark Mode Shadow Tokens (5-Level System, Deeper for Industrial Feel) === */
@@ -540,6 +541,80 @@
 	.stagger-8 { animation-delay: calc(8 * var(--delay-stagger, 50ms)); animation-fill-mode: both; }
 }
 
+/* === Typography Scale === */
+/* Standardized text styles for consistent visual hierarchy */
+@layer components {
+	/* H1: Large page titles (desktop: 24px, mobile: 24px) */
+	.h1 {
+		@apply text-2xl font-semibold leading-tight;
+	}
+
+	/* H2: Section titles (desktop: 20px, mobile: 20px) */
+	.h2 {
+		@apply text-xl font-semibold leading-relaxed;
+	}
+
+	/* H3: Subsection titles (16px) */
+	.h3 {
+		@apply text-base font-medium leading-relaxed;
+	}
+
+	/* Body text: Standard reading text (14px, 1.5 line-height) */
+	.body-text {
+		@apply text-sm font-normal leading-relaxed;
+	}
+
+	/* Small text: Captions, secondary text (12px, 1.4 line-height) */
+	.body-small {
+		@apply text-xs font-normal leading-relaxed;
+	}
+
+	/* Code/Monospace: Code blocks, technical text (13px, JetBrains Mono) */
+	.code-text {
+		@apply text-code font-mono;
+	}
+
+	/* Section label: Field labels, uppercase (10px, 0.1em tracking) */
+	.label-section {
+		@apply text-2xs font-normal uppercase tracking-widest text-muted-foreground;
+	}
+
+	/* Alternative typography utility classes for common patterns */
+	
+	/* Large label text (commonly used in forms) */
+	.label-lg {
+		@apply text-sm font-medium leading-normal;
+	}
+
+	/* Medium label text */
+	.label-md {
+		@apply text-xs font-medium leading-normal;
+	}
+
+	/* Small label text */
+	.label-sm {
+		@apply text-2xs font-medium leading-tight uppercase tracking-wide;
+	}
+
+	/* Inline code (used within body text) */
+	.code-inline {
+		@apply px-1.5 py-0.5 bg-muted rounded text-code font-mono;
+	}
+
+	/* Heading text (semantic alternative to h1/h2/h3) */
+	.heading-1 {
+		@apply text-2xl font-semibold leading-tight;
+	}
+
+	.heading-2 {
+		@apply text-xl font-semibold leading-relaxed;
+	}
+
+	.heading-3 {
+		@apply text-base font-medium leading-relaxed;
+	}
+}
+
 /* === Stagger Animation Container === */
 /* Apply .stagger to parent, children get automatic staggered delays */
 @layer components {
@@ -834,4 +909,47 @@
 * {
 	scrollbar-width: thin;
 	scrollbar-color: hsl(var(--border)) transparent;
+}
+
+/* === Responsive Layout Bug Fixes (UI-023) === */
+/* Prevent horizontal overflow on mobile/tablet */
+
+/* Cards: constrain width and prevent overflow */
+.panel-glass {
+	max-width: 100%;
+	overflow: hidden;
+}
+
+/* Generic card/container overflow fix */
+[class*="card"],
+[class*="panel"],
+[class*="container"] {
+	max-width: 100%;
+	overflow: hidden;
+}
+
+/* Ensure tables and code blocks scroll within their container, not the page */
+table {
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+code {
+	max-width: 100%;
+	overflow-x: auto;
+	display: block;
+}
+
+pre {
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+/* Prevent flex children from overflowing */
+.flex {
+	min-width: 0;
+}
+
+.grid {
+	min-width: 0;
 }
