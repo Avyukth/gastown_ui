@@ -29,12 +29,12 @@
 </svelte:head>
 
 <div class="relative min-h-screen bg-background">
-	<GridPattern variant="dots" opacity={0.15} />
+	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10">
 		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-4">
 			<div class="container">
-				<h1 class="text-xl font-semibold text-foreground">Rigs</h1>
+				<h1 class="text-2xl md:text-2xl font-semibold text-foreground">Rigs</h1>
 				<p class="text-sm text-muted-foreground">Manage project containers in Gas Town</p>
 			</div>
 		</header>

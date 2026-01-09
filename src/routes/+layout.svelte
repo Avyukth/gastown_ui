@@ -5,23 +5,27 @@
 	import { page } from '$app/stores';
 	import { afterNavigate } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { swipe } from '$lib/actions/swipe';
+	import { goto } from '$app/navigation';
 	import {
 		Home,
-		Target,
+		Briefcase,
 		Bot,
 		Mail,
 		ClipboardList,
 		Truck,
-		FlaskConical,
-		Factory,
+		GitBranch,
+		Server,
 		Bell,
 		HeartPulse,
 		BarChart3,
 		Eye,
 		Users,
-		Dog,
+		Shield,
 		Settings,
-		ScrollText
+		ScrollText,
+		Menu,
+		X
 	} from 'lucide-svelte';
 
 	interface Props {
@@ -32,6 +36,9 @@
 
 	// Sidebar collapse state (persisted via Sidebar component)
 	let sidebarCollapsed = $state(false);
+	
+	// Mobile drawer state (not persisted - resets on navigation)
+	let mobileDrawerOpen = $state(false);
 
 	// Badge counts (fetched from API)
 	let unreadMail = $state(0);
@@ -47,24 +54,24 @@
 	const navItems = $derived([
 		// Core (primary visibility)
 		{ id: 'dashboard', label: 'Dashboard', href: '/', icon: Home },
-		{ id: 'work', label: 'Work', href: '/work', icon: Target },
+		{ id: 'work', label: 'Work', href: '/work', icon: Briefcase },
 		{ id: 'agents', label: 'Agents', href: '/agents', icon: Bot },
 		{ id: 'mail', label: 'Mail', href: '/mail', icon: Mail, badge: unreadMail || undefined },
 		// Core (in overflow)
 		{ id: 'queue', label: 'Queue', href: '/queue', icon: ClipboardList },
 		// Operations
 		{ id: 'convoys', label: 'Convoys', href: '/convoys', icon: Truck },
-		{ id: 'workflows', label: 'Workflows', href: '/workflows', icon: FlaskConical },
-		{ id: 'rigs', label: 'Rigs', href: '/rigs', icon: Factory },
+		{ id: 'workflows', label: 'Workflows', href: '/workflows', icon: GitBranch },
+		{ id: 'rigs', label: 'Rigs', href: '/rigs', icon: Server },
 		// Communication
-		{ id: 'escalations', label: 'Alerts', href: '/escalations', icon: Bell, badge: escalationCount || undefined },
+		{ id: 'escalations', label: 'Escalations', href: '/escalations', icon: Bell, badge: escalationCount || undefined },
 		// Monitoring
 		{ id: 'health', label: 'Health', href: '/health', icon: HeartPulse },
 		{ id: 'activity', label: 'Activity', href: '/activity', icon: BarChart3 },
 		{ id: 'watchdog', label: 'Watchdog', href: '/watchdog', icon: Eye },
 		// System
 		{ id: 'crew', label: 'Crew', href: '/crew', icon: Users },
-		{ id: 'dogs', label: 'Dogs', href: '/dogs', icon: Dog },
+		{ id: 'dogs', label: 'Dogs', href: '/dogs', icon: Shield },
 		{ id: 'settings', label: 'Settings', href: '/settings', icon: Settings },
 		{ id: 'logs', label: 'Logs', href: '/logs', icon: ScrollText }
 	]);
@@ -117,6 +124,9 @@
 
 	// Focus management and route announcements on navigation
 	afterNavigate(({ to }) => {
+		// Close mobile drawer on navigation
+		mobileDrawerOpen = false;
+		
 		// Get page title from nav items or path
 		const path = to?.url?.pathname || '/';
 		const navItem = navItems.find((item) => item.href === path);
@@ -136,6 +146,11 @@
 	function getPageTitleFromPath(path: string): string {
 		const segment = path.split('/')[1] || 'Dashboard';
 		return segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, ' ');
+	}
+
+	// Handle swipe-right to go back
+	function handleSwipeRight() {
+		history.back();
 	}
 </script>
 
@@ -175,7 +190,7 @@
 				bind:this={mainContentRef}
 				id="main-content"
 				tabindex="-1"
-				class="flex-1 outline-none"
+				class="flex-1 min-w-0 overflow-x-hidden outline-none"
 			>
 				{@render children()}
 			</main>
@@ -183,9 +198,47 @@
 	</div>
 
 	<!-- Mobile/Tablet layout with bottom nav (hidden on desktop) -->
-	<div class="lg:hidden">
-		<!-- Global search (mobile) -->
-		<div class="fixed bottom-24 right-4 z-40">
+	<div class="lg:hidden flex flex-col min-h-screen">
+		<!-- Mobile header with menu button -->
+		<div class="sticky top-0 z-30 flex items-center gap-2 px-4 py-3 bg-card/80 backdrop-blur-xl border-b border-border md:hidden">
+			<button
+				onclick={() => mobileDrawerOpen = !mobileDrawerOpen}
+				class="p-2 -ml-2 text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+				aria-label={mobileDrawerOpen ? 'Close navigation menu' : 'Open navigation menu'}
+				aria-expanded={mobileDrawerOpen}
+			>
+				{#if mobileDrawerOpen}
+					<X size={24} />
+				{:else}
+					<Menu size={24} />
+				{/if}
+			</button>
+			<span class="text-sm font-semibold text-foreground">Navigation</span>
+		</div>
+
+		<!-- Mobile drawer backdrop -->
+		{#if mobileDrawerOpen}
+			<div
+				class="fixed inset-0 z-20 bg-black/40 md:hidden transition-opacity duration-300"
+				onclick={() => mobileDrawerOpen = false}
+				aria-hidden="true"
+			></div>
+		{/if}
+
+		<!-- Mobile sidebar drawer -->
+		<div
+			class="fixed inset-y-0 left-0 z-20 w-64 md:hidden transition-transform duration-300 ease-out transform"
+			style:transform={mobileDrawerOpen ? 'translateX(0)' : 'translateX(-100%)'}
+		>
+			<Sidebar
+				items={navItems}
+				{activeId}
+				class="h-screen"
+			/>
+		</div>
+
+		<!-- Global search (mobile) - positioned above bottom nav with safe area support -->
+		<div class="fixed right-4 z-40" style="bottom: calc(80px + env(safe-area-inset-bottom));">
 			<GlobalSearch class="rounded-full p-3 shadow-lg" />
 		</div>
 
@@ -194,7 +247,11 @@
 			bind:this={mainContentRef}
 			id="main-content"
 			tabindex="-1"
-			class="min-h-screen pb-20 outline-none"
+			class="flex-1 min-h-screen min-w-0 overflow-x-hidden pb-20 outline-none"
+			use:swipe={{
+				onswiperight: handleSwipeRight,
+				minDistance: 40
+			}}
 		>
 			{@render children()}
 		</div>
@@ -219,7 +276,7 @@
 		bind:this={mainContentRef}
 		id="main-content"
 		tabindex="-1"
-		class="min-h-screen outline-none"
+		class="min-h-screen min-w-0 overflow-x-hidden outline-none"
 	>
 		{@render children()}
 	</div>

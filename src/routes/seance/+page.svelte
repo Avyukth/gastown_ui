@@ -217,7 +217,7 @@
 </script>
 
 <div class="relative min-h-screen bg-background">
-	<GridPattern variant="dots" opacity={0.1} />
+	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10 flex flex-col min-h-screen">
 		<!-- Header -->

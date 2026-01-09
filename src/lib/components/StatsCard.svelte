@@ -12,13 +12,19 @@
 				'panel-glass p-6 rounded-lg',
 				'transition-all duration-200 ease-out',
 				'hover:scale-[1.02] hover:shadow-lg',
-				'cursor-default',
+				'cursor-pointer',
 				// Mobile horizontal scroll support
 				'min-w-[280px] flex-shrink-0 snap-center',
 				'xl:min-w-0 xl:flex-shrink xl:snap-align-none'
 			],
+			header: [
+				'flex items-center justify-between gap-2 mb-2'
+			],
 			label: [
-				'text-xs text-muted-foreground uppercase tracking-wide'
+				'text-xs text-muted-foreground uppercase tracking-wide flex-1'
+			],
+			icon: [
+				'w-5 h-5 text-muted-foreground flex-shrink-0'
 			],
 			valueRow: [
 				'flex items-end justify-between gap-2',
@@ -97,6 +103,8 @@
 		value: string | number;
 		/** Value suffix (e.g., '%', 'ms') */
 		suffix?: string;
+		/** Descriptive icon (Lucide component) */
+		icon?: any;
 		/** Trend direction */
 		trend?: TrendDirection;
 		/** Trend percentage (e.g., 12.5) */
@@ -125,6 +133,7 @@
 		label,
 		value,
 		suffix = '',
+		icon,
 		trend = 'neutral',
 		trendValue,
 		comparisonText,
@@ -205,10 +214,17 @@
 -->
 
 <article class={cn(styles.container(), className)}>
-	<!-- Label -->
-	<p class={styles.label()}>
-		{label}
-	</p>
+	<!-- Header: Label + Icon -->
+	<div class={styles.header()}>
+		<p class={styles.label()}>
+			{label}
+		</p>
+		{#if icon}
+			<span class={styles.icon()} aria-hidden="true">
+				<svelte:component this={icon} strokeWidth={1.5} />
+			</span>
+		{/if}
+	</div>
 
 	<!-- Value + Trend -->
 	<div class={styles.valueRow()}>

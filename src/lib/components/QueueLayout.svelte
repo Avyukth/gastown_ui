@@ -63,7 +63,7 @@
 		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-4">
 			<div class="container flex items-center justify-between">
 				<div>
-					<h1 class="text-xl font-semibold text-foreground">{title}</h1>
+					<h1 class="text-2xl md:text-2xl font-semibold text-foreground">{title}</h1>
 					<p class="text-sm text-muted-foreground">{items.length} items in queue</p>
 				</div>
 				{#if actions}

@@ -100,7 +100,7 @@
 <!-- Full-screen login container -->
 <div class="relative min-h-screen flex flex-col bg-background overflow-hidden">
 	<!-- Industrial grid background -->
-	<GridPattern variant="lines" opacity={0.15} class="z-0" />
+	<GridPattern variant="lines" opacity={0.03} class="z-0" />
 
 	<!-- Top industrial accent bar -->
 	<div class="h-2 bg-gradient-to-r from-primary via-primary/80 to-primary relative z-10">

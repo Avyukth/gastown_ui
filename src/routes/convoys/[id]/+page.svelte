@@ -89,7 +89,7 @@
 </svelte:head>
 
 <div class="relative min-h-screen bg-background">
-	<GridPattern variant="dots" opacity={0.15} />
+	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10">
 		<!-- Header -->

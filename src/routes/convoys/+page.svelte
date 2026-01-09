@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { GridPattern, ProgressBar, StatusIndicator } from '$lib/components';
+	import { GridPattern, ProgressBar, StatusIndicator, EmptyState } from '$lib/components';
 	import type { Convoy } from './+page.server';
 	import { ChevronDown } from 'lucide-svelte';
 
@@ -70,12 +70,12 @@
 </script>
 
 <div class="relative min-h-screen bg-background">
-	<GridPattern variant="dots" opacity={0.15} />
+	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10">
 		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-4">
 			<div class="container">
-				<h1 class="text-xl font-semibold text-foreground">Convoys</h1>
+				<h1 class="text-2xl md:text-2xl font-semibold text-foreground">Convoys</h1>
 				<p class="text-sm text-muted-foreground">Track batched work across Gas Town</p>
 			</div>
 		</header>
@@ -87,11 +87,12 @@
 					<p class="text-sm text-muted-foreground mt-1">{data.error}</p>
 				</div>
 			{:else if data.convoys.length === 0}
-				<div class="panel-glass p-6">
-					<p class="text-muted-foreground">No convoys found</p>
-					<p class="text-sm text-muted-foreground/70 mt-1">
-						Create a convoy with <code class="px-1 py-0.5 bg-muted rounded">gt convoy create</code>
-					</p>
+				<div class="max-w-md mx-auto">
+					<EmptyState
+						title="No convoys yet"
+						description="Convoys group issues for coordinated delivery across multiple rigs."
+						size="default"
+					/>
 				</div>
 			{:else}
 				<div class="space-y-4">

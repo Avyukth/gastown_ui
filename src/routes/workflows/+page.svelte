@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { DashboardLayout, StatusIndicator, ProgressBar, Skeleton } from '$lib/components';
+	import { DashboardLayout, StatusIndicator, ProgressBar, Skeleton, EmptyState, ErrorState } from '$lib/components';
 	import { cn } from '$lib/utils';
 	import { onMount } from 'svelte';
 	import { X } from 'lucide-svelte';
@@ -475,15 +475,21 @@
 					{/each}
 				</div>
 			{:else if error}
-				<div class="panel-glass p-4 rounded-lg border-l-4 border-destructive">
-					<p class="text-destructive">{error}</p>
+				<div class="max-w-md mx-auto">
+					<ErrorState
+						title="Failed to load workflows"
+						message={error}
+						showRetryButton={false}
+						compact={false}
+					/>
 				</div>
 			{:else if formulas.length === 0}
-				<div class="panel-glass p-8 rounded-lg text-center">
-					<p class="text-muted-foreground">No formulas found</p>
-					<p class="text-sm text-muted-foreground mt-2">
-						Add formulas to <code class="text-primary">.beads/formulas/</code>
-					</p>
+				<div class="max-w-md mx-auto">
+					<EmptyState
+						title="No workflows yet"
+						description="Create your first workflow by adding formulas to .beads/formulas/"
+						size="default"
+					/>
 				</div>
 			{:else}
 				{#each Object.entries(formulasByType()) as [type, typeFormulas]}

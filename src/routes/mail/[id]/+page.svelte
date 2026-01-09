@@ -90,7 +90,7 @@
 </script>
 
 <div class="relative min-h-screen bg-background">
-	<GridPattern variant="dots" opacity={0.15} />
+	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10">
 		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-4">

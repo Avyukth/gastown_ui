@@ -17,13 +17,15 @@
 	/**
 	 * Navigation item variant definitions
 	 * Dark industrial aesthetic with animated states
+	 * Touch targets: ≥44x44px for accessibility
 	 */
 	const navItemVariants = tv({
 		base: [
 			'flex flex-col items-center justify-center gap-1',
-			'min-w-[64px] min-h-[48px] py-2 px-3',
+			'min-w-[56px] min-h-[48px] py-2.5 px-2',
 			'transition-all duration-fast ease-out-expo',
-			'active:scale-95 active:transition-none'
+			'active:scale-95 active:transition-none',
+			'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
 		],
 		variants: {
 			active: {
@@ -101,6 +103,30 @@
 	function closeOverflow() {
 		showOverflow = false;
 	}
+
+	// Handle keyboard navigation
+	function handleMenuKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape') {
+			closeOverflow();
+		}
+	}
+
+	// Handle swipe gesture to close overflow menu
+	let touchStartY = $state(0);
+
+	function handleTouchStart(event: TouchEvent) {
+		touchStartY = event.touches[0].clientY;
+	}
+
+	function handleTouchEnd(event: TouchEvent) {
+		if (!showOverflow) return;
+		const touchEndY = event.changedTouches[0].clientY;
+		const diff = touchEndY - touchStartY;
+		// Close if swiped down more than 100px
+		if (diff > 100) {
+			closeOverflow();
+		}
+	}
 </script>
 
 <!-- Overflow backdrop -->
@@ -119,6 +145,9 @@
 		style="animation: slideInUp 300ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards"
 		role="menu"
 		aria-label="Additional navigation options"
+		ontouchstart={handleTouchStart}
+		ontouchend={handleTouchEnd}
+		onkeydown={handleMenuKeydown}
 	>
 		<div class="bg-card/95 backdrop-blur-xl border border-border rounded-t-2xl mx-2 mb-2 p-3 max-h-[60vh] overflow-y-auto shadow-xl">
 			<div class="grid grid-cols-4 gap-2" role="none">
@@ -161,10 +190,11 @@
 		'fixed bottom-0 left-0 right-0 z-50',
 		'bg-card/90 backdrop-blur-xl',
 		'border-t border-border',
-		'pb-safe px-safe',
+		'py-2 pb-safe px-safe',
 		className
 	)}
 	aria-label="Bottom navigation"
+	style="height: calc(64px + env(safe-area-inset-bottom))"
 >
 	<!-- Animated underline indicator -->
 	{#if activeIndex() >= 0}
@@ -265,8 +295,8 @@
 	</div>
 </nav>
 
-<!-- Spacer to prevent content overlap -->
-<div class="h-16 pb-safe" aria-hidden="true"></div>
+<!-- Spacer to prevent content overlap - matches nav height (64px + safe area) -->
+<div class="pb-safe" style="height: calc(64px + env(safe-area-inset-bottom))" aria-hidden="true"></div>
 
 <style>
 	/* Spring animation for overflow panel */

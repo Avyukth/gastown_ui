@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { tv } from 'tailwind-variants';
-	import { GridPattern, PullToRefresh } from '$lib/components';
+	import { GridPattern, PullToRefresh, SplitView, SkeletonCard, ErrorState, EmptyState, FloatingActionButton } from '$lib/components';
 	import { cn } from '$lib/utils';
-	import { Plus, ChevronDown, ChevronRight, Loader2 } from 'lucide-svelte';
+	import { Plus, ChevronDown, ChevronRight, Loader2, PenLine } from 'lucide-svelte';
+	import { UnreadDot } from '$lib/components';
 
 	interface MailMessage {
 		id: string;
@@ -55,12 +56,16 @@
 		await fetchMail();
 	}
 
+	async function handleRetry() {
+		await fetchMail();
+	}
+
 	onMount(() => {
 		fetchMail();
 	});
 
 	// Track which message is expanded
-	let expandedId = $state<string | null>(null);
+	let selectedId = $state<string | null>(null);
 
 	/**
 	 * Message type badge variants
@@ -121,30 +126,35 @@
 	}
 
 	/**
-	 * Toggle message expansion
-	 */
-	function toggleMessage(id: string) {
-		expandedId = expandedId === id ? null : id;
-	}
-
-	/**
 	 * Get badge type for message
 	 */
 	function getBadgeType(messageType: string): string {
 		const knownTypes = ['ESCALATION', 'ERROR', 'HANDOFF', 'DONE', 'POLECAT_DONE', 'TEST'];
 		return knownTypes.includes(messageType) ? messageType : 'MESSAGE';
 	}
+
+	/**
+	 * Select a message for viewing
+	 */
+	function selectMessage(id: string) {
+		selectedId = selectedId === id ? null : id;
+	}
+
+	/**
+	 * Get the currently selected message
+	 */
+	const selectedMessage = $derived(data.messages.find(m => m.id === selectedId));
 </script>
 
 <div class="relative min-h-screen bg-background">
-	<GridPattern variant="dots" opacity={0.15} />
+	<GridPattern variant="dots" opacity={0.03} />
 
-	<div class="relative z-10">
+	<div class="relative z-10 flex flex-col h-screen">
 		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-4">
 			<div class="container">
 				<div class="flex items-center justify-between">
 					<div>
-						<h1 class="text-xl font-semibold text-foreground">Mail Inbox</h1>
+						<h1 class="text-2xl md:text-2xl font-semibold text-foreground">Mail Inbox</h1>
 						<p class="text-sm text-muted-foreground">
 							{data.messages.length} messages
 							{#if data.unreadCount > 0}
@@ -156,63 +166,144 @@
 						href="/mail/compose"
 						class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors"
 					>
-					<Plus class="w-4 h-4" />
-					Compose
-				</a>
+						<Plus class="w-4 h-4" />
+						Compose
+					</a>
 				</div>
 			</div>
 		</header>
 
-		<PullToRefresh onRefresh={refresh} class="flex-1">
-		<main class="container py-6" data-scrollable>
-			{#if loading}
-				<div class="panel-glass p-6 flex items-center justify-center gap-3">
-					<Loader2 class="w-5 h-5 animate-spin text-accent" />
-					<span class="text-muted-foreground">Loading mail...</span>
-				</div>
-			{:else if data.error}
-				<div class="panel-glass p-6 border-status-offline/30">
-					<p class="text-status-offline font-medium">Failed to load inbox</p>
-					<p class="text-sm text-muted-foreground mt-1">{data.error}</p>
-				</div>
-			{:else if data.messages.length === 0}
-				<div class="panel-glass p-6 text-center">
-					<p class="text-muted-foreground">No messages in inbox</p>
-				</div>
-			{:else}
-				<div class="panel-glass overflow-hidden">
-					<ul class="divide-y divide-border" role="list">
-						{#each data.messages as message, index}
-							{@const isExpanded = expandedId === message.id}
-							<li
-								class={cn(
-									'transition-colors animate-blur-fade-up',
-									!message.read && 'bg-accent/5'
-								)}
-								style="animation-delay: {index * 50}ms"
-							>
-								<button
-									type="button"
-									class="w-full text-left p-4 hover:bg-accent/5 transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-inset"
-									onclick={() => toggleMessage(message.id)}
-									aria-expanded={isExpanded}
-								>
-									<div class="flex items-start gap-3">
-										<!-- Unread indicator -->
-										<div class="flex-shrink-0 mt-1.5">
-											{#if !message.read}
-												<span class="block w-2 h-2 rounded-full bg-accent"></span>
-											{:else}
-												<span class="block w-2 h-2"></span>
-											{/if}
-										</div>
+		<PullToRefresh onRefresh={refresh} class="flex-1 overflow-hidden">
+			<div class="h-full overflow-hidden">
+				{#if loading}
+					<!-- Show skeleton loaders while loading -->
+					<div class="h-full overflow-y-auto p-4">
+						<div class="space-y-2">
+							<SkeletonCard type="mail" count={5} />
+						</div>
+					</div>
+				{:else if data.error}
+					<div class="p-4">
+						<ErrorState
+							title="Failed to load inbox"
+							message={data.error}
+							onRetry={handleRetry}
+							showRetryButton={true}
+						/>
+					</div>
+				{:else if data.messages.length === 0}
+					<div class="flex items-center justify-center h-full">
+						<EmptyState
+							title="No messages"
+							description="Your inbox is empty. Check back later for new messages."
+							size="default"
+						/>
+					</div>
+				{:else}
+					<!-- Split View: List on left, Content on right -->
+					<SplitView
+						listWidth={30}
+						minListWidth={200}
+						minContentWidth={400}
+						storageKey="mail-split-width"
+						class="h-full"
+						listClass="bg-muted/20"
+						contentClass="bg-background"
+					>
+						{#snippet list()}
+							<!-- Message List -->
+							<ul class="divide-y divide-border" role="list">
+								{#each data.messages as message, index}
+									{@const isSelected = selectedId === message.id}
+									<li
+										class={cn(
+											'transition-colors animate-blur-fade-up border-l-4',
+											isSelected && 'border-l-accent bg-accent/5',
+											!isSelected && 'border-l-transparent',
+											!message.read && 'bg-accent/5'
+										)}
+										style="animation-delay: {index * 50}ms"
+									>
+										<button
+											type="button"
+											class={cn(
+												'w-full text-left p-4 hover:bg-accent/5 transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-inset',
+												isSelected && 'bg-accent/10'
+											)}
+											onclick={() => selectMessage(message.id)}
+											aria-selected={isSelected}
+										>
+											<div class="flex items-start gap-3">
+												<!-- Unread indicator -->
+												<div class="flex-shrink-0 mt-1.5">
+													{#if !message.read}
+														<UnreadDot size="sm" />
+													{:else}
+														<span class="block w-2 h-2"></span>
+													{/if}
+												</div>
 
-										<!-- Message content -->
-										<div class="flex-1 min-w-0">
-											<div class="flex items-center gap-2 mb-1">
+												<!-- Message content -->
+												<div class="flex-1 min-w-0">
+													<div class="flex items-center gap-2 mb-1">
+														<span
+															class={typeBadgeVariants({
+																type: getBadgeType(message.messageType) as
+																	| 'ESCALATION'
+																	| 'ERROR'
+																	| 'HANDOFF'
+																	| 'DONE'
+																	| 'POLECAT_DONE'
+																	| 'TEST'
+																	| 'MESSAGE'
+															})}
+														>
+															{message.messageType}
+														</span>
+														<span
+															class={cn(
+																'text-sm truncate',
+																!message.read ? 'font-semibold text-foreground' : 'font-medium text-foreground'
+															)}
+														>
+															{formatSender(message.from)}
+														</span>
+														<span class="text-xs text-muted-foreground ml-auto flex-shrink-0 font-mono">
+															{formatTime(message.timestamp)}
+														</span>
+													</div>
+
+													<h3
+														class={cn(
+															'truncate',
+															!message.read ? 'font-semibold text-foreground' : 'font-medium text-muted-foreground'
+														)}
+													>
+														{message.subject}
+													</h3>
+
+													<p class="text-sm text-muted-foreground truncate mt-1">
+														{message.body}
+													</p>
+												</div>
+											</div>
+										</button>
+									</li>
+								{/each}
+							</ul>
+						{/snippet}
+
+						{#snippet content()}
+							<!-- Message Content Panel -->
+							{#if selectedMessage}
+								<div class="h-full flex flex-col overflow-y-auto">
+									<!-- Message Header -->
+									<div class="sticky top-0 z-10 bg-background/95 border-b border-border px-6 py-4">
+										<div class="flex items-start justify-between gap-4">
+											<div class="flex-1 min-w-0">
 												<span
 													class={typeBadgeVariants({
-														type: getBadgeType(message.messageType) as
+														type: getBadgeType(selectedMessage.messageType) as
 															| 'ESCALATION'
 															| 'ERROR'
 															| 'HANDOFF'
@@ -222,73 +313,76 @@
 															| 'MESSAGE'
 													})}
 												>
-													{message.messageType}
+													{selectedMessage.messageType}
 												</span>
-												<span class="text-sm font-medium text-foreground">
-													{formatSender(message.from)}
-												</span>
-												<span class="text-xs text-muted-foreground ml-auto flex-shrink-0 font-mono">
-													{formatTime(message.timestamp)}
-												</span>
-											</div>
-
-											<h3
-												class="font-medium truncate"
-												class:text-foreground={!message.read}
-												class:text-muted-foreground={message.read}
-											>
-												{message.subject}
-											</h3>
-
-											{#if !isExpanded}
-												<p class="text-sm text-muted-foreground truncate mt-1">
-													{message.body}
+												<h2 class="text-xl font-semibold mt-2 break-words">{selectedMessage.subject}</h2>
+												<p class="text-sm text-muted-foreground mt-1">
+													From: <span class="font-medium">{formatSender(selectedMessage.from)}</span>
+													<span class="mx-2">•</span>
+													<span class="font-mono">{formatTime(selectedMessage.timestamp)}</span>
 												</p>
-											{/if}
-										</div>
-
-										<!-- Expand indicator -->
-										<div class="flex-shrink-0 text-muted-foreground">
-											<ChevronDown
-												class="w-5 h-5 transition-transform {isExpanded ? 'rotate-180' : ''}"
-											/>
-										</div>
-									</div>
-								</button>
-
-								<!-- Expanded message body -->
-								{#if isExpanded}
-									<div
-										class="px-4 pb-4 pt-0 ml-9 border-l-2 border-accent/30 animate-blur-fade-up"
-									>
-										<div class="prose prose-sm prose-invert max-w-none">
-											<pre
-												class="whitespace-pre-wrap text-sm text-foreground bg-muted/30 p-4 rounded-md font-mono">{message.body}</pre>
-										</div>
-										<div class="mt-3 flex items-center justify-between">
-											<div class="flex items-center gap-4 text-xs text-muted-foreground">
-												<span>From: {message.from}</span>
-												<span>ID: {message.id}</span>
-												{#if message.threadId}
-													<span>Thread: {message.threadId.slice(-8)}</span>
-												{/if}
 											</div>
 											<a
-												href="/mail/{message.id}"
-												class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-accent hover:text-accent/80 bg-accent/10 hover:bg-accent/20 rounded-md transition-colors"
+												href="/mail/{selectedMessage.id}"
+												class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-accent hover:text-accent/80 bg-accent/10 hover:bg-accent/20 rounded-md transition-colors flex-shrink-0"
 											>
-												View full message
+												View full
 												<ChevronRight class="w-3.5 h-3.5" />
 											</a>
 										</div>
 									</div>
-								{/if}
-							</li>
-						{/each}
-					</ul>
-				</div>
-			{/if}
-		</main>
+
+									<!-- Message Body -->
+									<div class="flex-1 overflow-y-auto px-6 py-4">
+										<pre
+											class="whitespace-pre-wrap text-sm text-foreground bg-muted/30 p-4 rounded-md font-mono"
+										>{selectedMessage.body}</pre>
+
+										<!-- Message Metadata -->
+										<div class="mt-6 pt-4 border-t border-border">
+											<div class="grid grid-cols-2 gap-4 text-xs">
+												<div>
+													<p class="text-muted-foreground">From</p>
+													<p class="text-foreground font-mono">{selectedMessage.from}</p>
+												</div>
+												<div>
+													<p class="text-muted-foreground">Message ID</p>
+													<p class="text-foreground font-mono">{selectedMessage.id}</p>
+												</div>
+												{#if selectedMessage.threadId}
+													<div>
+														<p class="text-muted-foreground">Thread ID</p>
+														<p class="text-foreground font-mono">{selectedMessage.threadId}</p>
+													</div>
+												{/if}
+												<div>
+													<p class="text-muted-foreground">Status</p>
+													<p class="text-foreground">{selectedMessage.read ? 'Read' : 'Unread'}</p>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							{:else}
+								<!-- Empty State: No message selected -->
+								<div class="h-full flex items-center justify-center">
+									<div class="text-center">
+										<p class="text-muted-foreground">Select a message to view details</p>
+									</div>
+								</div>
+							{/if}
+						{/snippet}
+					</SplitView>
+				{/if}
+			</div>
 		</PullToRefresh>
+
+		<!-- Mobile compose FAB -->
+		<FloatingActionButton
+			href="/mail/compose"
+			ariaLabel="Compose new message"
+		>
+			<PenLine class="w-5 h-5" strokeWidth={2.5} />
+		</FloatingActionButton>
 	</div>
 </div>

@@ -130,7 +130,10 @@ export default {
 				'label-lg': ['0.9375rem', { lineHeight: '1.25rem', fontWeight: '500', letterSpacing: '0.01em' }],
 				'label-md': ['0.875rem', { lineHeight: '1.25rem', fontWeight: '500', letterSpacing: '0.01em' }],
 				'label-sm': ['0.75rem', { lineHeight: '1rem', fontWeight: '500', letterSpacing: '0.02em' }],
-				'label-xs': ['0.625rem', { lineHeight: '0.875rem', fontWeight: '500', letterSpacing: '0.04em' }]
+				'label-xs': ['0.625rem', { lineHeight: '0.875rem', fontWeight: '500', letterSpacing: '0.04em' }],
+
+				// === Code Typography ===
+				'code': ['0.8125rem', { lineHeight: '1.5rem' }]
 			},
 
 			// === Letter Spacing Scale ===

@@ -158,7 +158,7 @@
 	>
 		{#snippet actions()}
 			<Button variant="ghost">Settings</Button>
-			<Button>Create Agent</Button>
+			<Button variant="primary">Create Agent</Button>
 		{/snippet}
 	</PageHeader>
 	```
