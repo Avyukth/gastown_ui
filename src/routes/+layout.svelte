@@ -199,7 +199,7 @@
 
 	<!-- Mobile/Tablet layout with bottom nav (hidden on desktop) -->
 	<div class="lg:hidden flex flex-col min-h-screen">
-		<!-- Mobile header with menu button -->
+		<!-- Mobile header with menu button and search -->
 		<div class="sticky top-0 z-30 flex items-center gap-2 px-4 py-3 bg-card/80 backdrop-blur-xl border-b border-border md:hidden">
 			<button
 				onclick={() => mobileDrawerOpen = !mobileDrawerOpen}
@@ -214,6 +214,9 @@
 				{/if}
 			</button>
 			<span class="text-sm font-semibold text-foreground">Navigation</span>
+			<div class="ml-auto">
+				<GlobalSearch class="rounded-lg" />
+			</div>
 		</div>
 
 		<!-- Mobile drawer backdrop -->
@@ -235,11 +238,6 @@
 				{activeId}
 				class="h-screen"
 			/>
-		</div>
-
-		<!-- Global search (mobile) - positioned above bottom nav with safe area support -->
-		<div class="fixed right-4 z-40" style="bottom: calc(80px + env(safe-area-inset-bottom));">
-			<GlobalSearch class="rounded-full p-3 shadow-lg" />
 		</div>
 
 		<!-- Main content area -->
