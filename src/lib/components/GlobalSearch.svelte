@@ -14,7 +14,7 @@
 		Search,
 		Home,
 		Bot,
-		Target,
+		Briefcase,
 		Truck,
 		ClipboardList,
 		Mail,
@@ -86,7 +86,7 @@
 	const routes: Array<{ path: string; label: string; icon: ComponentType }> = [
 		{ path: '/', label: 'Dashboard', icon: Home },
 		{ path: '/agents', label: 'Agents', icon: Bot },
-		{ path: '/work', label: 'Work', icon: Target },
+		{ path: '/work', label: 'Work', icon: Briefcase },
 		{ path: '/convoys', label: 'Convoys', icon: Truck },
 		{ path: '/queue', label: 'Queue', icon: ClipboardList },
 		{ path: '/mail', label: 'Mail', icon: Mail },
