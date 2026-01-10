@@ -262,6 +262,31 @@ async function handleSubmit(e: Event) {
 
 ---
 
+## Package Manager: Bun
+
+**IMPORTANT**: This project uses **bun** as the package manager. Do NOT use npm, yarn, or pnpm.
+
+```bash
+# Install dependencies
+bun install
+
+# Add a new package
+bun add <package>
+
+# Add dev dependency
+bun add -d <package>
+
+# Run scripts
+bun run dev
+bun run build
+bun run check
+
+# Run tests
+bun test
+```
+
+**Lock file**: `bun.lockb` - Do NOT create or commit `package-lock.json`, `yarn.lock`, or `pnpm-lock.yaml`.
+
 ## Dependencies Added
 
 ```json
@@ -272,7 +297,7 @@ async function handleSubmit(e: Event) {
 }
 ```
 
-Install with: `npm install zod --legacy-peer-deps`
+Install with: `bun add zod`
 
 ---
 

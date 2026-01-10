@@ -93,7 +93,7 @@ build/
 bundle-stats.html
 
 # =============================================================================
-# Temporary session & handoff docs (cleaned up 2026-01-19)
+# Temporary session & handoff docs (cleaned up 2026-01-10)
 # =============================================================================
 HANDOFF.md
 SESSION_HANDOFF.md
@@ -112,3 +112,22 @@ IMPROVEMENT.md
 prd-fixes.json
 ralph_execution.log
 TEST_PHASE_2_VERIFICATION.md
+
+# Phase/Session docs (historical, archived locally in .archive/)
+PHASE*.md
+SESSION*.md
+PROGRESS_SUMMARY.md
+CURRENT_STATUS.md
+SPRINT_MOLECULES.md
+AUDIT_REPORT.md
+BUNDLE_ANALYSIS.md
+DESIGN_CRITIQUE.md
+prompt.md
+.archive/
+
+# =============================================================================
+# Package managers (use bun only)
+# =============================================================================
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
