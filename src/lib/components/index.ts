@@ -63,7 +63,7 @@ export { default as OfflineIndicator } from './OfflineIndicator.svelte';
 export { default as ConnectionLost } from './ConnectionLost.svelte';
 
 // Search components
-export { default as GlobalSearch } from './GlobalSearch.svelte';
+export { GlobalSearch } from './global-search';
 export { CommandPalette } from './command-palette';
 
 // Keyboard shortcuts components

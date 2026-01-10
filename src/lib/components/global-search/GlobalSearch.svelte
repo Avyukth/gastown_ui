@@ -12,27 +12,29 @@
 	import { onMount } from 'svelte';
 	import {
 		Search,
-		Home,
 		Bot,
-		Briefcase,
-		Truck,
-		ClipboardList,
-		Mail,
-		Bell,
-		ScrollText,
-		Settings,
-		Users,
-		Dog,
-		Zap,
 		FileText,
-		FolderOpen,
+		Truck,
 		Clock,
+		Zap,
 		Sparkles,
 		ArrowUp,
 		ArrowDown,
 		CornerDownLeft
 	} from 'lucide-svelte';
-	import type { ComponentType } from 'svelte';
+
+	import type { FilterType, SearchResult } from './types';
+	import {
+		routes,
+		commands,
+		mockAgents,
+		mockIssues,
+		mockConvoys,
+		recentItems,
+		searchSuggestions,
+		filterOptions,
+		groupLabels
+	} from './data';
 
 	interface Props {
 		class?: string;
@@ -49,7 +51,7 @@
 	let triggerRef = $state<HTMLButtonElement | null>(null);
 
 	// Filter state
-	let filters = $state({ type: 'all' as 'all' | 'agent' | 'issue' | 'convoy' | 'route' });
+	let filters = $state({ type: 'all' as FilterType });
 	let recentSearches = $state<string[]>([]);
 
 	// Detect OS for keyboard shortcut display
@@ -75,119 +77,67 @@
 
 	// Command palette mode (when query starts with '>')
 	const isCommandMode = $derived(query.trimStart().startsWith('>'));
-	const searchQuery = $derived(isCommandMode ? query.slice(query.indexOf('>') + 1).trim() : query.trim());
-
-	// Mock data for search results
-	const mockAgents = [
-		{ id: 'mayor', name: 'Mayor', status: 'running', task: 'Coordinating work' },
-		{ id: 'witness-1', name: 'Witness (gastown_ui)', status: 'running', task: 'Monitoring polecats' },
-		{ id: 'refinery-1', name: 'Refinery (gastown_ui)', status: 'idle', task: 'Waiting for merges' },
-		{ id: 'polecat-morsov', name: 'Polecat Morsov', status: 'running', task: 'Building features' },
-		{ id: 'polecat-rictus', name: 'Polecat Rictus', status: 'idle', task: 'Awaiting work' }
-	];
-
-	const mockIssues = [
-		{ id: 'gt-d3a', title: 'Authentication', type: 'epic', priority: 1 },
-		{ id: 'gt-2hs', title: 'UI Components', type: 'epic', priority: 2 },
-		{ id: 'gt-be4', title: 'Auth Token Refresh', type: 'task', priority: 2 },
-		{ id: 'gt-931', title: 'CSRF Protection', type: 'task', priority: 2 },
-		{ id: 'gt-3v5', title: 'Command Palette', type: 'task', priority: 2 },
-		{ id: 'hq-7vsv', title: 'Global Search', type: 'task', priority: 1 }
-	];
-
-	const mockConvoys = [
-		{ id: 'convoy-001', name: 'Auth Sprint', status: 'active', progress: 45 },
-		{ id: 'convoy-002', name: 'UI Polish', status: 'active', progress: 70 },
-		{ id: 'convoy-003', name: 'Mobile PWA', status: 'stale', progress: 30 }
-	];
-
-	const routes: Array<{ path: string; label: string; icon: ComponentType }> = [
-		{ path: '/', label: 'Dashboard', icon: Home },
-		{ path: '/agents', label: 'Agents', icon: Bot },
-		{ path: '/work', label: 'Work', icon: Briefcase },
-		{ path: '/convoys', label: 'Convoys', icon: Truck },
-		{ path: '/queue', label: 'Queue', icon: ClipboardList },
-		{ path: '/mail', label: 'Mail', icon: Mail },
-		{ path: '/escalations', label: 'Escalations', icon: Bell },
-		{ path: '/logs', label: 'Logs', icon: ScrollText },
-		{ path: '/settings', label: 'Settings', icon: Settings },
-		{ path: '/crew', label: 'Crew', icon: Users },
-		{ path: '/watchdog', label: 'Watchdog', icon: Dog }
-	];
-
-	const commands = [
-		{ id: 'new-issue', label: 'New Issue', description: 'Create a new issue', action: () => goto('/work') },
-		{ id: 'new-convoy', label: 'New Convoy', description: 'Create a new convoy', action: () => goto('/work') },
-		{ id: 'go-settings', label: 'Go to Settings', description: 'Open settings page', action: () => goto('/settings') },
-		{ id: 'go-mail', label: 'Compose Mail', description: 'Write a new message', action: () => goto('/mail/compose') },
-		{ id: 'refresh', label: 'Refresh', description: 'Reload current page', action: () => window.location.reload() }
-	];
-
-	// Recent items (simulated) - shown with clock icon at 60% opacity
-	const recentItems = [
-		{ type: 'agent', id: 'polecat-morsov', label: 'Polecat Morsov', path: '/agents/polecat-morsov' },
-		{ type: 'issue', id: 'hq-7vsv', label: 'Global Search', path: '/work' },
-		{ type: 'route', id: 'convoys', label: 'Convoys', path: '/convoys' }
-	];
-
-	// Search suggestions for empty state
-	const searchSuggestions = [
-		{ query: 'running agents', description: 'Find active agents' },
-		{ query: 'P1 issues', description: 'High priority issues' },
-		{ query: '>new issue', description: 'Create a new issue' },
-		{ query: 'convoy', description: 'View convoy status' }
-	];
+	const searchQuery = $derived(
+		isCommandMode ? query.slice(query.indexOf('>') + 1).trim() : query.trim()
+	);
 
 	// Filter results based on query
 	const filteredAgents = $derived(
 		searchQuery
-			? mockAgents.filter(a =>
-				a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				a.id.toLowerCase().includes(searchQuery.toLowerCase())
-			)
+			? mockAgents.filter(
+					(a) =>
+						a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+						a.id.toLowerCase().includes(searchQuery.toLowerCase())
+				)
 			: []
 	);
 
 	const filteredIssues = $derived(
 		searchQuery
-			? mockIssues.filter(i =>
-				i.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				i.id.toLowerCase().includes(searchQuery.toLowerCase())
-			)
+			? mockIssues.filter(
+					(i) =>
+						i.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+						i.id.toLowerCase().includes(searchQuery.toLowerCase())
+				)
 			: []
 	);
 
 	const filteredConvoys = $derived(
 		searchQuery
-			? mockConvoys.filter(c =>
-				c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				c.id.toLowerCase().includes(searchQuery.toLowerCase())
-			)
+			? mockConvoys.filter(
+					(c) =>
+						c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+						c.id.toLowerCase().includes(searchQuery.toLowerCase())
+				)
 			: []
 	);
 
 	const filteredRoutes = $derived(
 		searchQuery
-			? routes.filter(r =>
-				r.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				r.path.toLowerCase().includes(searchQuery.toLowerCase())
-			)
+			? routes.filter(
+					(r) =>
+						r.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+						r.path.toLowerCase().includes(searchQuery.toLowerCase())
+				)
 			: []
 	);
 
 	const filteredCommands = $derived(
 		isCommandMode && searchQuery
-			? commands.filter(c =>
-				c.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				c.description.toLowerCase().includes(searchQuery.toLowerCase())
-			)
-			: isCommandMode ? commands : []
+			? commands.filter(
+					(c) =>
+						c.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+						c.description.toLowerCase().includes(searchQuery.toLowerCase())
+				)
+			: isCommandMode
+				? commands
+				: []
 	);
 
 	// Helper: Save recent search
 	function addRecentSearch(term: string) {
 		if (!term.trim()) return;
-		const filtered = recentSearches.filter(s => s.toLowerCase() !== term.toLowerCase());
+		const filtered = recentSearches.filter((s) => s.toLowerCase() !== term.toLowerCase());
 		recentSearches = [term, ...filtered].slice(0, 5);
 		localStorage.setItem('gastown-recent-searches', JSON.stringify(recentSearches));
 	}
@@ -198,24 +148,18 @@
 	}
 
 	// Build flat list of all results for keyboard navigation
-	interface SearchResult {
-		type: 'agent' | 'issue' | 'convoy' | 'route' | 'command' | 'recent';
-		id: string;
-		label: string;
-		sublabel?: string;
-		icon?: ComponentType;
-		action: () => void;
-	}
-
 	const allResults = $derived.by((): SearchResult[] => {
 		if (isCommandMode) {
-			return filteredCommands.map(c => ({
+			return filteredCommands.map((c) => ({
 				type: 'command' as const,
 				id: c.id,
 				label: c.label,
 				sublabel: c.description,
 				icon: Zap,
-				action: () => { c.action(); close(); }
+				action: () => {
+					c.action();
+					close();
+				}
 			}));
 		}
 
@@ -223,14 +167,17 @@
 
 		// Show recent items when no query (with Clock icon, will be styled at 60% opacity)
 		if (!searchQuery) {
-			recentItems.forEach(item => {
+			recentItems.forEach((item) => {
 				results.push({
 					type: 'recent',
 					id: item.id,
 					label: item.label,
 					sublabel: `Recent ${item.type}`,
 					icon: Clock, // Clock icon for all recent items
-					action: () => { goto(item.path); close(); }
+					action: () => {
+						goto(item.path);
+						close();
+					}
 				});
 			});
 			return results;
@@ -238,56 +185,68 @@
 
 		// Agents
 		if (shouldIncludeInResults('agent')) {
-			filteredAgents.forEach(a => {
+			filteredAgents.forEach((a) => {
 				results.push({
 					type: 'agent',
 					id: a.id,
 					label: a.name,
 					sublabel: a.task,
 					icon: Bot,
-					action: () => { goto(`/agents/${a.id}`); close(); }
+					action: () => {
+						goto(`/agents/${a.id}`);
+						close();
+					}
 				});
 			});
 		}
 
 		// Issues
 		if (shouldIncludeInResults('issue')) {
-			filteredIssues.forEach(i => {
+			filteredIssues.forEach((i) => {
 				results.push({
 					type: 'issue',
 					id: i.id,
 					label: i.title,
 					sublabel: `${i.id} · ${i.type} · P${i.priority}`,
 					icon: FileText,
-					action: () => { goto('/work'); close(); }
+					action: () => {
+						goto('/work');
+						close();
+					}
 				});
 			});
 		}
 
 		// Convoys
 		if (shouldIncludeInResults('convoy')) {
-			filteredConvoys.forEach(c => {
+			filteredConvoys.forEach((c) => {
 				results.push({
 					type: 'convoy',
 					id: c.id,
 					label: c.name,
 					sublabel: `${c.status} · ${c.progress}%`,
 					icon: Truck,
-					action: () => { goto(`/convoys/${c.id}`); close(); }
+					action: () => {
+						goto(`/convoys/${c.id}`);
+						close();
+					}
 				});
 			});
 		}
 
 		// Routes
 		if (shouldIncludeInResults('route')) {
-			filteredRoutes.forEach(r => {
+			filteredRoutes.forEach((r) => {
 				results.push({
 					type: 'route',
 					id: r.path,
 					label: r.label,
 					sublabel: r.path,
 					icon: r.icon,
-					action: () => { goto(r.path); close(); }
+					action: () => {
+						goto(r.path);
+						close();
+					}
 				});
 			});
 		}
@@ -386,12 +345,6 @@
 		}
 	}
 
-	function handleBackdropClick(e: MouseEvent) {
-		if (e.target === e.currentTarget) {
-			close();
-		}
-	}
-
 	// Group results by type for display
 	const groupedResults = $derived.by(() => {
 		const groups: Record<string, SearchResult[]> = {};
@@ -406,15 +359,6 @@
 
 		return groups;
 	});
-
-	const groupLabels: Record<string, string> = {
-		recent: 'Recent',
-		agent: 'Agents',
-		issue: 'Issues',
-		convoy: 'Convoys',
-		route: 'Routes',
-		command: 'Commands'
-	};
 
 	// Calculate flat index for a grouped item
 	function getFlatIndex(groupKey: string, itemIndex: number): number {
@@ -456,7 +400,9 @@
 >
 	<Search class="w-4 h-4 flex-shrink-0" />
 	<span class="hidden sm:inline text-sm font-medium">Search...</span>
-	<kbd class="hidden md:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-mono font-medium bg-muted/80 text-muted-foreground rounded border border-border/80 shadow-sm">
+	<kbd
+		class="hidden md:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-mono font-medium bg-muted/80 text-muted-foreground rounded border border-border/80 shadow-sm"
+	>
 		{isMac ? '⌘' : 'Ctrl'}K
 	</kbd>
 </button>
@@ -501,14 +447,18 @@
 						bind:value={query}
 						id="global-search-input"
 						type="text"
-						placeholder={isCommandMode ? 'Type a command...' : 'Search agents, issues, convoys, or type > for commands...'}
+						placeholder={isCommandMode
+							? 'Type a command...'
+							: 'Search agents, issues, convoys, or type > for commands...'}
 						class="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground outline-none text-base"
 						autocomplete="off"
 						autocorrect="off"
 						autocapitalize="off"
 						spellcheck="false"
 					/>
-					<kbd class="hidden sm:inline-flex items-center px-1.5 py-0.5 text-xs font-mono text-muted-foreground bg-muted rounded border border-border">
+					<kbd
+						class="hidden sm:inline-flex items-center px-1.5 py-0.5 text-xs font-mono text-muted-foreground bg-muted rounded border border-border"
+					>
 						ESC
 					</kbd>
 				</div>
@@ -516,12 +466,7 @@
 				<!-- Filter buttons (show when searching) -->
 				{#if searchQuery}
 					<div class="flex flex-wrap gap-2">
-						{#each [
-							{ label: 'All', value: 'all' },
-							{ label: 'Agents', value: 'agent' },
-							{ label: 'Issues', value: 'issue' },
-							{ label: 'Convoys', value: 'convoy' }
-						] as filterOption}
+						{#each filterOptions as filterOption}
 							<button
 								type="button"
 								class={cn(
@@ -530,7 +475,7 @@
 										? 'bg-primary text-primary-foreground'
 										: 'bg-muted text-muted-foreground hover:bg-muted/80'
 								)}
-								onclick={() => filters.type = filterOption.value as any}
+								onclick={() => (filters.type = filterOption.value)}
 								aria-pressed={filters.type === filterOption.value}
 							>
 								{filterOption.label}
@@ -547,7 +492,7 @@
 							<button
 								type="button"
 								class="px-3 py-1 text-xs rounded-md bg-muted/50 text-muted-foreground hover:bg-muted transition-colors flex items-center gap-1"
-								onclick={() => query = recent}
+								onclick={() => (query = recent)}
 								title="Search for '{recent}'"
 							>
 								<Clock class="w-3 h-3" />
@@ -567,7 +512,11 @@
 							<div class="text-muted-foreground">
 								<Search class="w-10 h-10 mx-auto mb-3 opacity-40" />
 								<p class="font-medium">No results for "{searchQuery}"</p>
-								<p class="text-body-sm mt-1">Try a different search term or type <kbd class="px-1.5 py-0.5 text-xs font-mono bg-muted rounded">&gt;</kbd> for commands</p>
+								<p class="text-body-sm mt-1">
+									Try a different search term or type <kbd
+										class="px-1.5 py-0.5 text-xs font-mono bg-muted rounded">&gt;</kbd
+									> for commands
+								</p>
 							</div>
 						{:else if isCommandMode}
 							<!-- Command mode empty -->
@@ -587,7 +536,7 @@
 										<button
 											type="button"
 											class="inline-flex items-center gap-1.5 px-3 py-1.5 text-body-sm text-muted-foreground bg-muted/50 hover:bg-muted rounded-full transition-colors duration-fast"
-											onclick={() => query = suggestion.query}
+											onclick={() => (query = suggestion.query)}
 										>
 											<Search class="w-3 h-3" />
 											{suggestion.query}
@@ -602,7 +551,9 @@
 						{#each Object.entries(groupedResults) as [groupKey, items]}
 							<div class="px-2">
 								<!-- Group header with icon -->
-								<div class="flex items-center gap-2 px-2 py-1.5 text-label-sm text-muted-foreground uppercase tracking-wider">
+								<div
+									class="flex items-center gap-2 px-2 py-1.5 text-label-sm text-muted-foreground uppercase tracking-wider"
+								>
 									{#if groupKey === 'recent'}
 										<Clock class="w-3.5 h-3.5" />
 									{/if}
@@ -623,12 +574,16 @@
 											isRecent && flatIndex !== selectedIndex && 'opacity-60'
 										)}
 										onclick={() => item.action()}
-										onmouseenter={() => selectedIndex = flatIndex}
+										onmouseenter={() => (selectedIndex = flatIndex)}
 									>
-										<span class={cn(
-											'w-6 h-6 flex items-center justify-center flex-shrink-0 rounded-md',
-											flatIndex === selectedIndex ? 'text-accent-foreground' : 'text-muted-foreground'
-										)}>
+										<span
+											class={cn(
+												'w-6 h-6 flex items-center justify-center flex-shrink-0 rounded-md',
+												flatIndex === selectedIndex
+													? 'text-accent-foreground'
+													: 'text-muted-foreground'
+											)}
+										>
 											{#if item.icon}
 												<item.icon size={18} strokeWidth={2} />
 											{/if}
@@ -636,7 +591,9 @@
 										<div class="flex-1 min-w-0">
 											<div class="font-medium truncate">{item.label}</div>
 											{#if item.sublabel}
-												<div class="text-body-sm text-muted-foreground truncate">{item.sublabel}</div>
+												<div class="text-body-sm text-muted-foreground truncate">
+													{item.sublabel}
+												</div>
 											{/if}
 										</div>
 										{#if flatIndex === selectedIndex}
@@ -653,7 +610,9 @@
 			</div>
 
 			<!-- Footer hints -->
-			<div class="flex items-center justify-between gap-4 px-4 py-2 border-t border-border text-xs text-muted-foreground">
+			<div
+				class="flex items-center justify-between gap-4 px-4 py-2 border-t border-border text-xs text-muted-foreground"
+			>
 				<div class="flex items-center gap-4">
 					<span class="flex items-center gap-1">
 						<kbd class="px-1 py-0.5 font-mono bg-muted rounded">↑</kbd>

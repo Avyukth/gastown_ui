@@ -259,7 +259,7 @@
 		<div class="flex-1 flex flex-col h-full overflow-y-auto">
 			<!-- Global search in header for desktop -->
 			<div class="fixed top-4 right-4 z-40">
-				{#await import('$lib/components/GlobalSearch.svelte') then m}
+				{#await import('$lib/components/global-search/GlobalSearch.svelte') then m}
 					<m.default />
 				{:catch}
 					<button class="w-10 h-10 rounded-lg bg-card border border-border" aria-label="Loading search"></button>
@@ -295,7 +295,7 @@
 			</button>
 			<span class="text-sm font-semibold text-foreground">Navigation</span>
 			<div class="ml-auto">
-				{#await import('$lib/components/GlobalSearch.svelte') then m}
+				{#await import('$lib/components/global-search/GlobalSearch.svelte') then m}
 					<m.default class="rounded-lg" />
 				{:catch}
 					<button class="w-10 h-10 rounded-lg bg-card border border-border" aria-label="Loading search"></button>
