@@ -953,3 +953,25 @@ pre {
 .grid {
 	min-width: 0;
 }
+
+/* === Dynamic Viewport Height (Safari mobile toolbar fix) === */
+@layer utilities {
+	.h-dvh {
+		height: 100vh;    /* Fallback for older browsers */
+		height: 100dvh;   /* Dynamic viewport height */
+	}
+
+	.min-h-dvh {
+		min-height: 100vh;
+		min-height: 100dvh;
+	}
+
+	/* Safe area padding for notched devices */
+	.pb-safe {
+		padding-bottom: env(safe-area-inset-bottom, 0);
+	}
+
+	.pt-safe {
+		padding-top: env(safe-area-inset-top, 0);
+	}
+}

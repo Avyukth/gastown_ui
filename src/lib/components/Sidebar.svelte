@@ -11,6 +11,7 @@
 	import { cn } from '$lib/utils';
 	import { onMount } from 'svelte';
 	import { Fuel } from 'lucide-svelte';
+	import ThemeToggle from './ThemeToggle.svelte';
 
 	/**
 	 * Navigation item styling variants
@@ -145,6 +146,42 @@
 	let navRef = $state<HTMLElement | null>(null);
 	let focusedIndex = $state(-1);
 
+	// Scroll fade indicators state
+	let showTopFade = $state(false);
+	let showBottomFade = $state(false);
+
+	function updateScrollState() {
+		if (!navRef) return;
+
+		const { scrollTop, scrollHeight, clientHeight } = navRef;
+		const hasOverflow = scrollHeight > clientHeight;
+
+		showTopFade = hasOverflow && scrollTop > 8;
+		showBottomFade = hasOverflow && scrollTop < scrollHeight - clientHeight - 8;
+	}
+
+	// Recalculate when navRef is set, on resize, or when collapsed state changes
+	$effect(() => {
+		if (navRef) {
+			// Initial calculation
+			updateScrollState();
+
+			// Watch for resize
+			const resizeObserver = new ResizeObserver(updateScrollState);
+			resizeObserver.observe(navRef);
+
+			return () => resizeObserver.disconnect();
+		}
+	});
+
+	// Recalculate when collapsed changes (affects content height)
+	$effect(() => {
+		// Access collapsed to create dependency
+		const _ = collapsed;
+		// Use setTimeout to wait for transition
+		setTimeout(updateScrollState, 350);
+	});
+
 	// Flatten items for keyboard navigation
 	const flatItems = $derived(navGroups.flatMap(group => group.items));
 
@@ -219,13 +256,24 @@
 		{/if}
 	</div>
 
-	<!-- Navigation -->
-	<nav
-		bind:this={navRef}
-		class="flex-1 overflow-y-auto py-4 px-2"
-		aria-label="Sidebar navigation"
-		onkeydown={handleKeyDown}
-	>
+	<!-- Navigation with scroll fade indicators -->
+	<div class="relative flex-1 overflow-hidden">
+		<!-- Top fade gradient -->
+		<div
+			class="pointer-events-none absolute top-0 left-0 right-0 h-6 z-10
+				   bg-gradient-to-b from-card to-transparent
+				   transition-opacity duration-200"
+			class:opacity-0={!showTopFade}
+			aria-hidden="true"
+		></div>
+
+		<nav
+			bind:this={navRef}
+			onscroll={updateScrollState}
+			class="h-full overflow-y-auto py-4 px-2"
+			aria-label="Sidebar navigation"
+			onkeydown={handleKeyDown}
+		>
 		{#each navGroups as group, groupIndex}
 			<!-- Section divider with 24px vertical margins (except first group) -->
 			{#if groupIndex > 0}
@@ -285,10 +333,24 @@
 				</ul>
 			</div>
 		{/each}
-	</nav>
+		</nav>
 
-	<!-- Collapse toggle button -->
-	<div class="shrink-0 border-t border-border p-2">
+		<!-- Bottom fade gradient -->
+		<div
+			class="pointer-events-none absolute bottom-0 left-0 right-0 h-6 z-10
+				   bg-gradient-to-t from-card to-transparent
+				   transition-opacity duration-200"
+			class:opacity-0={!showBottomFade}
+			aria-hidden="true"
+		></div>
+	</div>
+
+	<!-- Footer: Theme toggle and Collapse button -->
+	<div class="shrink-0 border-t border-border p-2 space-y-1">
+		<!-- Theme toggle -->
+		<ThemeToggle {collapsed} class="w-full" />
+
+		<!-- Collapse toggle -->
 		<button
 			onclick={toggleCollapse}
 			class={cn(

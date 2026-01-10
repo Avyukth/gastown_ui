@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { AgentCard, GridPattern, SwipeableItem, SkeletonCard, ErrorState, EmptyState, PullToRefresh } from '$lib/components';
+	import { AgentCard, GridPattern, SwipeableItem, SkeletonCard, ErrorState, EmptyState, PullToRefresh, PageHeader } from '$lib/components';
 	import { goto } from '$app/navigation';
 	import { Search, RefreshCw, ChevronDown } from 'lucide-svelte';
 	import { onMount } from 'svelte';
@@ -82,29 +82,28 @@
 	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10">
-		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-4">
-			<div class="container">
-				<div class="flex items-center justify-between mb-2">
-					<h1 class="text-2xl md:text-2xl font-semibold text-foreground">Agents</h1>
-					<!-- Status filter dropdown -->
-					<div class="relative inline-block">
-						<select
-							bind:value={filters.status}
-							class="px-3 py-1 text-xs bg-muted text-muted-foreground rounded border border-border
-								   appearance-none pr-8 cursor-pointer
-								   focus:outline-none focus:ring-2 focus:ring-ring"
-						>
-							<option value="all">All Status</option>
-							<option value="running">Running</option>
-							<option value="idle">Idle</option>
-							<option value="error">Error</option>
-						</select>
-						<ChevronDown class="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
-					</div>
+		<PageHeader
+			title="Agents"
+			subtitle="Showing {filteredAgents.length} of {data.agents.length} agents"
+		>
+			{#snippet actions()}
+				<!-- Status filter dropdown -->
+				<div class="relative inline-block">
+					<select
+						bind:value={filters.status}
+						class="px-3 py-1 text-xs bg-muted text-muted-foreground rounded border border-border
+							   appearance-none pr-8 cursor-pointer
+							   focus:outline-none focus:ring-2 focus:ring-ring"
+					>
+						<option value="all">All Status</option>
+						<option value="running">Running</option>
+						<option value="idle">Idle</option>
+						<option value="error">Error</option>
+					</select>
+					<ChevronDown class="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
 				</div>
-				<p class="text-sm text-muted-foreground">Showing {filteredAgents.length} of {data.agents.length} agents</p>
-			</div>
-		</header>
+			{/snippet}
+		</PageHeader>
 
 		<PullToRefresh onRefresh={refresh} class="flex-1">
 			<main class="container py-6">

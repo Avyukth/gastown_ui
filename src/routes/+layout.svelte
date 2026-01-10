@@ -247,7 +247,7 @@
 <!-- Layout wrapper with responsive sidebar/bottom nav -->
 {#if !hideNav}
 	<!-- Desktop layout with sidebar (hidden on mobile) -->
-	<div class="hidden lg:flex min-h-screen">
+	<div class="hidden lg:flex h-screen overflow-hidden">
 		<!-- Sidebar navigation -->
 		<Sidebar
 			items={navItems}
@@ -256,7 +256,7 @@
 		/>
 
 		<!-- Main content area -->
-		<div class="flex-1 flex flex-col min-h-screen">
+		<div class="flex-1 flex flex-col h-full overflow-y-auto">
 			<!-- Global search in header for desktop -->
 			<div class="fixed top-4 right-4 z-40">
 				{#await import('$lib/components/GlobalSearch.svelte') then m}
