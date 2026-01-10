@@ -46,10 +46,28 @@ async function fetchIssues(): Promise<Issue[]> {
 
 async function fetchRigs(): Promise<Rig[]> {
 	try {
-		const { stdout } = await execAsync('gt rigs --json');
-		return JSON.parse(stdout);
+		const { stdout } = await execAsync('gt rig list');
+		// Parse the output format:
+		// Rigs in /home/eclipze/gt:
+		//
+		//   ui_gastown
+		//     Polecats: 2  Crew: 2
+		//     Agents: [refinery witness mayor]
+		const lines = stdout.trim().split('\n');
+		const rigs: Rig[] = [];
+
+		for (const line of lines) {
+			// Rig names are indented with 2 spaces and not indented further
+			const trimmed = line.trim();
+			// Skip empty lines and lines that start with "Rigs in" or contain stats (Polecats, Crew, Agents)
+			if (trimmed && !trimmed.startsWith('Rigs') && !trimmed.includes('Polecats:') && !trimmed.includes('Agents:')) {
+				rigs.push({ name: trimmed });
+			}
+		}
+
+		return rigs;
 	} catch {
-		// Return empty array if gt rigs fails
+		// Return empty array if gt rig list fails
 		return [];
 	}
 }
