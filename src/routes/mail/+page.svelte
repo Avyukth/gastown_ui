@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { tv } from 'tailwind-variants';
-	import { GridPattern, PullToRefresh, SplitView, SkeletonCard, ErrorState, EmptyState, FloatingActionButton, PageHeader } from '$lib/components';
+	import { GridPattern, PullToRefresh, SplitView, SkeletonCard, ErrorState, EmptyState, FloatingActionButton, PageHeader, AgentCard } from '$lib/components';
 	import { cn } from '$lib/utils';
-	import { Plus, ChevronDown, ChevronRight, Loader2, PenLine } from 'lucide-svelte';
+	import { Plus, ChevronDown, ChevronRight, Loader2, PenLine, Users } from 'lucide-svelte';
 	import { UnreadDot } from '$lib/components';
+	import { goto } from '$app/navigation';
 
 	interface MailMessage {
 		id: string;
@@ -25,6 +26,27 @@
 		fetchedAt: string;
 	}
 
+	interface Agent {
+		id: string;
+		name: string;
+		task: string;
+		status: 'running' | 'idle' | 'error' | 'complete';
+		progress: number;
+		meta: string;
+		role?: string;
+		uptime?: string;
+		uptimePercent?: number;
+		efficiency?: number;
+		lastSeen?: string;
+		errorMessage?: string;
+	}
+
+	interface AgentsData {
+		agents: Agent[];
+		error: string | null;
+		fetchedAt: string;
+	}
+
 	// Client-side state
 	let data = $state<MailData>({
 		messages: [],
@@ -32,7 +54,14 @@
 		error: null,
 		fetchedAt: ''
 	});
+	let agentsData = $state<AgentsData>({
+		agents: [],
+		error: null,
+		fetchedAt: ''
+	});
 	let loading = $state(true);
+	let agentsLoading = $state(true);
+	let showAgentsSidebar = $state(true);
 
 	async function fetchMail() {
 		try {
@@ -51,17 +80,42 @@
 		}
 	}
 
+	async function fetchAgents() {
+		try {
+			const res = await fetch('/api/gastown/agents');
+			if (!res.ok) throw new Error('Failed to fetch agents');
+			agentsData = await res.json();
+		} catch (e) {
+			agentsData = {
+				agents: [],
+				error: e instanceof Error ? e.message : 'Failed to fetch agents',
+				fetchedAt: new Date().toISOString()
+			};
+		} finally {
+			agentsLoading = false;
+		}
+	}
+
 	async function refresh() {
 		loading = true;
-		await fetchMail();
+		agentsLoading = true;
+		await Promise.all([fetchMail(), fetchAgents()]);
 	}
 
 	async function handleRetry() {
 		await fetchMail();
 	}
 
+	function handleAgentInspect(agentId: string) {
+		goto(`/agents/${agentId}`);
+	}
+
+	// Count running agents for the badge
+	const runningAgentsCount = $derived(agentsData.agents.filter(a => a.status === 'running').length);
+
 	onMount(() => {
 		fetchMail();
+		fetchAgents();
 	});
 
 	// Track which message is expanded
@@ -157,6 +211,24 @@
 			showAccentBar={true}
 		>
 			{#snippet actions()}
+				<button
+					type="button"
+					onclick={() => showAgentsSidebar = !showAgentsSidebar}
+					class={cn(
+						"inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors",
+						showAgentsSidebar
+							? "bg-accent text-accent-foreground"
+							: "bg-muted text-muted-foreground hover:bg-muted/80"
+					)}
+				>
+					<Users class="w-4 h-4" />
+					<span class="hidden sm:inline">Agents</span>
+					{#if runningAgentsCount > 0}
+						<span class="inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full bg-success/20 text-success">
+							{runningAgentsCount}
+						</span>
+					{/if}
+				</button>
 				<a
 					href="/mail/compose"
 					class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors"
@@ -168,7 +240,9 @@
 		</PageHeader>
 
 		<PullToRefresh onRefresh={refresh} class="flex-1 overflow-hidden">
-			<div class="h-full overflow-hidden">
+			<div class="h-full overflow-hidden flex">
+				<!-- Main Mail Content -->
+				<div class={cn("flex-1 h-full overflow-hidden transition-all duration-300", showAgentsSidebar && "lg:mr-0")}>
 				{#if loading}
 					<!-- Show skeleton loaders while loading -->
 					<div class="h-full overflow-y-auto p-4">
@@ -367,6 +441,64 @@
 							{/if}
 						{/snippet}
 					</SplitView>
+				{/if}
+				</div>
+
+				<!-- Agents Sidebar -->
+				{#if showAgentsSidebar}
+					<aside class="hidden lg:flex flex-col w-80 h-full border-l border-border bg-muted/20 overflow-hidden">
+						<div class="flex items-center justify-between px-4 py-3 border-b border-border bg-background/50">
+							<h2 class="text-sm font-semibold text-foreground flex items-center gap-2">
+								<Users class="w-4 h-4" />
+								Active Agents
+							</h2>
+							{#if runningAgentsCount > 0}
+								<span class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium rounded-full bg-success/20 text-success">
+									{runningAgentsCount} running
+								</span>
+							{/if}
+						</div>
+						<div class="flex-1 overflow-y-auto p-3 space-y-3">
+							{#if agentsLoading}
+								<SkeletonCard type="agent" count={3} />
+							{:else if agentsData.error}
+								<div class="p-3 text-center">
+									<p class="text-sm text-muted-foreground">{agentsData.error}</p>
+								</div>
+							{:else if agentsData.agents.length === 0}
+								<div class="p-3 text-center">
+									<p class="text-sm text-muted-foreground">No agents running</p>
+								</div>
+							{:else}
+								{#each agentsData.agents as agent}
+									<a
+										href="/agents/{agent.id}"
+										class="block transition-transform hover:scale-[1.02]"
+									>
+										<AgentCard
+											name={agent.name}
+											role={agent.role as any}
+											task={agent.task}
+											status={agent.status}
+											progress={agent.progress}
+											meta={agent.meta}
+											lastSeen={agent.lastSeen}
+											errorMessage={agent.errorMessage}
+											compact={true}
+										/>
+									</a>
+								{/each}
+							{/if}
+						</div>
+						<div class="px-4 py-3 border-t border-border bg-background/50">
+							<a
+								href="/agents"
+								class="block w-full text-center text-sm text-accent hover:text-accent/80 font-medium transition-colors"
+							>
+								View all agents
+							</a>
+						</div>
+					</aside>
 				{/if}
 			</div>
 		</PullToRefresh>
