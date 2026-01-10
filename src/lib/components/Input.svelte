@@ -13,7 +13,7 @@
 			wrapper: 'relative w-full',
 			label: 'block text-sm font-medium text-foreground mb-1.5',
 			container: [
-				'relative flex items-center w-full',
+				'relative flex items-center w-full min-h-touch',
 				'bg-background border border-input rounded-md',
 				'transition-colors duration-150',
 				'focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2'

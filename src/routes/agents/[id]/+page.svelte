@@ -70,7 +70,7 @@
 			<div class="container flex items-center gap-3">
 				<button
 					onclick={goBack}
-					class="p-2 -m-2 hover:bg-muted rounded-lg transition-colors"
+					class="touch-target-interactive p-2 -m-2 hover:bg-muted rounded-lg transition-colors"
 					aria-label="Back to agents"
 					title="Back to agents"
 				>
@@ -215,7 +215,7 @@
 			<section class="flex flex-col sm:flex-row gap-3 mx-auto max-w-2xl mb-8">
 				<button
 					onclick={handleInspect}
-					class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
+					class="touch-target-interactive flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
 					aria-label="Inspect agent"
 				>
 					<Search class="w-4 h-4" strokeWidth={2} />
@@ -224,7 +224,7 @@
 
 				<button
 					onclick={handleViewLogs}
-					class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-secondary text-secondary-foreground font-medium rounded-lg hover:bg-secondary/90 transition-colors"
+					class="touch-target-interactive flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-secondary text-secondary-foreground font-medium rounded-lg hover:bg-secondary/90 transition-colors"
 					aria-label="View logs"
 				>
 					<Clock class="w-4 h-4" strokeWidth={2} />
@@ -234,7 +234,7 @@
 				{#if agent.status !== 'error'}
 					<button
 						onclick={handleReboot}
-						class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-destructive/10 text-destructive font-medium rounded-lg hover:bg-destructive/20 transition-colors"
+						class="touch-target-interactive flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-destructive/10 text-destructive font-medium rounded-lg hover:bg-destructive/20 transition-colors"
 						aria-label="Reboot agent"
 					>
 						<RefreshCw class="w-4 h-4" strokeWidth={2} />
