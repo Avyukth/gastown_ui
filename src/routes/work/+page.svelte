@@ -63,8 +63,8 @@
 		priority: 'all' as 'all' | 0 | 1 | 2 | 3 | 4,
 		status: 'all' as 'all' | 'open' | 'in_progress' | 'done'
 	});
-	let sortBy = $state('date' as 'date' | 'priority' | 'type');
-	let sortOrder = $state('desc' as 'asc' | 'desc');
+	let sortBy = $state('id' as 'id' | 'priority' | 'type');
+	let sortOrder = $state('asc' as 'asc' | 'desc');
 
 	// Filtered and sorted issues
 	const filteredIssues = $derived.by(() => {
@@ -83,12 +83,19 @@
 
 		// Apply sorting
 		result.sort((a, b) => {
-			let aVal: any = a[sortBy === 'date' ? 'created_at' : sortBy];
-			let bVal: any = b[sortBy === 'date' ? 'created_at' : sortBy];
+			let aVal: any;
+			let bVal: any;
 			
 			if (sortBy === 'priority') {
 				aVal = a.priority;
 				bVal = b.priority;
+			} else if (sortBy === 'type') {
+				aVal = a.type;
+				bVal = b.type;
+			} else {
+				// Default to ID (insertion order)
+				aVal = a.id;
+				bVal = b.id;
 			}
 
 			if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
@@ -575,7 +582,7 @@
 								   appearance-none pr-8 cursor-pointer
 								   focus:outline-none focus:ring-2 focus:ring-ring"
 						>
-							<option value="date">Date</option>
+							<option value="id">ID</option>
 							<option value="priority">Priority</option>
 							<option value="type">Type</option>
 						</select>
