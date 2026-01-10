@@ -83,16 +83,31 @@ function transformBead(bead: BdMailBead): MailMessage {
 	};
 }
 
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async ({ url }) => {
 	try {
-		// Use bd list directly since gt mail inbox hangs in Node.js child_process
-		const { stdout } = await execAsync('bd list --type=message --status=open --json');
+		// Get the identity query parameter (e.g., "ui_gastown/furiosa", "--human")
+		const identity = url.searchParams.get('identity');
+
+		let command = 'bd list --type=message --json';
+
+		if (identity) {
+			if (identity === '--human') {
+				// For human, filter by assignee="human"
+				command = 'bd list --type=message --assignee=human --json';
+			} else {
+				// For agents, filter by their full address as assignee
+				command = `bd list --type=message --assignee="${identity}" --json`;
+			}
+		}
+
+		const { stdout } = await execAsync(command, { timeout: 10000 });
 
 		const rawBeads: BdMailBead[] = JSON.parse(stdout) || [];
 		const messages = rawBeads.map(transformBead);
 
-		// Sort by timestamp descending (newest first)
+		// Sort: unread first, then by timestamp descending (newest first)
 		messages.sort((a, b) => {
+			if (a.read !== b.read) return a.read ? 1 : -1;
 			return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
 		});
 
