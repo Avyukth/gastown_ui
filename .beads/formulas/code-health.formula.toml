@@ -1,0 +1,414 @@
+# Gas Town UI Code Health Action Plan Formula
+#
+# Creates P0 issues for all code health improvements from ACTION_PLAN.md
+# Testing: Use Claude Chrome MCP tools only
+#
+# Usage:
+#   bd cook gastownui-code-health --dry-run
+#   bd cook gastownui-code-health
+
+description = """
+P0 issues from Gas Town UI Code Health Audit (2026-01-10).
+
+Eight priority items for production readiness:
+1. Fix hardcoded WebSocket URL (production blocker)
+2. Fix 12 svelte-check warnings
+3. Remove 14 debug console.log statements
+4. Create shared date/time utilities (18 duplicates)
+5. Create shared status utilities (6 duplicates)
+6. Split CommandPalette.svelte (718 lines)
+7. Split GlobalSearch.svelte (675 lines)
+8. Create debug logger utility
+
+All testing uses Claude Chrome MCP tools only.
+"""
+formula = "code-health"
+type = "workflow"
+version = 1
+
+# Step 1: Fix Hardcoded WebSocket URL (PRODUCTION BLOCKER)
+[[steps]]
+id = "websocket-url"
+title = "P0: Fix hardcoded WebSocket URL for production deployment"
+type = "bug"
+priority = 0
+description = """
+## Problem
+WebSocket URL is hardcoded to localhost in `src/lib/stores/websocket.svelte.ts:78`:
+```typescript
+const DEFAULT_CONFIG: WebSocketConfig = {
+  url: 'ws://localhost:8080/ws',  // BROKEN IN PRODUCTION
+};
+```
+
+This will cause WebSocket connections to fail in any non-localhost environment.
+
+## Solution
+1. Create `.env.example` with `VITE_WS_URL=ws://localhost:8080/ws`
+2. Update `websocket.svelte.ts` to use environment variable:
+```typescript
+const DEFAULT_CONFIG: WebSocketConfig = {
+  url: import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws',
+};
+```
+3. Document in README deployment section
+
+## Acceptance Criteria
+- [ ] `.env.example` created with VITE_WS_URL
+- [ ] `websocket.svelte.ts` uses `import.meta.env.VITE_WS_URL`
+- [ ] Fallback to localhost for development works
+- [ ] `bun run build` succeeds
+- [ ] No hardcoded localhost URLs in codebase (verify with grep)
+
+## Testing (Claude Chrome MCP Only)
+1. Run `bun run dev` without .env file, verify WebSocket attempts localhost
+2. Create `.env` with custom WS URL, restart dev server
+3. Verify WebSocket connection uses custom URL (check network tab)
+4. Run `bun run build`, verify no build errors
+5. Run `rg "localhost:" src` and verify no hardcoded URLs remain
+"""
+
+# Step 2: Fix svelte-check Warnings
+[[steps]]
+id = "svelte-check-warnings"
+title = "P0: Fix all 12 svelte-check warnings"
+type = "bug"
+priority = 0
+depends_on = []
+description = """
+## Problem
+12 warnings detected by svelte-check across 9 files:
+
+| Warning Type | Count | Files |
+|--------------|-------|-------|
+| state_referenced_locally | 3 | Announcer, SplitView, MobileDashboard |
+| a11y_no_noninteractive_tabindex | 3 | AgentCard, SplitView, SwipeableItem |
+| a11y_no_noninteractive_element_interactions | 4 | Sidebar, SplitView, SwipeableItem, PullToRefresh |
+| svelte_component_deprecated | 1 | ThemeToggle |
+| a11y_interactive_supports_focus | 1 | SheetNav |
+
+## Solution
+
+### state_referenced_locally (3 warnings)
+- `Announcer.svelte:25`: Use `$derived` instead of `$state`
+- `SplitView.svelte:36`: Use `$derived` or closure
+- `MobileDashboard.svelte:101`: Use `$effect` for initialization
+
+### a11y_no_noninteractive_tabindex (3 warnings)
+- `AgentCard.svelte:278`: Use `<button>` when interactive
+- `SplitView.svelte:116`: Add `role="slider"` with ARIA
+- `SwipeableItem.svelte:211`: Add `role="listitem"` or suppress
+
+### Non-interactive element interactions (4 warnings)
+- Touch gesture handlers on divs - add proper roles or suppress with `<!-- svelte-ignore -->`
+
+### Deprecated svelte:component (1 warning)
+- `ThemeToggle.svelte:66`: Use `{@const}` pattern
+
+### Dialog role focus (1 warning)
+- `SheetNav.svelte:120`: Add `tabindex="-1"` to dialog
+
+## Acceptance Criteria
+- [ ] `bun run check` shows 0 errors, 0 warnings
+- [ ] All component functionality preserved
+- [ ] Keyboard navigation works correctly
+- [ ] Screen readers announce elements properly
+- [ ] No new warnings introduced
+
+## Testing (Claude Chrome MCP Only)
+1. Run `bun run check` before fixes (baseline: 12 warnings)
+2. Fix each warning category
+3. Run `bun run check` after each category
+4. Navigate to affected pages, verify functionality
+5. Test keyboard navigation (Tab through interactive elements)
+6. Final `bun run check` must show 0 warnings
+"""
+
+# Step 3: Remove Debug Console Statements
+[[steps]]
+id = "console-cleanup"
+title = "P0: Remove 14 debug console.log statements"
+type = "chore"
+priority = 0
+depends_on = []
+description = """
+## Problem
+14 debug console.log statements across 6 files leak to production:
+
+| File | Lines | Count |
+|------|-------|-------|
+| src/hooks.client.ts | 74-77, 80 | 5 |
+| src/lib/auth/store.svelte.ts | 357 | 1 |
+| src/lib/components/CommandPalette.svelte | 343, 346, 353 | 3 |
+| src/routes/escalations/[id]/+page.svelte | 85 | 1 |
+| src/routes/agents/+page.svelte | 77 | 1 |
+| src/routes/agents/[id]/+page.svelte | 52, 57, 62 | 3 |
+
+**Note:** Keep 51 console.warn/error statements across 31 files - these are legitimate error handling.
+
+## Solution
+Remove all `console.log` debug statements from the listed files.
+
+## Acceptance Criteria
+- [ ] All 14 console.log statements removed
+- [ ] console.error and console.warn preserved
+- [ ] No runtime errors after removal
+- [ ] `bun run build` succeeds
+- [ ] `rg "console\\.log" src` returns 0 results
+
+## Testing (Claude Chrome MCP Only)
+1. Run `rg "console\\.log" src --type ts --type svelte -c` (baseline: 14)
+2. Remove each console.log statement
+3. Run `bun run dev`, verify no runtime errors
+4. Navigate to affected pages (agents, escalations, command palette)
+5. Open browser console, verify no debug output
+6. Run `rg "console\\.log" src` - must return 0 results
+"""
+
+# Step 4: Create Shared Date/Time Utilities
+[[steps]]
+id = "date-utilities"
+title = "P0: Create shared date/time utilities to eliminate 18 duplicates"
+type = "refactor"
+priority = 0
+depends_on = []
+description = """
+## Problem
+18 duplicate date formatting functions across 12 files:
+- `formatDate()`: 5 occurrences
+- `formatTime()`: 7 occurrences
+- `formatTimestamp()`: 2 occurrences
+- `formatRelativeTime()`: 3 occurrences
+- `formatTimeSince()`: 1 occurrence
+
+## Solution
+Create `src/lib/utils/date.ts` with:
+- `formatTime(isoString)` - "2:30:45 PM"
+- `formatDate(isoString)` - "Today", "Yesterday", "Jan 5"
+- `formatRelativeTime(isoString)` - "5m ago", "2h ago"
+- `formatTimestamp(isoString)` - "Jan 5, 2:30 PM"
+- `formatDuration(minutes)` - "2h 30m"
+
+Export from `src/lib/utils/index.ts`
+
+**Files to Update:**
+1. src/routes/convoys/+page.svelte
+2. src/routes/convoys/[id]/+page.svelte
+3. src/routes/dogs/+page.svelte
+4. src/routes/escalations/+page.svelte
+5. src/routes/escalations/[id]/+page.svelte
+6. src/routes/seance/+page.svelte
+7. src/routes/activity/+page.svelte
+8. src/routes/mail/+page.svelte
+9. src/routes/mail/[id]/+page.svelte
+10. src/routes/logs/+page.svelte
+11. src/routes/watchdog/+page.svelte
+12. src/routes/issues/[id]/+page.svelte
+
+## Acceptance Criteria
+- [ ] `src/lib/utils/date.ts` created with all functions
+- [ ] Exported from `src/lib/utils/index.ts`
+- [ ] All 12 files updated to import from shared utility
+- [ ] Local function definitions removed
+- [ ] All date/time formatting works correctly
+- [ ] `rg "function format(Date|Time)" src/routes` returns 0 results
+
+## Testing (Claude Chrome MCP Only)
+1. Navigate to each affected page
+2. Verify dates display correctly (Today, Yesterday, relative times)
+3. Check different date scenarios (past, recent, old)
+4. Verify timestamps format correctly
+5. Run `rg "function format(Date|Time)" src/routes` - must return 0
+"""
+
+# Step 5: Create Shared Status Utilities
+[[steps]]
+id = "status-utilities"
+title = "P0: Create shared status utilities to eliminate 6 duplicates"
+type = "refactor"
+priority = 0
+depends_on = []
+description = """
+## Problem
+6 duplicate status functions across 4 files:
+- `getStatusColor()`: watchdog, dogs, seance
+- `getStatusVariant()`: watchdog, dogs, health
+- `getStatusLabel()`: dogs, health
+
+## Solution
+Create `src/lib/utils/status.ts` with:
+- `getStatusColor(status)` - Returns Tailwind text color class
+- `getStatusVariant(status)` - Returns StatusIndicator variant
+- `getFreshnessColor(freshness)` - For watchdog/heartbeat
+- `getFreshnessBg(freshness)` - Background/border for freshness
+- `getFreshnessLabel(freshness)` - Human-readable label
+
+Export from `src/lib/utils/index.ts`
+
+**Files to Update:**
+1. src/routes/watchdog/+page.svelte
+2. src/routes/dogs/+page.svelte
+3. src/routes/seance/+page.svelte
+4. src/routes/health/+page.svelte
+
+## Acceptance Criteria
+- [ ] `src/lib/utils/status.ts` created
+- [ ] Exported from `src/lib/utils/index.ts`
+- [ ] All 4 files updated to import from shared utility
+- [ ] Local function definitions removed
+- [ ] Status styling consistent across all pages
+- [ ] `rg "function getStatus" src/routes` returns 0 results
+
+## Testing (Claude Chrome MCP Only)
+1. Navigate to watchdog, dogs, seance, health pages
+2. Verify status colors match expected (online=green, error=red, etc.)
+3. Verify status variants render correctly
+4. Compare status indicators across pages for consistency
+5. Run `rg "function getStatus" src/routes` - must return 0
+"""
+
+# Step 6: Split CommandPalette.svelte
+[[steps]]
+id = "split-command-palette"
+title = "P0: Split CommandPalette.svelte (718 lines) into modular components"
+type = "refactor"
+priority = 0
+depends_on = []
+description = """
+## Problem
+`CommandPalette.svelte` is 718 lines - too large for maintainability.
+
+## Solution
+Split into modular structure:
+```
+src/lib/components/
+├── CommandPalette/
+│   ├── index.ts              # Re-export
+│   ├── CommandPalette.svelte # Main container (~150 lines)
+│   ├── CommandList.svelte    # List rendering (~100 lines)
+│   ├── CommandItem.svelte    # Single item (~80 lines)
+│   ├── CommandSearch.svelte  # Search input (~60 lines)
+│   ├── commands.ts           # Command definitions (~200 lines)
+│   └── types.ts              # TypeScript types (~30 lines)
+```
+
+## Acceptance Criteria
+- [ ] No single file exceeds 200 lines
+- [ ] All command palette functionality preserved
+- [ ] Keyboard navigation works (↑↓ arrows, Enter, Escape)
+- [ ] Search/filtering works
+- [ ] Command execution works
+- [ ] No performance regression
+- [ ] Types properly exported
+- [ ] Existing imports continue to work
+
+## Testing (Claude Chrome MCP Only)
+1. Open command palette (Cmd+K)
+2. Type search query, verify filtering
+3. Navigate with keyboard arrows
+4. Press Enter to execute command
+5. Press Escape to close
+6. Verify all command categories work (navigation, actions, shortcuts)
+7. Check no console errors
+8. Verify typing performance (no lag)
+"""
+
+# Step 7: Split GlobalSearch.svelte
+[[steps]]
+id = "split-global-search"
+title = "P0: Split GlobalSearch.svelte (675 lines) into modular components"
+type = "refactor"
+priority = 0
+depends_on = []
+description = """
+## Problem
+`GlobalSearch.svelte` is 675 lines and shares ~40% functionality with CommandPalette.
+
+## Solution
+Extract shared modal functionality and split:
+```
+src/lib/components/
+├── SearchModal/
+│   ├── index.ts              # Re-export
+│   ├── SearchModal.svelte    # Shared modal base
+│   ├── SearchInput.svelte    # Search input with keyboard
+│   ├── SearchResults.svelte  # Results list
+│   └── types.ts              # Shared types
+├── GlobalSearch/
+│   ├── index.ts
+│   ├── GlobalSearch.svelte   # Uses SearchModal
+│   └── mockData.ts           # Extract mock data
+```
+
+## Acceptance Criteria
+- [ ] Shared modal functionality extracted
+- [ ] GlobalSearch uses shared SearchModal
+- [ ] Mock data extracted to separate file
+- [ ] No functionality regression
+- [ ] Search works correctly
+- [ ] Results display correctly
+- [ ] Keyboard navigation preserved
+- [ ] CommandPalette can optionally use SearchModal
+
+## Testing (Claude Chrome MCP Only)
+1. Click search button to open GlobalSearch
+2. Type search query, verify results appear
+3. Navigate with keyboard arrows
+4. Click result to navigate
+5. Press Escape to close
+6. Verify all search categories work
+7. Check results match search query
+8. Verify mock data displays correctly
+"""
+
+# Step 8: Create Debug Logger Utility
+[[steps]]
+id = "logger-utility"
+title = "P0: Create debug logger utility for controlled logging"
+type = "feature"
+priority = 0
+depends_on = ["console-cleanup"]
+description = """
+## Problem
+After removing console.log statements, there's no controlled way to enable debug logging when needed.
+
+## Solution
+Create `src/lib/utils/logger.ts`:
+```typescript
+const isDev = import.meta.env.DEV;
+const isDebug = import.meta.env.VITE_DEBUG === 'true';
+
+function createLogger(options = {}) {
+  const { prefix = '[App]', enabled = isDev || isDebug } = options;
+
+  return {
+    debug: (...args) => enabled && console.log(prefix, ...args),
+    info: (...args) => enabled && console.info(prefix, ...args),
+    warn: (...args) => console.warn(prefix, ...args),
+    error: (...args) => console.error(prefix, ...args)
+  };
+}
+
+export const logger = createLogger();
+export const authLogger = createLogger({ prefix: '[Auth]' });
+export const wsLogger = createLogger({ prefix: '[WebSocket]' });
+export const syncLogger = createLogger({ prefix: '[Sync]' });
+```
+
+## Acceptance Criteria
+- [ ] `src/lib/utils/logger.ts` created
+- [ ] Default logger exported
+- [ ] Module-specific loggers for auth, websocket, sync
+- [ ] Debug output only in development by default
+- [ ] `VITE_DEBUG=true` enables debug in production
+- [ ] Production builds have no debug output
+- [ ] warn/error always log regardless of mode
+
+## Testing (Claude Chrome MCP Only)
+1. Run `bun run dev`, verify debug logs appear in console
+2. Run `bun run build && bun run preview`
+3. Verify no debug logs in preview mode
+4. Set `VITE_DEBUG=true` in .env, rebuild
+5. Verify debug logs appear in preview
+6. Check warn/error logs always appear
+"""

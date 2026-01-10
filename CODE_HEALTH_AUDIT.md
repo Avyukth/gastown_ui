@@ -18,7 +18,10 @@
 | Type Check Errors | 0 | Excellent |
 | Type Check Warnings | 12 | Needs Attention |
 | Bundle Size | 2.0 MB | Acceptable |
-| Console Statements | 20 files | Needs Cleanup |
+| Debug console.log | 14 (6 files) | Needs Cleanup |
+| Error console.warn/error | 51 (31 files) | OK (legitimate) |
+| @html usages | 16 | ✅ Safe (static SVG) |
+| Hardcoded URLs | 1 | ⚠️ Production Blocker |
 | TODO Comments | 6 | Low |
 | Root Docs | 8 files | Cleaned |
 | Package Manager | bun | Standardized |
@@ -29,6 +32,8 @@
 - ✅ Removed 46 obsolete PHASE/SESSION docs from git (archived locally)
 - ✅ Standardized on `bun` (removed `package-lock.json`)
 - ✅ Updated `.gitignore` with proper patterns
+- ✅ Verified @html security (false positive - static SVG icons)
+- ⚠️ Found hardcoded WebSocket URL (production blocker)
 
 ---
 
@@ -327,16 +332,18 @@ src/
 ## 10. Priority Action Items
 
 ### P0 - Critical (Do Now)
-1. Audit `seance/+page.svelte` for XSS vulnerabilities (15 @html usages)
-2. Implement proper authentication (currently TODO placeholders)
+1. ~~Audit `seance/+page.svelte` for XSS vulnerabilities~~ ✅ CLOSED - False positive (static SVG icons)
+2. Implement proper authentication (currently TODO placeholders) ⏸️ DEFERRED - Needs architecture decision
 
 ### P1 - High (This Sprint)
 1. Fix 12 svelte-check warnings
-2. Remove/replace console.log statements (20 files)
-3. Create shared date/time utilities to reduce duplication
+2. Remove 14 debug console.log statements (6 files)
+3. Create shared date/time utilities (18 duplicates across 12 files)
+4. Create shared status utilities (6 duplicates across 4 files)
+5. **NEW**: Fix hardcoded WebSocket URL in `websocket.svelte.ts` (production blocker)
 
 ### P2 - Medium (Next Sprint)
-1. Split large components (CommandPalette, GlobalSearch)
+1. Split large components (CommandPalette 718 lines, GlobalSearch 675 lines)
 2. Consider merging overlapping command palette components
 3. Create debug logger utility
 
@@ -354,8 +361,10 @@ src/
 | Type Errors | 0 | 0 | svelte-check |
 | Type Warnings | 12 | 0 | svelte-check |
 | Bundle Size | 2.0 MB | < 1.5 MB | vite build |
-| Console Statements | 20 files | 0 | grep |
-| @html without sanitize | 2 files | 0 | grep |
+| Debug console.log | 14 statements | 0 | grep |
+| console.warn/error | 51 (legitimate) | n/a | grep |
+| @html without sanitize | 0 | 0 | ✅ All safe (static SVG) |
+| Hardcoded URLs | 1 (WebSocket) | 0 | grep |
 
 ---
 
@@ -363,13 +372,16 @@ src/
 
 The codebase is in **good health** overall with strong TypeScript usage and proper component architecture. The main areas for improvement are:
 
-1. **Security**: Audit and secure all `@html` usages
-2. **Code Duplication**: Extract shared utilities for date/time and status
-3. **Console Cleanup**: Remove debug statements or use proper logger
-4. **Component Size**: Split the two largest components
+1. **Production Blocker**: Hardcoded WebSocket URL needs environment variable
+2. **Code Duplication**: Extract shared utilities for date/time (18 duplicates) and status (6 duplicates)
+3. **Console Cleanup**: Remove 14 debug statements or use proper logger
+4. **Component Size**: Split the two largest components (CommandPalette 718, GlobalSearch 675)
 
-The project follows modern Svelte 5 patterns and has good accessibility foundations. With the recommended changes, the codebase would achieve excellent maintainability.
+**Security Status**: `@html` usages verified safe (static SVG icons only). Authentication is mock/demo - awaiting architecture decision.
+
+The project follows modern Svelte 5 patterns, has proper SSR guards (browser checks), and good accessibility foundations. With the recommended changes, the codebase would achieve excellent maintainability.
 
 ---
 
 *Note: PMAT analysis is designed for Rust projects. This report uses SvelteKit/TypeScript-appropriate analysis tools including svelte-check, bundle analysis, and manual code review.*
+*Last verified: 2026-01-10 with stress-testing against codebase.*

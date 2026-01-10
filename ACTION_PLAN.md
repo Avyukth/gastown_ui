@@ -2,6 +2,7 @@
 ## Gas Town UI - SvelteKit/TypeScript Frontend
 
 **Created:** 2026-01-10
+**Last Verified:** 2026-01-10 (stress-tested against codebase)
 **Target:** Complete P0-P2 items for production readiness
 
 ---
@@ -11,8 +12,31 @@
 | Priority | Items | Status |
 |----------|-------|--------|
 | P0 - Critical | 2 | 1 Closed (false positive), 1 Deferred (needs decision) |
-| P1 - High | 4 | Pending |
+| P1 - High | 5 | Pending |
 | P2 - Medium | 3 | Pending |
+
+---
+
+## ⚠️ Risks & Edge Cases
+
+### Production Blockers
+1. **Hardcoded WebSocket URL** (P1-5) - Will break in production
+2. **Mock auth** (P0-2) - Accepts any password "demo"
+
+### Refactoring Risks
+1. **Component splitting (P2-1, P2-2)** - Keyboard navigation could regress if not tested
+2. **Date utility consolidation (P1-3)** - Timezone edge cases need testing
+3. **svelte-ignore usage (P1-1c)** - Could mask real a11y issues if overused
+
+### Edge Cases Not Covered
+1. **Date formatting** - No year display for dates >1 year old
+2. **formatRelativeTime** - No handling for future dates
+3. **WebSocket** - No fallback when backend unavailable
+
+### Testing Gaps
+1. No E2E tests for keyboard navigation
+2. No cross-browser visual regression tests
+3. Auth flow has no integration tests
 
 ---
 
@@ -228,20 +252,20 @@ These are touch/gesture handlers that require mouse/touch events on divs:
 
 ### P1-2: Remove Debug Console Statements
 
-**Status:** Verified - 10 debug `console.log` statements to remove
+**Status:** Verified - 14 debug `console.log` statements to remove across 6 files
 
 **Files to Clean:**
 
-| File | Lines | Action |
-|------|-------|--------|
-| `src/hooks.client.ts` | 74-77, 80 | Remove debug output |
-| `src/lib/auth/store.svelte.ts` | 357 | Remove debug log |
-| `src/lib/components/CommandPalette.svelte` | 343, 346, 353 | Remove debug logs |
-| `src/routes/escalations/[id]/+page.svelte` | 85 | Remove debug log |
-| `src/routes/agents/+page.svelte` | 77 | Remove debug log |
-| `src/routes/agents/[id]/+page.svelte` | 52, 57, 62 | Remove debug logs |
+| File | Lines | Count | Action |
+|------|-------|-------|--------|
+| `src/hooks.client.ts` | 74-77, 80 | 5 | Remove debug output |
+| `src/lib/auth/store.svelte.ts` | 357 | 1 | Remove debug log |
+| `src/lib/components/CommandPalette.svelte` | 343, 346, 353 | 3 | Remove debug logs |
+| `src/routes/escalations/[id]/+page.svelte` | 85 | 1 | Remove debug log |
+| `src/routes/agents/+page.svelte` | 77 | 1 | Remove debug log |
+| `src/routes/agents/[id]/+page.svelte` | 52, 57, 62 | 3 | Remove debug logs |
 
-**Note:** Keep all `console.error` and `console.warn` statements - they're legitimate error handling.
+**Note:** Keep all `console.error` (1) and `console.warn` (51) statements - they're legitimate error handling across 31 files.
 
 **Acceptance Criteria:**
 - [ ] All `console.log` debug statements removed
@@ -509,6 +533,52 @@ export function getFreshnessLabel(freshness: FreshnessType): string {
 
 ---
 
+### P1-5: Fix Hardcoded WebSocket URL (Production Blocker)
+
+**Status:** NEW - Discovered during stress-testing
+
+**Problem:** WebSocket URL is hardcoded to localhost, will break in production.
+
+**File:** `src/lib/stores/websocket.svelte.ts:78`
+
+```typescript
+// Current (BROKEN IN PRODUCTION)
+const DEFAULT_CONFIG: WebSocketConfig = {
+  url: 'ws://localhost:8080/ws',
+  // ...
+};
+```
+
+**Solution:**
+
+1. Add environment variable to `.env.example`:
+```bash
+VITE_WS_URL=ws://localhost:8080/ws
+```
+
+2. Update `websocket.svelte.ts`:
+```typescript
+const DEFAULT_CONFIG: WebSocketConfig = {
+  url: import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws',
+  // ...
+};
+```
+
+3. Update production deployment to set `VITE_WS_URL`:
+```bash
+# Production
+VITE_WS_URL=wss://api.gastown.app/ws
+```
+
+**Acceptance Criteria:**
+- [ ] Create `.env.example` with `VITE_WS_URL`
+- [ ] Update `websocket.svelte.ts` to use env variable
+- [ ] Fallback to localhost for development
+- [ ] Document in README deployment section
+- [ ] WebSocket connects in both dev and production
+
+---
+
 ## P2 - Medium (Next Sprint)
 
 ### P2-1: Split CommandPalette.svelte (718 lines)
@@ -644,33 +714,23 @@ rg "console\.log" src --type ts --type svelte
 rg "function format(Date|Time)" src/routes
 # Expected: 0 results
 
-# 4. Build succeeds
+# 4. No hardcoded localhost URLs
+rg "localhost:" src --type ts --type svelte
+# Expected: 0 results (all should use env vars)
+
+# 5. Build succeeds
 bun run build
 # Expected: Success
 
-# 5. Tests pass
+# 6. Tests pass
 bun test
 # Expected: All tests pass
+
+# 7. WebSocket connects (manual test)
+# Dev: ws://localhost:8080/ws
+# Prod: wss://api.gastown.app/ws (via VITE_WS_URL)
 ```
 
 ---
 
-## Timeline Estimate
-
-| Phase | Items | Effort |
-|-------|-------|--------|
-| P0 | Auth decision + implementation | Backend team decision |
-| P1-1 | svelte-check warnings | 2-3 hours |
-| P1-2 | Console cleanup | 30 minutes |
-| P1-3 | Date utilities | 2 hours |
-| P1-4 | Status utilities | 1 hour |
-| P2-1 | CommandPalette split | 4 hours |
-| P2-2 | GlobalSearch split | 3 hours |
-| P2-3 | Logger utility | 1 hour |
-
-**Total P1:** ~6 hours
-**Total P2:** ~8 hours
-
----
-
-*Generated from CODE_HEALTH_AUDIT.md with codebase verification on 2026-01-10*
+*Generated from CODE_HEALTH_AUDIT.md with codebase verification and stress-testing on 2026-01-10*
