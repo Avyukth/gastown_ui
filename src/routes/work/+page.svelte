@@ -5,6 +5,7 @@
 	import { hapticMedium, hapticSuccess, hapticError } from '$lib/utils/haptics';
 	import { cn } from '$lib/utils';
 	import { z } from 'zod';
+	import { apiClient, isApiError } from '$lib/api/client';
 
 	let { data } = $props();
 	
@@ -151,33 +152,24 @@
 		hapticMedium(); // Medium haptic on form submission
 
 		try {
-			const res = await fetch('/api/gastown/work/issues', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					title: issueTitle,
-					type: issueType,
-					priority: issuePriority
-				})
+			const response = await apiClient.post<typeof localIssues[0]>('/api/gastown/work/issues', {
+				title: issueTitle,
+				type: issueType,
+				priority: issuePriority
 			});
 
-			const data = await res.json();
-
-			if (!res.ok) {
-				throw new Error(data.error || 'Failed to create issue');
-			}
-
 			hapticSuccess(); // Success haptic on successful submission
-			issueMessage = { type: 'success', text: `Created issue: ${data.id}` };
+			issueMessage = { type: 'success', text: `Created issue: ${response.data.id}` };
 			// Add to local issues list
-			localIssues = [...localIssues, data];
+			localIssues = [...localIssues, response.data];
 			// Reset form
 			issueTitle = '';
 			issueType = 'task';
 			issuePriority = 2;
 		} catch (error) {
 			hapticError(); // Error haptic on failure
-			issueMessage = { type: 'error', text: error instanceof Error ? error.message : 'Failed to create issue' };
+			const message = isApiError(error) ? error.message : 'Failed to create issue';
+			issueMessage = { type: 'error', text: message };
 		} finally {
 			issueSubmitting = false;
 		}
@@ -207,29 +199,20 @@
 		hapticMedium(); // Medium haptic on form submission
 
 		try {
-			const res = await fetch('/api/gastown/work/convoys', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					name: convoyName,
-					issues: selectedIssues
-				})
+			const response = await apiClient.post<{ message?: string }>('/api/gastown/work/convoys', {
+				name: convoyName,
+				issues: selectedIssues
 			});
 
-			const data = await res.json();
-
-			if (!res.ok) {
-				throw new Error(data.error || 'Failed to create convoy');
-			}
-
 			hapticSuccess(); // Success haptic on successful submission
-			convoyMessage = { type: 'success', text: data.message || 'Convoy created successfully' };
+			convoyMessage = { type: 'success', text: response.data.message || 'Convoy created successfully' };
 			// Reset form
 			convoyName = '';
 			selectedIssues = [];
 		} catch (error) {
 			hapticError(); // Error haptic on failure
-			convoyMessage = { type: 'error', text: error instanceof Error ? error.message : 'Failed to create convoy' };
+			const message = isApiError(error) ? error.message : 'Failed to create convoy';
+			convoyMessage = { type: 'error', text: message };
 		} finally {
 			convoySubmitting = false;
 		}
@@ -259,29 +242,20 @@
 		hapticMedium(); // Medium haptic on form submission
 
 		try {
-			const res = await fetch('/api/gastown/work/sling', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					issue: slingIssue,
-					rig: slingRig
-				})
+			const response = await apiClient.post<{ message?: string }>('/api/gastown/work/sling', {
+				issue: slingIssue,
+				rig: slingRig
 			});
 
-			const data = await res.json();
-
-			if (!res.ok) {
-				throw new Error(data.error || 'Failed to sling work');
-			}
-
 			hapticSuccess(); // Success haptic on successful submission
-			slingMessage = { type: 'success', text: data.message || 'Work slung successfully' };
+			slingMessage = { type: 'success', text: response.data.message || 'Work slung successfully' };
 			// Reset form
 			slingIssue = '';
 			slingRig = '';
 		} catch (error) {
 			hapticError(); // Error haptic on failure
-			slingMessage = { type: 'error', text: error instanceof Error ? error.message : 'Failed to sling work' };
+			const message = isApiError(error) ? error.message : 'Failed to sling work';
+			slingMessage = { type: 'error', text: message };
 		} finally {
 			slingSubmitting = false;
 		}
