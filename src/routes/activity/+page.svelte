@@ -152,7 +152,7 @@
 	<div class="relative z-10 flex flex-col min-h-screen">
 		<!-- Header (clean, minimal) -->
 		<header class="sticky top-0 z-50 panel-glass px-4 h-[72px] relative">
-			<div class="container h-full flex items-center justify-between gap-4">
+			<div class="container h-full flex items-center justify-between gap-4 lg:pr-44">
 				<div class="flex items-center gap-3">
 					<div class="w-1.5 h-8 bg-primary rounded-sm shadow-glow shrink-0" aria-hidden="true"></div>
 					<h1 class="text-2xl font-display font-semibold text-foreground">Activity Feed</h1>

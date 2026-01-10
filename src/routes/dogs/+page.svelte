@@ -103,7 +103,7 @@
 
 	<div class="relative z-10">
 		<header class="sticky top-0 z-50 panel-glass px-4 h-[72px] relative">
-			<div class="container h-full flex items-center justify-between">
+			<div class="container h-full flex items-center justify-between lg:pr-44">
 				<div class="flex items-center gap-3">
 					<div class="w-1.5 h-8 bg-primary rounded-sm shadow-glow shrink-0" aria-hidden="true"></div>
 					<PawPrint class="w-6 h-6 text-foreground" strokeWidth={2} />

@@ -17,7 +17,9 @@
 			],
 			inner: [
 				'container h-full',
-				'flex items-center justify-between gap-4'
+				'flex items-center justify-between gap-4',
+				// Reserve space for fixed GlobalSearch button on desktop
+				'lg:pr-44'
 			],
 			content: [
 				'min-w-0 flex-1'
