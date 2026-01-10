@@ -30,7 +30,7 @@ interface ConvoyRaw {
 	id: string;
 	title: string;
 	status: string;
-	tracked: TrackedIssue[];
+	tracked: TrackedIssue[] | null;
 	completed: number;
 	total: number;
 	created_at?: string;
@@ -54,17 +54,23 @@ function determineConvoyStatus(convoy: ConvoyRaw): ConvoyStatus {
 		return 'complete';
 	}
 
-	const hasBlocked = convoy.tracked.some((t) => t.status === 'blocked');
+	// Handle case where tracked is null (no tracked issues)
+	const tracked = convoy.tracked ?? [];
+	if (tracked.length === 0) {
+		return 'stale';
+	}
+
+	const hasBlocked = tracked.some((t) => t.status === 'blocked');
 	if (hasBlocked) {
 		return 'stuck';
 	}
 
-	const hasInProgress = convoy.tracked.some((t) => t.status === 'in_progress');
+	const hasInProgress = tracked.some((t) => t.status === 'in_progress');
 	if (hasInProgress) {
 		return 'active';
 	}
 
-	const allOpen = convoy.tracked.every((t) => t.status === 'open' || t.status === 'unknown');
+	const allOpen = tracked.every((t) => t.status === 'open' || t.status === 'unknown');
 	if (allOpen && convoy.total > 0) {
 		return 'stale';
 	}
@@ -72,9 +78,9 @@ function determineConvoyStatus(convoy: ConvoyRaw): ConvoyStatus {
 	return 'active';
 }
 
-function extractWorkers(tracked: TrackedIssue[]): string[] {
+function extractWorkers(tracked: TrackedIssue[] | null): string[] {
 	const workers = new Set<string>();
-	for (const issue of tracked) {
+	for (const issue of tracked ?? []) {
 		if (issue.assignee) {
 			workers.add(issue.assignee);
 		}
@@ -119,7 +125,7 @@ export const load: PageServerLoad = async ({ params }) => {
 			completed: raw.completed,
 			total: raw.total,
 			createdAt,
-			tracked: raw.tracked,
+			tracked: raw.tracked ?? [],
 			workers: extractWorkers(raw.tracked)
 		};
 
