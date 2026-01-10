@@ -3,6 +3,7 @@
 	import { ClipboardList, PenLine, Target, Truck, ChevronDown, CheckSquare, Bug, Lightbulb, BookOpen, Plus } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { hapticMedium, hapticSuccess, hapticError } from '$lib/utils/haptics';
+	import { cn } from '$lib/utils';
 	import { z } from 'zod';
 
 	let { data } = $props();
@@ -55,6 +56,55 @@
 
 	// Local copy of issues that updates after creation
 	let localIssues = $state<typeof data.issues>([]);
+
+	// Filter and sort state
+	let filters = $state({
+		type: 'all' as 'all' | 'task' | 'bug' | 'feature' | 'epic',
+		priority: 'all' as 'all' | 0 | 1 | 2 | 3 | 4,
+		status: 'all' as 'all' | 'open' | 'in_progress' | 'done'
+	});
+	let sortBy = $state('id' as 'id' | 'priority' | 'type');
+	let sortOrder = $state('asc' as 'asc' | 'desc');
+
+	// Filtered and sorted issues
+	const filteredIssues = $derived.by(() => {
+		let result = [...localIssues];
+
+		// Apply filters
+		if (filters.type !== 'all') {
+			result = result.filter(i => i.type === filters.type);
+		}
+		if (filters.priority !== 'all') {
+			result = result.filter(i => i.priority === filters.priority);
+		}
+		if (filters.status !== 'all') {
+			result = result.filter(i => i.status === filters.status);
+		}
+
+		// Apply sorting
+		result.sort((a, b) => {
+			let aVal: any;
+			let bVal: any;
+			
+			if (sortBy === 'priority') {
+				aVal = a.priority;
+				bVal = b.priority;
+			} else if (sortBy === 'type') {
+				aVal = a.type;
+				bVal = b.type;
+			} else {
+				// Default to ID (insertion order)
+				aVal = a.id;
+				bVal = b.id;
+			}
+
+			if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+			if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+			return 0;
+		});
+
+		return result;
+	});
 
 	// Sync with server data
 	$effect(() => {
@@ -250,16 +300,20 @@
 	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10">
-		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-4">
-			<div class="container">
-				<h1 class="text-2xl md:text-2xl font-semibold text-foreground">Work Management</h1>
-				<p class="text-sm text-muted-foreground">Create issues, convoys, and assign work</p>
+		<header class="sticky top-0 z-50 panel-glass px-4 h-[72px] relative">
+			<div class="container h-full flex items-center gap-3">
+				<div class="w-1.5 h-8 bg-primary rounded-sm shadow-glow shrink-0" aria-hidden="true"></div>
+				<div>
+					<h1 class="text-2xl font-display font-semibold text-foreground">Work Management</h1>
+					<p class="text-sm text-muted-foreground">Create issues, convoys, and assign work</p>
+				</div>
 			</div>
+			<div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" aria-hidden="true"></div>
 		</header>
 
 		<main class="container py-6">
 			<!-- Create Issue Section -->
-			<section class="panel-glass p-6 mx-auto mb-6 max-w-2xl">
+			<section class="panel-glass p-6 mx-auto mb-8 max-w-lg">
 				<h2 class="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
 					<PenLine class="w-5 h-5 text-foreground" strokeWidth={2} />
 					Create Issue
@@ -269,7 +323,8 @@
 					<div>
 						<label for="issue-title" class="block text-sm font-medium text-foreground mb-2">
 							<span>Title</span>
-							<span class="text-destructive">*</span>
+							<span class="text-destructive font-semibold">*</span>
+							<span class="text-xs text-muted-foreground ml-1">(required)</span>
 						</label>
 						<input
 							id="issue-title"
@@ -296,19 +351,19 @@
 						/>
 					</div>
 
-					<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-						<div>
-							<label for="issue-priority" class="block text-sm font-medium text-foreground mb-2">
-								<span>Priority</span>
-								<span class="text-destructive">*</span>
-							</label>
-							<div class="relative">
-								<select
-									id="issue-priority"
-									bind:value={issuePriority}
-									class="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg
-										   text-foreground focus:outline-none focus:ring-2 focus:ring-ring
-										   appearance-none pr-10"
+					<div>
+						<label for="issue-priority" class="block text-sm font-medium text-foreground mb-2">
+							<span>Priority</span>
+							<span class="text-destructive font-semibold">*</span>
+							<span class="text-xs text-muted-foreground ml-1">(required)</span>
+						</label>
+						<div class="relative">
+							<select
+								id="issue-priority"
+								bind:value={issuePriority}
+								class="w-full px-3 py-2 bg-input border border-border rounded-lg
+									   text-foreground focus:outline-none focus:ring-2 focus:ring-ring
+									   appearance-none pr-10"
 								>
 									{#each priorities as p}
 										<option value={p.value}>{p.label}</option>
@@ -316,7 +371,6 @@
 								</select>
 								<ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" strokeWidth={2} />
 							</div>
-						</div>
 					</div>
 
 					{#if issueMessage}
@@ -342,17 +396,18 @@
 			</section>
 
 			<!-- Create Convoy Section -->
-			<section class="panel-glass p-6 mx-auto mb-6 max-w-2xl">
+			<section class="panel-glass p-6 mx-auto mb-8 max-w-lg">
 				<h2 class="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
 					<Truck class="w-5 h-5 text-foreground" strokeWidth={2} />
 					Create Convoy
 				</h2>
 
-				<form onsubmit={handleCreateConvoy} class="space-y-3">
+				<form onsubmit={handleCreateConvoy} class="space-y-4">
 					<div>
 						<label for="convoy-name" class="block text-sm font-medium text-foreground mb-2">
 							<span>Convoy Name</span>
-							<span class="text-destructive">*</span>
+							<span class="text-destructive font-semibold">*</span>
+							<span class="text-xs text-muted-foreground ml-1">(required)</span>
 						</label>
 						<input
 							id="convoy-name"
@@ -373,7 +428,8 @@
 					<div>
 						<span class="block text-sm font-medium text-foreground mb-2">
 							Select Issues ({selectedIssues.length} selected)
-							<span class="text-destructive">*</span>
+							<span class="text-destructive font-semibold">*</span>
+							<span class="text-xs text-muted-foreground ml-1">(required)</span>
 						</span>
 						{#if localIssues.length === 0}
 							<p class="text-sm text-muted-foreground">No open issues available</p>
@@ -428,24 +484,25 @@
 			</section>
 
 			<!-- Sling Work Section -->
-			<section class="panel-glass p-6 mx-auto mb-6 max-w-2xl">
+			<section class="panel-glass p-6 mx-auto mb-8 max-w-lg">
 				<h2 class="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
 					<Target class="w-5 h-5 text-foreground" strokeWidth={2} />
 					Sling Work
 				</h2>
 
-				<form onsubmit={handleSling} class="space-y-3">
+				<form onsubmit={handleSling} class="space-y-4">
 					<div>
 						<label for="sling-issue" class="block text-sm font-medium text-foreground mb-2">
 							<span>Issue</span>
-							<span class="text-destructive">*</span>
+							<span class="text-destructive font-semibold">*</span>
+							<span class="text-xs text-muted-foreground ml-1">(required)</span>
 						</label>
 						<div class="relative">
 							<select
 								id="sling-issue"
 								bind:value={slingIssue}
 								required
-								class="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg
+								class="w-full px-3 py-2 bg-input border border-border rounded-lg
 									   text-foreground focus:outline-none focus:ring-2 focus:ring-ring
 									   appearance-none pr-10
 									   {slingErrors.issue ? 'border-destructive' : ''}"
@@ -467,14 +524,15 @@
 					<div>
 						<label for="sling-rig" class="block text-sm font-medium text-foreground mb-2">
 							<span>Target Rig</span>
-							<span class="text-destructive">*</span>
+							<span class="text-destructive font-semibold">*</span>
+							<span class="text-xs text-muted-foreground ml-1">(required)</span>
 						</label>
 						<div class="relative">
 							<select
 								id="sling-rig"
 								bind:value={slingRig}
 								required
-								class="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg
+								class="w-full px-3 py-2 bg-input border border-border rounded-lg
 									   text-foreground focus:outline-none focus:ring-2 focus:ring-ring
 									   appearance-none pr-10
 									   {slingErrors.rig ? 'border-destructive' : ''}"
@@ -514,11 +572,27 @@
 			</section>
 
 			<!-- Current Issues List -->
-			<section class="panel-glass p-6 mx-auto mb-6 max-w-2xl">
-				<h2 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-					<ClipboardList class="w-5 h-5 text-foreground" strokeWidth={2} />
-					Open Issues ({localIssues.length})
-				</h2>
+			<section class="panel-glass p-6 mx-auto mb-8 max-w-lg">
+				<div class="flex items-center justify-between mb-4">
+					<h2 class="text-lg font-semibold text-foreground flex items-center gap-2">
+						<ClipboardList class="w-5 h-5 text-foreground" strokeWidth={2} />
+						Issues ({filteredIssues.length})
+					</h2>
+					<!-- Sort dropdown -->
+					<div class="relative inline-block">
+						<select
+							bind:value={sortBy}
+							class="px-3 py-1 text-xs bg-muted text-muted-foreground rounded border border-border
+								   appearance-none pr-8 cursor-pointer
+								   focus:outline-none focus:ring-2 focus:ring-ring"
+						>
+							<option value="id">ID</option>
+							<option value="priority">Priority</option>
+							<option value="type">Type</option>
+						</select>
+						<ChevronDown class="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+					</div>
+				</div>
 
 				{#if isLoading}
 					<!-- Show skeleton loaders while loading -->
@@ -540,9 +614,60 @@
 						size="sm"
 					/>
 				{:else}
+					<!-- Filter chips -->
+					<div class="flex flex-wrap gap-2 mb-4">
+						{#each [
+							{ label: 'All Types', value: 'all', key: 'type' },
+							{ label: 'Tasks', value: 'task', key: 'type' },
+							{ label: 'Bugs', value: 'bug', key: 'type' },
+							{ label: 'Features', value: 'feature', key: 'type' },
+							{ label: 'Epics', value: 'epic', key: 'type' }
+						] as chip}
+							<button
+								type="button"
+								class={cn(
+									'px-3 py-1 text-xs font-medium rounded-full transition-colors',
+									filters.type === chip.value
+										? 'bg-primary text-primary-foreground'
+										: 'bg-muted text-muted-foreground hover:bg-muted/80'
+								)}
+								onclick={() => filters.type = chip.value as any}
+								aria-pressed={filters.type === chip.value}
+							>
+								{chip.label}
+							</button>
+						{/each}
+					</div>
+
+					<!-- Priority filter -->
+					<div class="flex flex-wrap gap-2 mb-4">
+						{#each [
+							{ label: 'All Priorities', value: 'all', key: 'priority' },
+							{ label: 'P0 - Critical', value: 0, key: 'priority' },
+							{ label: 'P1 - High', value: 1, key: 'priority' },
+							{ label: 'P2 - Medium', value: 2, key: 'priority' },
+							{ label: 'P3 - Low', value: 3, key: 'priority' }
+						] as chip}
+							<button
+								type="button"
+								class={cn(
+									'px-3 py-1 text-xs font-medium rounded-full transition-colors',
+									filters.priority === chip.value
+										? 'bg-primary text-primary-foreground'
+										: 'bg-muted text-muted-foreground hover:bg-muted/80'
+								)}
+								onclick={() => filters.priority = chip.value as any}
+								aria-pressed={filters.priority === chip.value}
+							>
+								{chip.label}
+							</button>
+						{/each}
+					</div>
+
+					<!-- Issues list -->
 					<div class="space-y-2">
-						{#each localIssues as issue}
-							<div class="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+						{#each filteredIssues as issue}
+							<div class="flex items-center gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
 								<span class="font-mono text-sm text-primary">{issue.id}</span>
 								<span class="flex-1 text-sm text-foreground truncate">{issue.title}</span>
 								<span class="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">
@@ -554,6 +679,12 @@
 							</div>
 						{/each}
 					</div>
+
+					{#if filteredIssues.length === 0 && localIssues.length > 0}
+						<div class="text-center py-6 text-muted-foreground">
+							<p class="text-sm">No issues match your filters</p>
+						</div>
+					{/if}
 				{/if}
 			</section>
 		</main>

@@ -1,4 +1,4 @@
-<script context="module" lang="ts">
+<script module lang="ts">
 	import { tv, type VariantProps } from 'tailwind-variants';
 
 	/**

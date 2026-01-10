@@ -102,17 +102,21 @@
 	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10">
-		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-4">
-			<div class="container">
+		<header class="sticky top-0 z-50 panel-glass px-4 h-[72px] relative">
+			<div class="container h-full flex items-center justify-between lg:pr-44">
 				<div class="flex items-center gap-3">
+					<div class="w-1.5 h-8 bg-primary rounded-sm shadow-glow shrink-0" aria-hidden="true"></div>
 					<PawPrint class="w-6 h-6 text-foreground" strokeWidth={2} />
-					<h1 class="text-xl font-semibold text-foreground">Deacon Dogs</h1>
-					{#if data.dogs}
-						<StatusIndicator status={getStatusVariant(data.dogs.boot.status)} size="lg" />
-					{/if}
+					<div>
+						<h1 class="text-2xl font-display font-semibold text-foreground">Deacon Dogs</h1>
+						<p class="text-sm text-muted-foreground">Helper agents that keep Gas Town running</p>
+					</div>
 				</div>
-				<p class="text-sm text-muted-foreground">Helper agents that keep Gas Town running</p>
+				{#if data.dogs}
+					<StatusIndicator status={getStatusVariant(data.dogs.boot.status)} size="lg" />
+				{/if}
 			</div>
+			<div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" aria-hidden="true"></div>
 		</header>
 
 		<main class="container py-6 space-y-6">
@@ -160,14 +164,16 @@
 
 						<div class="p-4 rounded-lg bg-background/50 border border-border">
 							<p class="text-xs text-muted-foreground uppercase tracking-wide">Last Decision</p>
-							<div class="flex items-center gap-2 mt-2">
-								<svelte:component
-									this={getTriageIcon(data.dogs.boot.lastTriage)}
-									class="w-5 h-5 text-muted-foreground"
-									strokeWidth={2}
-								/>
-								<span class="font-semibold">{data.dogs.boot.lastTriage}</span>
-							</div>
+							{#if data.dogs.boot.lastTriage}
+								{@const TriageIcon = getTriageIcon(data.dogs.boot.lastTriage)}
+								<div class="flex items-center gap-2 mt-2">
+									<TriageIcon
+										class="w-5 h-5 text-muted-foreground"
+										strokeWidth={2}
+									/>
+									<span class="font-semibold">{data.dogs.boot.lastTriage}</span>
+								</div>
+							{/if}
 						</div>
 
 						<div class="p-4 rounded-lg bg-background/50 border border-border">

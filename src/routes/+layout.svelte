@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '../app.css';
-	import { SkipLink, Announcer, BottomNav, Sidebar, GlobalSearch, NavigationLoader } from '$lib/components';
+	import { SkipLink, Announcer, BottomNav, Sidebar, NavigationLoader } from '$lib/components';
+	import { initializeKeyboardShortcuts, keyboardManager } from '$lib/utils/keyboard';
 	import { preloadRoute } from '$lib/preload';
 	import { page } from '$app/stores';
 	import { afterNavigate } from '$app/navigation';
@@ -115,15 +116,79 @@
 		}
 	}
 
-	// Poll for badge counts
+	// Apply theme on mount (persistence)
+	function applyStoredTheme() {
+		const stored = localStorage.getItem('gastown-theme') as 'light' | 'dark' | 'system' | null;
+		const theme = stored ?? 'system';
+		
+		let effectiveTheme: 'light' | 'dark';
+		if (theme === 'system') {
+			effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+		} else {
+			effectiveTheme = theme;
+		}
+		
+		const root = document.documentElement;
+		root.classList.remove('light', 'dark');
+		root.classList.add(effectiveTheme);
+	}
+
+	// Poll for badge counts and apply theme
 	onMount(() => {
+		// Apply stored theme immediately
+		applyStoredTheme();
+		
+		// Listen for system theme changes
+		const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+		const handleThemeChange = () => {
+			const stored = localStorage.getItem('gastown-theme');
+			if (stored === 'system') {
+				applyStoredTheme();
+			}
+		};
+		mediaQuery.addEventListener('change', handleThemeChange);
+		
+		// Initialize keyboard shortcuts
+		const manager = initializeKeyboardShortcuts();
+		if (manager) {
+			// Navigation shortcuts
+			manager.register('goto-inbox', {
+				keys: ['cmd', 'j'],
+				description: 'Go to Mail',
+				action: () => goto('/mail'),
+				category: 'navigation'
+			});
+			
+			manager.register('goto-work', {
+				keys: ['cmd', 'l'],
+				description: 'Go to Work',
+				action: () => goto('/work'),
+				category: 'navigation'
+			});
+			
+			// Action shortcuts (global)
+			manager.register('toggle-search', {
+				keys: ['cmd', 'k'],
+				description: 'Toggle Search',
+				action: () => {
+					// Dispatch event to GlobalSearch component
+					window.dispatchEvent(new CustomEvent('open-search'));
+				},
+				category: 'action'
+			});
+		}
+		
 		fetchBadgeCounts();
 		const interval = setInterval(fetchBadgeCounts, 30000); // Poll every 30s
-		return () => clearInterval(interval);
+		
+		return () => {
+			clearInterval(interval);
+			mediaQuery.removeEventListener('change', handleThemeChange);
+		};
 	});
 
 	// Focus management and route announcements on navigation
-	afterNavigate(({ to }) => {
+	afterNavigate(({ to, from }) => {
 		// Close mobile drawer on navigation
 		mobileDrawerOpen = false;
 		
@@ -182,7 +247,7 @@
 <!-- Layout wrapper with responsive sidebar/bottom nav -->
 {#if !hideNav}
 	<!-- Desktop layout with sidebar (hidden on mobile) -->
-	<div class="hidden lg:flex min-h-screen">
+	<div class="hidden lg:flex h-dvh overflow-hidden">
 		<!-- Sidebar navigation -->
 		<Sidebar
 			items={navItems}
@@ -191,10 +256,14 @@
 		/>
 
 		<!-- Main content area -->
-		<div class="flex-1 flex flex-col min-h-screen">
+		<div class="flex-1 flex flex-col h-full overflow-y-auto">
 			<!-- Global search in header for desktop -->
 			<div class="fixed top-4 right-4 z-40">
-				<GlobalSearch />
+				{#await import('$lib/components/GlobalSearch.svelte') then m}
+					<m.default />
+				{:catch}
+					<button class="w-10 h-10 rounded-lg bg-card border border-border" aria-label="Loading search"></button>
+				{/await}
 			</div>
 
 			<main
@@ -226,7 +295,11 @@
 			</button>
 			<span class="text-sm font-semibold text-foreground">Navigation</span>
 			<div class="ml-auto">
-				<GlobalSearch class="rounded-lg" />
+				{#await import('$lib/components/GlobalSearch.svelte') then m}
+					<m.default class="rounded-lg" />
+				{:catch}
+					<button class="w-10 h-10 rounded-lg bg-card border border-border" aria-label="Loading search"></button>
+				{/await}
 			</div>
 		</div>
 
@@ -241,22 +314,23 @@
 		{/if}
 
 		<!-- Mobile sidebar drawer -->
-		<nav
+		<div
 			class="fixed inset-y-0 left-0 z-20 w-64 md:hidden transition-transform duration-300 ease-out transform"
 			style:transform={mobileDrawerOpen ? 'translateX(0)' : 'translateX(-100%)'}
-			role="navigation"
 			aria-label="Main navigation"
+			role="dialog"
 			aria-modal={mobileDrawerOpen}
-			tabindex={mobileDrawerOpen ? 0 : -1}
+			tabindex="-1"
+			inert={!mobileDrawerOpen}
 		>
 			<Sidebar
 				items={navItems}
 				{activeId}
-				class="h-screen"
+				class="h-dvh"
 			/>
-		</nav>
+		</div>
 
-		<!-- Main content area -->
+		<!-- Main content area with page transitions -->
 		<div
 			bind:this={mainContentRef}
 			id="main-content"
@@ -267,7 +341,9 @@
 				minDistance: 40
 			}}
 		>
-			{@render children()}
+			<div class="animate-fade-in">
+				{@render children()}
+			</div>
 		</div>
 
 		<!-- Bottom navigation with preload on hover -->
@@ -283,7 +359,12 @@
 			{/each}
 		</nav>
 		<BottomNav items={navItems} {activeId} />
-	</div>
+		
+		<!-- Keyboard shortcuts help dialog (lazy loaded) -->
+		{#await import('$lib/components/KeyboardHelpDialog.svelte') then m}
+			<m.default />
+		{/await}
+		</div>
 {:else}
 	<!-- Login page - no navigation -->
 	<div

@@ -2,6 +2,7 @@
 	import { cn } from '$lib/utils';
 	import GridPattern from './GridPattern.svelte';
 	import StatusIndicator from './StatusIndicator.svelte';
+	import PageHeader from './PageHeader.svelte';
 	import type { Snippet } from 'svelte';
 
 	interface Props {
@@ -52,29 +53,29 @@
 
 	<!-- Main content wrapper -->
 	<div class="relative z-10 flex flex-col min-h-screen">
-		<!-- Header -->
-		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-3">
-			<div class="container flex items-center justify-between gap-4">
-				<!-- Branding with accent bar -->
-				<div class="flex items-center gap-3">
-					<!-- Logo accent bar with glow -->
-					<div class="w-2 h-8 bg-primary rounded-sm shadow-glow" aria-hidden="true"></div>
-					<h1 class="text-2xl md:text-2xl font-semibold text-foreground">{title}</h1>
-				</div>
-
+		<!-- Header using PageHeader component -->
+		<PageHeader
+			title={title}
+			showAccentBar={true}
+			liveCount={{
+				count: systemStatus === 'running' ? 1 : 0,
+				label: systemStatus === 'running' ? 'connected' : systemStatus === 'error' ? 'disconnected' : systemStatus,
+				status: systemStatus === 'running' ? 'success' : systemStatus === 'error' ? 'error' : 'warning'
+			}}
+		>
+			{#snippet actions()}
 				<!-- Connection status pill -->
 				<div class="flex items-center gap-2 bg-card px-3 py-1.5 rounded-full border border-border">
-					<!-- Animated pulse dot -->
 					<span
-						class="w-2 h-2 rounded-full bg-primary animate-pulse"
+						class="w-2 h-2 rounded-full {systemStatus === 'running' ? 'bg-primary animate-pulse' : systemStatus === 'error' ? 'bg-destructive' : 'bg-warning'}"
 						aria-hidden="true"
 					></span>
-					<span class="text-[10px] font-bold text-primary uppercase tracking-wider">
+					<span class="text-[10px] font-bold uppercase tracking-wider {systemStatus === 'running' ? 'text-primary' : systemStatus === 'error' ? 'text-destructive' : 'text-warning'}">
 						{systemStatus === 'running' ? 'Connected' : systemStatus === 'error' ? 'Disconnected' : systemStatus}
 					</span>
 				</div>
-			</div>
-		</header>
+			{/snippet}
+		</PageHeader>
 
 		<!-- Main content area -->
 		<main class="flex-1 container py-6 space-y-6">

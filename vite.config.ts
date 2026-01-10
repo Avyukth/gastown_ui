@@ -6,7 +6,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 export default defineConfig({
 	plugins: [
 		sveltekit(),
-		// Bundle analyzer - run with: ANALYZE=true bun run build
+		// Bundle analyzer - run with: ANALYZE=true npm run build
 		process.env.ANALYZE === 'true' &&
 			visualizer({
 				filename: 'bundle-stats.html',

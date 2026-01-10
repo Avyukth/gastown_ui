@@ -81,12 +81,14 @@
 
 			<!-- Error icon and status -->
 			<div class="text-center mb-6">
-				<svelte:component
-					this={errorInfo.icon}
-					class="w-12 h-12 text-destructive mx-auto mb-4"
-					strokeWidth={2}
-					aria-label={errorInfo.title}
-				/>
+				{#if errorInfo.icon}
+					{@const ErrorIcon = errorInfo.icon}
+					<ErrorIcon
+						class="w-12 h-12 text-destructive mx-auto mb-4"
+						strokeWidth={2}
+						aria-label={errorInfo.title}
+					/>
+				{/if}
 				<div class="inline-flex items-center gap-2 px-3 py-1 bg-destructive/10 text-destructive rounded-full text-sm font-mono">
 					<span class="w-2 h-2 bg-destructive rounded-full animate-pulse"></span>
 					ERROR {status}

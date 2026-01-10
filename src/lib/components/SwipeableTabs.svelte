@@ -283,6 +283,7 @@
 			class={styles.tabList()}
 			role="tablist"
 			aria-orientation="horizontal"
+			tabindex="-1"
 			onkeydown={handleKeyDown}
 		>
 			{#each tabs as tab, index (tab.id)}

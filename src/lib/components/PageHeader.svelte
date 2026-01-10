@@ -12,12 +12,14 @@
 			container: [
 				'sticky top-0 z-50',
 				'panel-glass',
-				'px-4 py-4',
+				'px-4 h-[72px]',
 				'relative'
 			],
 			inner: [
-				'container',
-				'flex items-center justify-between gap-4'
+				'container h-full',
+				'flex items-center justify-between gap-4',
+				// Reserve space for fixed GlobalSearch button on desktop
+				'lg:pr-44'
 			],
 			content: [
 				'min-w-0 flex-1'
@@ -98,6 +100,8 @@
 		liveCounts?: LiveCount[];
 		/** Whether header is sticky */
 		sticky?: boolean;
+		/** Show vertical accent bar with glow next to title */
+		showAccentBar?: boolean;
 		/** Additional container classes */
 		class?: string;
 	}
@@ -121,6 +125,7 @@
 		liveCount,
 		liveCounts = [],
 		sticky = true,
+		showAccentBar = false,
 		class: className = '',
 		actions
 	}: Props = $props();
@@ -167,57 +172,64 @@
 <header class={cn(styles.container(), className)}>
 	<div class={styles.inner()}>
 		<!-- Content: Breadcrumbs + Title + Subtitle -->
-		<div class={styles.content()}>
-			<!-- Breadcrumb Trail -->
-			{#if breadcrumbs.length > 0}
-				<nav class={styles.breadcrumb()} aria-label="Breadcrumb">
-					{#each breadcrumbs as crumb, i}
-						{#if i > 0}
-							<ChevronRight class={cn(styles.breadcrumbSeparator(), 'w-3 h-3')} aria-hidden="true" />
-						{/if}
-						{#if crumb.href && i < breadcrumbs.length - 1}
-							<a href={crumb.href} class={styles.breadcrumbItem()}>
-								{crumb.label}
-							</a>
-						{:else}
-							<span class={i === breadcrumbs.length - 1 ? 'text-foreground' : ''}>
-								{crumb.label}
-							</span>
-						{/if}
-					{/each}
-				</nav>
+		<div class={cn(styles.content(), showAccentBar && 'flex items-start gap-3')}>
+			<!-- Accent Bar (optional) -->
+			{#if showAccentBar}
+				<div class="w-1.5 h-8 bg-primary rounded-sm shadow-glow shrink-0 mt-0.5" aria-hidden="true"></div>
 			{/if}
 
-			<!-- Title -->
-			<h1 class={styles.title()}>
-				{title}
-			</h1>
-
-			<!-- Subtitle / Live Counts -->
-			{#if subtitle || allCounts.length > 0}
-				<div class={styles.subtitle()}>
-					{#if subtitle}
-						<span>{subtitle}</span>
-					{/if}
-					{#each allCounts as count, i}
-						{#if i > 0 || subtitle}
-							<span class="text-muted-foreground/50">·</span>
-						{/if}
-						<span class="inline-flex items-center gap-1.5">
-							{#if count.status}
-								<span
-									class={cn(styles.statusDot(), statusColors[count.status] ?? 'bg-muted-foreground')}
-									aria-hidden="true"
-								></span>
+			<div class={showAccentBar ? 'min-w-0 flex-1' : ''}>
+				<!-- Breadcrumb Trail -->
+				{#if breadcrumbs.length > 0}
+					<nav class={styles.breadcrumb()} aria-label="Breadcrumb">
+						{#each breadcrumbs as crumb, i}
+							{#if i > 0}
+								<ChevronRight class={cn(styles.breadcrumbSeparator(), 'w-3 h-3')} aria-hidden="true" />
 							{/if}
-							<span class={count.status === 'success' ? 'text-success' : count.status === 'warning' ? 'text-warning' : count.status === 'error' ? 'text-destructive' : ''}>
-								{count.count}
+							{#if crumb.href && i < breadcrumbs.length - 1}
+								<a href={crumb.href} class={styles.breadcrumbItem()}>
+									{crumb.label}
+								</a>
+							{:else}
+								<span class={i === breadcrumbs.length - 1 ? 'text-foreground' : ''}>
+									{crumb.label}
+								</span>
+							{/if}
+						{/each}
+					</nav>
+				{/if}
+
+				<!-- Title -->
+				<h1 class={styles.title()}>
+					{title}
+				</h1>
+
+				<!-- Subtitle / Live Counts -->
+				{#if subtitle || allCounts.length > 0}
+					<div class={styles.subtitle()}>
+						{#if subtitle}
+							<span>{subtitle}</span>
+						{/if}
+						{#each allCounts as count, i}
+							{#if i > 0 || subtitle}
+								<span class="text-muted-foreground/50">·</span>
+							{/if}
+							<span class="inline-flex items-center gap-1.5">
+								{#if count.status}
+									<span
+										class={cn(styles.statusDot(), statusColors[count.status] ?? 'bg-muted-foreground')}
+										aria-hidden="true"
+									></span>
+								{/if}
+								<span class={count.status === 'success' ? 'text-success' : count.status === 'warning' ? 'text-warning' : count.status === 'error' ? 'text-destructive' : ''}>
+									{count.count}
+								</span>
+								<span>{count.label}</span>
 							</span>
-							<span>{count.label}</span>
-						</span>
-					{/each}
-				</div>
-			{/if}
+						{/each}
+					</div>
+				{/if}
+			</div>
 		</div>
 
 		<!-- Actions -->

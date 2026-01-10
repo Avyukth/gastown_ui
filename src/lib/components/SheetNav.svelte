@@ -117,7 +117,7 @@ export interface SheetNavItem {
 		aria-label="Close navigation sheet"
 	></button>
 
-	<section
+	<div
 		class={cn('fixed inset-x-0 bottom-0 z-50 pb-safe px-safe', className)}
 		role="dialog"
 		aria-modal="true"
@@ -171,7 +171,7 @@ export interface SheetNavItem {
 										>
 											<span class={itemVariants({ active: isActive }).iconWrap()}>
 												{#if item.icon}
-													<svelte:component this={item.icon} class="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} aria-hidden="true" />
+													<item.icon class="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} aria-hidden="true" />
 												{:else}
 													<span class="h-4 w-4 rounded-full bg-current opacity-30" aria-hidden="true"></span>
 												{/if}
@@ -194,5 +194,5 @@ export interface SheetNavItem {
 				{/if}
 			</div>
 		</div>
-	</section>
+	</div>
 {/if}

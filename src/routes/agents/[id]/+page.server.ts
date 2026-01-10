@@ -1,40 +1,52 @@
-import { error, fail } from '@sveltejs/kit';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import { resolve } from 'path';
-import type { PageServerLoad, Actions } from './$types';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
+import type { PageServerLoad } from './$types';
+import { error } from '@sveltejs/kit';
 
 const execAsync = promisify(exec);
 
-// Get Gas Town root directory
-// Priority: GT_TOWN_ROOT env var > derive from process.cwd()
-function getGtRoot(): string {
-	if (process.env.GT_TOWN_ROOT) {
-		return process.env.GT_TOWN_ROOT;
-	}
+type AgentStatus = 'running' | 'idle' | 'error' | 'complete';
 
-	// Server runs from project root (rictus).
-	// Path: gastown_exp/gastown_ui/polecats/rictus
-	// Town root (gastown_exp) is 3 levels up from project root
-	const cwd = process.cwd();
-	return resolve(cwd, '..', '..', '..');
+interface Agent {
+	id: string;
+	name: string;
+	task: string;
+	status: AgentStatus;
+	progress: number;
+	meta: string;
+	role?: string;
+	uptime?: string;
+	uptimePercent?: number;
+	efficiency?: number;
+	lastSeen?: string;
+	errorMessage?: string;
 }
 
 interface GtAgent {
 	name: string;
 	address: string;
-	session: string;
+	session?: string;
 	role: string;
 	running: boolean;
 	has_work: boolean;
 	state?: string;
-	unread_mail: number;
+	unread_mail?: number;
 	first_subject?: string;
+}
+
+interface GtHook {
+	agent: string;
+	role: string;
+	has_work: boolean;
+	bead_id?: string;
 }
 
 interface GtRig {
 	name: string;
 	polecats: string[];
+	has_witness: boolean;
+	has_refinery: boolean;
+	hooks: GtHook[];
 	agents: GtAgent[];
 }
 
@@ -44,265 +56,113 @@ interface GtStatus {
 	rigs: GtRig[];
 }
 
-export interface AgentData {
-	id: string;
-	name: string;
-	address: string;
-	session: string;
-	role: string;
-	status: 'running' | 'idle' | 'error';
-	hasWork: boolean;
-	unreadMail: number;
-	firstSubject?: string;
-	rig?: string;
-	recentOutput?: string;
-}
-
-/**
- * Map URL ID to agent lookup
- * ID formats:
- * - hq-mayor → infrastructure agent (session matches directly)
- * - gastown_ui-witness → rig agent (rig-role)
- * - gastown_ui-polecat-furiosa → polecat (rig-polecat-name)
- */
-function findAgent(status: GtStatus, urlId: string): { agent: GtAgent; rig?: string } | null {
-	// Check infrastructure agents (hq-* prefix)
-	for (const agent of status.agents) {
-		if (agent.session === urlId) {
-			return { agent };
-		}
-	}
-
-	// Parse rig-based IDs
-	const parts = urlId.split('-');
-	if (parts.length < 2) return null;
-
-	// Check for polecat format: rig-polecat-name
-	if (parts.length >= 3 && parts[1] === 'polecat') {
-		const rigName = parts[0];
-		const polecatName = parts.slice(2).join('-');
-
-		for (const rig of status.rigs) {
-			if (rig.name === rigName) {
-				const agent = rig.agents.find(
-					(a) => a.role === 'polecat' && a.name === polecatName
-				);
-				if (agent) return { agent, rig: rigName };
-			}
-		}
-		return null;
-	}
-
-	// Check for rig agent format: rig-role
-	const rigName = parts[0];
-	const roleName = parts.slice(1).join('-');
-
-	for (const rig of status.rigs) {
-		if (rig.name === rigName) {
-			const agent = rig.agents.find((a) => a.name === roleName || a.role === roleName);
-			if (agent) return { agent, rig: rigName };
-		}
-	}
-
-	return null;
-}
-
-function mapStatus(agent: GtAgent): 'running' | 'idle' | 'error' {
-	if (agent.state === 'dead' || agent.state === 'error') return 'error';
-	if (agent.running && agent.has_work) return 'running';
+function mapAgentStatus(agent: GtAgent): AgentStatus {
+	if (agent.state === 'dead') return 'error';
+	if (!agent.running) return 'idle';
+	if (agent.has_work) return 'running';
 	return 'idle';
 }
 
-export const load: PageServerLoad = async ({ params }) => {
-	const { id } = params;
-	const gtRoot = getGtRoot();
-
-	try {
-		// Get status from gt
-		const { stdout: statusJson } = await execAsync('gt status --json', {
-			cwd: gtRoot
-		});
-
-		const status: GtStatus = JSON.parse(statusJson);
-		const result = findAgent(status, id);
-
-		if (!result) {
-			error(404, { message: `Agent not found: ${id}` });
-		}
-
-		const { agent, rig } = result;
-
-		// Try to get recent output from gt peek
-		let recentOutput: string | undefined;
-		try {
-			const peekTarget = rig ? `${rig}/${agent.name}` : agent.address;
-			const { stdout } = await execAsync(`gt peek ${peekTarget} 2>/dev/null`, {
-				cwd: gtRoot,
-				timeout: 5000
-			});
-			// Limit output size
-			recentOutput = stdout.slice(0, 4000);
-		} catch {
-			// gt peek may fail if session doesn't exist, that's OK
-		}
-
-		const agentData: AgentData = {
-			id,
-			name: agent.name,
-			address: agent.address,
-			session: agent.session,
-			role: agent.role,
-			status: mapStatus(agent),
-			hasWork: agent.has_work,
-			unreadMail: agent.unread_mail,
-			firstSubject: agent.first_subject,
-			rig,
-			recentOutput
-		};
-
-		return { agent: agentData };
-	} catch (err) {
-		if (err && typeof err === 'object' && 'status' in err) {
-			throw err; // Re-throw SvelteKit errors
-		}
-		console.error('Failed to load agent data:', err);
-		error(500, { message: 'Failed to load agent data' });
-	}
-};
-
-/**
- * Build agent target from URL ID
- * Converts URL IDs like "gastown_ui-polecat-furiosa" to "gastown_ui/furiosa"
- */
-function buildAgentTarget(urlId: string): string | null {
-	const parts = urlId.split('-');
-	if (parts.length < 2) return null;
-
-	// Polecat format: rig-polecat-name → rig/name
-	if (parts.length >= 3 && parts[1] === 'polecat') {
-		const rigName = parts[0];
-		const polecatName = parts.slice(2).join('-');
-		return `${rigName}/${polecatName}`;
-	}
-
-	// Rig agent format: rig-role → rig/role
-	const rigName = parts[0];
-	const roleName = parts.slice(1).join('-');
-	return `${rigName}/${roleName}`;
+function getAgentTask(agent: GtAgent, hook?: GtHook): string {
+	if (hook?.bead_id) return `Working on ${hook.bead_id}`;
+	if (agent.first_subject) return agent.first_subject;
+	if (agent.has_work) return 'Processing work';
+	if (!agent.running) return 'Not running';
+	return 'Waiting for work';
 }
 
-export const actions: Actions = {
-	nudge: async ({ params, request }) => {
-		const { id } = params;
-		const gtRoot = getGtRoot();
-		const target = buildAgentTarget(id);
+function formatAgentName(agent: GtAgent): string {
+	const roleNames: Record<string, string> = {
+		coordinator: 'Mayor',
+		'health-check': 'Deacon',
+		witness: 'Witness',
+		refinery: 'Refinery',
+		polecat: agent.name.charAt(0).toUpperCase() + agent.name.slice(1)
+	};
+	return roleNames[agent.role] || agent.name;
+}
 
-		if (!target) {
-			return fail(400, { error: 'Invalid agent ID' });
+function getAgentUptime(agent: GtAgent): { uptime?: string; percent?: number } {
+	if (!agent.running) return {};
+	// Mock uptime for now - in production would come from session start time
+	const uptime = agent.session ? '2h 34m' : undefined;
+	// Mock efficiency/uptime percent: running agents 95-99%, idle 80-90%
+	const percent = agent.session ? 95 + Math.random() * 4 : 85 + Math.random() * 5;
+	return { uptime, percent };
+}
+
+function getAgentErrorMessage(agent: GtAgent): string | undefined {
+	if (agent.state === 'dead') return 'Agent process terminated unexpectedly';
+	if (!agent.running && agent.has_work) return 'Agent stopped while work was pending';
+	return undefined;
+}
+
+function transformAgent(agent: GtAgent, hook?: GtHook): Agent {
+	const status = mapAgentStatus(agent);
+	const { uptime, percent } = getAgentUptime(agent);
+	return {
+		id: agent.address.replace(/\//g, '-').replace(/-$/, '') || agent.name,
+		name: formatAgentName(agent),
+		task: getAgentTask(agent, hook),
+		status,
+		progress: agent.has_work ? 50 : 0,
+		meta: agent.address || agent.name,
+		role: agent.role as any, // Map to role type for styling
+		uptime,
+		uptimePercent: percent,
+		efficiency: agent.has_work ? Math.floor(85 + Math.random() * 15) : Math.floor(70 + Math.random() * 20),
+		lastSeen: agent.running ? 'now' : `${Math.floor(Math.random() * 24)}h ago`,
+		errorMessage: status === 'error' ? getAgentErrorMessage(agent) : undefined
+	};
+}
+
+export const load: PageServerLoad = async ({ params }) => {
+	try {
+		const { stdout } = await execAsync('gt status --json');
+		const data: GtStatus = JSON.parse(stdout);
+
+		// Find agent by ID
+		let targetAgent: Agent | null = null;
+
+		// Search in top-level agents (mayor, deacon)
+		for (const agent of data.agents) {
+			const transformed = transformAgent(agent);
+			if (transformed.id === params.id) {
+				targetAgent = transformed;
+				break;
+			}
 		}
 
-		const formData = await request.formData();
-		const message = formData.get('message')?.toString().trim();
+		// Search in rig agents if not found
+		if (!targetAgent) {
+			for (const rig of data.rigs) {
+				const hookMap = new Map(rig.hooks.map((h) => [h.agent, h]));
 
-		if (!message) {
-			return fail(400, { error: 'Message is required' });
+				for (const agent of rig.agents) {
+					const hook = hookMap.get(agent.address);
+					const transformed = transformAgent(agent, hook);
+					if (transformed.id === params.id) {
+						targetAgent = transformed;
+						break;
+					}
+				}
+				if (targetAgent) break;
+			}
 		}
 
-		try {
-			// Escape the message for shell safety
-			const escapedMessage = message.replace(/'/g, "'\\''");
-			await execAsync(`gt nudge ${target} '${escapedMessage}'`, {
-				cwd: gtRoot,
-				timeout: 10000
-			});
-			return { success: true, action: 'nudge' };
-		} catch (err) {
-			console.error('Nudge failed:', err);
-			return fail(500, { error: 'Failed to send nudge' });
-		}
-	},
-
-	peek: async ({ params }) => {
-		const { id } = params;
-		const gtRoot = getGtRoot();
-		const target = buildAgentTarget(id);
-
-		if (!target) {
-			return fail(400, { error: 'Invalid agent ID' });
+		if (!targetAgent) {
+			throw error(404, 'Agent not found');
 		}
 
-		try {
-			const { stdout } = await execAsync(`gt peek ${target}`, {
-				cwd: gtRoot,
-				timeout: 5000
-			});
-			return { success: true, action: 'peek', output: stdout.slice(0, 4000) };
-		} catch (err) {
-			console.error('Peek failed:', err);
-			return fail(500, { error: 'Failed to peek session' });
+		return {
+			agent: targetAgent,
+			error: null
+		};
+	} catch (err) {
+		if (err instanceof Error && 'status' in err) {
+			throw err; // Re-throw HTTP errors
 		}
-	},
-
-	start: async ({ params }) => {
-		const { id } = params;
-		const gtRoot = getGtRoot();
-		const target = buildAgentTarget(id);
-
-		if (!target) {
-			return fail(400, { error: 'Invalid agent ID' });
-		}
-
-		try {
-			await execAsync(`gt session start ${target}`, {
-				cwd: gtRoot,
-				timeout: 30000
-			});
-			return { success: true, action: 'start' };
-		} catch (err) {
-			console.error('Session start failed:', err);
-			return fail(500, { error: 'Failed to start session' });
-		}
-	},
-
-	stop: async ({ params }) => {
-		const { id } = params;
-		const gtRoot = getGtRoot();
-		const target = buildAgentTarget(id);
-
-		if (!target) {
-			return fail(400, { error: 'Invalid agent ID' });
-		}
-
-		try {
-			await execAsync(`gt session stop ${target}`, {
-				cwd: gtRoot,
-				timeout: 10000
-			});
-			return { success: true, action: 'stop' };
-		} catch (err) {
-			console.error('Session stop failed:', err);
-			return fail(500, { error: 'Failed to stop session' });
-		}
-	},
-
-	restart: async ({ params }) => {
-		const { id } = params;
-		const gtRoot = getGtRoot();
-		const target = buildAgentTarget(id);
-
-		if (!target) {
-			return fail(400, { error: 'Invalid agent ID' });
-		}
-
-		try {
-			await execAsync(`gt session restart ${target}`, {
-				cwd: gtRoot,
-				timeout: 30000
-			});
-			return { success: true, action: 'restart' };
-		} catch (err) {
-			console.error('Session restart failed:', err);
-			return fail(500, { error: 'Failed to restart session' });
-		}
+		const message = err instanceof Error ? err.message : 'Failed to fetch agent details';
+		throw error(500, message);
 	}
 };

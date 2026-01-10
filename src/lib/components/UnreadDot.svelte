@@ -22,4 +22,4 @@
 		className
 	)}
 	aria-hidden="true"
-/>
+></span>

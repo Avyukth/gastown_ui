@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { DashboardLayout, AgentCard, StatsCard, EmptyState, Button, CircularProgress } from '$lib/components';
 	import { Clock, CheckCircle, Zap, Layers, TrendingUp, Package } from 'lucide-svelte';
+	import { goto } from '$app/navigation';
 
 	let { data } = $props();
 
@@ -58,6 +59,7 @@
 					status={agent.status}
 					progress={agent.progress}
 					meta={agent.meta}
+					role={agent.role === 'polecat' ? 'crew' : (agent.role as any)}
 					compact
 				/>
 			{/each}
@@ -67,7 +69,14 @@
 	<!-- Center Column: Workflows -->
 	{#snippet workflows()}
 		{#each workflowsList as workflow (workflow.id)}
-			<div class="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors cursor-pointer group">
+			<div 
+				class="flex items-center justify-between p-4 hover:bg-accent/5 transition-colors cursor-pointer group"
+				role="button"
+				tabindex="0"
+				onclick={() => goto(`/workflows/${workflow.id}`)}
+				onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && goto(`/workflows/${workflow.id}`)}
+				aria-label="View {workflow.name} workflow"
+			>
 				<div class="flex items-center gap-3 min-w-0 flex-1">
 					<span class="text-sm font-medium text-foreground truncate">{workflow.name}</span>
 				</div>
@@ -87,7 +96,7 @@
 					
 					<CircularProgress 
 						progress={workflow.progress}
-						diameter={24}
+						diameter={32}
 						status={workflow.status as 'pending' | 'running' | 'completed'}
 						icon={workflow.status === 'pending' ? Clock : workflow.status === 'completed' ? CheckCircle : undefined}
 						ariaLabel="{workflow.name} progress: {workflow.progress}%"
@@ -113,36 +122,60 @@
 
 	<!-- Right Column: Stats -->
 	{#snippet stats()}
-		<StatsCard
-			label="Active Agents"
-			value={statsData.activeAgents}
-			icon={Zap}
-			trend="up"
-			trendValue={12}
-			comparisonText="from yesterday"
-			sparklineData={[3, 4, 3, 5, 4, 6, statsData.activeAgents]}
-		/>
-		<StatsCard
-			label="Tasks Running"
-			value={statsData.tasksRunning}
-			icon={Layers}
-			trend="neutral"
-		/>
-		<StatsCard
-			label="Polecats"
-			value={statsData.queueDepth}
-			icon={Package}
-			trend={statsData.queueDepth > 5 ? 'up' : 'down'}
-			trendValue={statsData.queueDepth > 5 ? 8 : -3}
-		/>
-		<StatsCard
-			label="Completed Today"
-			value={statsData.completedToday}
-			icon={TrendingUp}
-			trend="up"
-			trendValue={25}
-			comparisonText="from yesterday"
-		/>
+		<button
+			type="button"
+			onclick={() => goto('/agents')}
+			class="w-full text-left hover:opacity-100 transition-opacity"
+		>
+			<StatsCard
+				label="Active Agents"
+				value={statsData.activeAgents}
+				icon={Zap}
+				trend="up"
+				trendValue={12}
+				comparisonText="from yesterday"
+				sparklineData={[3, 4, 3, 5, 4, 6, statsData.activeAgents]}
+			/>
+		</button>
+		<button
+			type="button"
+			onclick={() => goto('/work')}
+			class="w-full text-left hover:opacity-100 transition-opacity"
+		>
+			<StatsCard
+				label="Tasks Running"
+				value={statsData.tasksRunning}
+				icon={Layers}
+				trend="neutral"
+			/>
+		</button>
+		<button
+			type="button"
+			onclick={() => goto('/queue')}
+			class="w-full text-left hover:opacity-100 transition-opacity"
+		>
+			<StatsCard
+				label="Polecats"
+				value={statsData.queueDepth}
+				icon={Package}
+				trend={statsData.queueDepth > 5 ? 'up' : 'down'}
+				trendValue={statsData.queueDepth > 5 ? 8 : -3}
+			/>
+		</button>
+		<button
+			type="button"
+			onclick={() => goto('/activity')}
+			class="w-full text-left hover:opacity-100 transition-opacity"
+		>
+			<StatsCard
+				label="Completed Today"
+				value={statsData.completedToday}
+				icon={TrendingUp}
+				trend="up"
+				trendValue={25}
+				comparisonText="from yesterday"
+			/>
+		</button>
 	{/snippet}
 
 	<!-- Right Column: Actions -->

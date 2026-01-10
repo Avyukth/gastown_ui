@@ -6,8 +6,8 @@
 	 * 
 	 * Styles:
 	 * - Hover: background-color #F3F4F6 (muted/50)
-	 * - Selected: 3px orange (#F97316) left border
-	 * - Icons: Lucide icons, color-coded by type
+	 * - Selected: 4px orange (#F97316) left border with light orange background
+	 * - Icons: Lucide icons with type-specific colors
 	 * - Card grouped with subtle border
 	 */
 	export const issueTypeSelectorVariants = tv({
@@ -32,7 +32,7 @@
 				'hover:bg-muted/50'
 			],
 			itemSelected: [
-				'bg-muted/30',
+				'bg-orange-50 dark:bg-orange-950/30',
 				'border-l-primary'
 			],
 			input: [
@@ -43,8 +43,7 @@
 			],
 			icon: [
 				'w-5 h-5',
-				'flex-shrink-0',
-				'text-muted-foreground'
+				'flex-shrink-0'
 			],
 			content: [
 				'flex-1 min-w-0'
@@ -67,6 +66,14 @@
 		icon?: any; // Lucide component
 		color?: string; // CSS color class
 	}
+
+	// Type-specific icon colors
+	export const typeColors: Record<string, string> = {
+		task: 'text-blue-500 dark:text-blue-400',
+		bug: 'text-red-500 dark:text-red-400',
+		feature: 'text-green-500 dark:text-green-400',
+		epic: 'text-purple-500 dark:text-purple-400'
+	};
 </script>
 
 <script lang="ts">
@@ -95,16 +102,21 @@
 		value = newValue;
 		onchange?.(newValue);
 	}
+
+	// Get icon color for a type value
+	function getIconColor(typeValue: string): string {
+		return typeColors[typeValue] || 'text-muted-foreground';
+	}
 </script>
 
 <div class={cn(styles.container(), className)}>
 	{#if label}
-		<label class={styles.label()}>
+		<span id="issue-type-label" class={styles.label()}>
 			{label}
-		</label>
+		</span>
 	{/if}
 
-	<div class={styles.group()}>
+	<div class={styles.group()} aria-labelledby={label ? "issue-type-label" : undefined} role="radiogroup">
 		{#each options as option (option.value)}
 			<label 
 				class={cn(
@@ -123,8 +135,11 @@
 				/>
 				
 				{#if option.icon}
-					<span class={styles.icon()} aria-hidden="true">
-						<svelte:component this={option.icon} strokeWidth={2} />
+					<span 
+						class={cn(styles.icon(), getIconColor(option.value))} 
+						aria-hidden="true"
+					>
+						<option.icon strokeWidth={2} />
 					</span>
 				{/if}
 				

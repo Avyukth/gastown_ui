@@ -220,8 +220,9 @@
 			{label}
 		</p>
 		{#if icon}
+			{@const Icon = icon}
 			<span class={styles.icon()} aria-hidden="true">
-				<svelte:component this={icon} strokeWidth={1.5} />
+				<Icon strokeWidth={1.5} />
 			</span>
 		{/if}
 	</div>

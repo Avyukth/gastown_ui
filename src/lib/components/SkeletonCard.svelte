@@ -62,18 +62,26 @@
 <div class={`grid gap-4 ${className}`}>
 	{#each Array(count) as _, cardIdx}
 		<div
-			class="rounded-lg border border-border bg-card/50 p-4 backdrop-blur-sm"
+			class="rounded-lg border border-border bg-card/50 p-4 backdrop-blur-sm overflow-hidden"
 			aria-busy="true"
 			aria-label="Loading content"
+			style={animated ? `animation-delay: ${cardIdx * 50}ms` : undefined}
 		>
+			{#if animated}
+				<!-- Shimmer effect overlay -->
+				<div
+					class="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent"
+				></div>
+			{/if}
 			<!-- Agent card skeleton -->
 			{#if type === 'agent'}
-				<div class="flex items-start gap-3">
+				<div class="flex items-start gap-3 relative">
 					<!-- Icon skeleton -->
 					{#if layout.icon}
 						<div
 							class="h-8 w-8 flex-shrink-0 rounded-md bg-muted/50 animate-pulse"
 							aria-hidden="true"
+							style={animated ? `animation-delay: ${cardIdx * 50}ms` : undefined}
 						></div>
 					{/if}
 
@@ -82,12 +90,13 @@
 						<div
 							class="h-4 w-24 rounded-md bg-muted/50 animate-pulse"
 							aria-hidden="true"
+							style={animated ? `animation-delay: ${cardIdx * 50 + 75}ms` : undefined}
 						></div>
 						<!-- Description lines -->
-						{#each Array(layout.descLines || 1) as _}
+						{#each Array(layout.descLines || 1) as _, lineIdx}
 							<div
 								class="h-3 w-full rounded-md bg-muted/50 animate-pulse"
-								style="width: {Math.random() > 0.5 ? 80 : 60}%"
+								style={`width: ${Math.random() > 0.5 ? 80 : 60}%; ${animated ? `animation-delay: ${cardIdx * 50 + (lineIdx + 1) * 75}ms` : ''}`}
 								aria-hidden="true"
 							></div>
 						{/each}

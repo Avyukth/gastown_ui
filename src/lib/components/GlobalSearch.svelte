@@ -14,7 +14,7 @@
 		Search,
 		Home,
 		Bot,
-		Target,
+		Briefcase,
 		Truck,
 		ClipboardList,
 		Mail,
@@ -48,11 +48,29 @@
 	let dialogRef = $state<HTMLDivElement | null>(null);
 	let triggerRef = $state<HTMLButtonElement | null>(null);
 
+	// Filter state
+	let filters = $state({ type: 'all' as 'all' | 'agent' | 'issue' | 'convoy' | 'route' });
+	let recentSearches = $state<string[]>([]);
+
 	// Detect OS for keyboard shortcut display
 	let isMac = $state(false);
 
 	onMount(() => {
 		isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+		// Load recent searches from localStorage
+		const saved = localStorage.getItem('gastown-recent-searches');
+		if (saved) {
+			try {
+				recentSearches = JSON.parse(saved);
+			} catch (e) {
+				console.error('Failed to parse recent searches:', e);
+			}
+		}
+		// Listen for open-search event from keyboard shortcuts
+		window.addEventListener('open-search', open);
+		return () => {
+			window.removeEventListener('open-search', open);
+		};
 	});
 
 	// Command palette mode (when query starts with '>')
@@ -86,7 +104,7 @@
 	const routes: Array<{ path: string; label: string; icon: ComponentType }> = [
 		{ path: '/', label: 'Dashboard', icon: Home },
 		{ path: '/agents', label: 'Agents', icon: Bot },
-		{ path: '/work', label: 'Work', icon: Target },
+		{ path: '/work', label: 'Work', icon: Briefcase },
 		{ path: '/convoys', label: 'Convoys', icon: Truck },
 		{ path: '/queue', label: 'Queue', icon: ClipboardList },
 		{ path: '/mail', label: 'Mail', icon: Mail },
@@ -166,6 +184,19 @@
 			: isCommandMode ? commands : []
 	);
 
+	// Helper: Save recent search
+	function addRecentSearch(term: string) {
+		if (!term.trim()) return;
+		const filtered = recentSearches.filter(s => s.toLowerCase() !== term.toLowerCase());
+		recentSearches = [term, ...filtered].slice(0, 5);
+		localStorage.setItem('gastown-recent-searches', JSON.stringify(recentSearches));
+	}
+
+	// Helper: Execute search (apply filters)
+	function shouldIncludeInResults(type: 'agent' | 'issue' | 'convoy' | 'route'): boolean {
+		return filters.type === 'all' || filters.type === type;
+	}
+
 	// Build flat list of all results for keyboard navigation
 	interface SearchResult {
 		type: 'agent' | 'issue' | 'convoy' | 'route' | 'command' | 'recent';
@@ -206,52 +237,60 @@
 		}
 
 		// Agents
-		filteredAgents.forEach(a => {
-			results.push({
-				type: 'agent',
-				id: a.id,
-				label: a.name,
-				sublabel: a.task,
-				icon: Bot,
-				action: () => { goto(`/agents/${a.id}`); close(); }
+		if (shouldIncludeInResults('agent')) {
+			filteredAgents.forEach(a => {
+				results.push({
+					type: 'agent',
+					id: a.id,
+					label: a.name,
+					sublabel: a.task,
+					icon: Bot,
+					action: () => { goto(`/agents/${a.id}`); close(); }
+				});
 			});
-		});
+		}
 
 		// Issues
-		filteredIssues.forEach(i => {
-			results.push({
-				type: 'issue',
-				id: i.id,
-				label: i.title,
-				sublabel: `${i.id} · ${i.type} · P${i.priority}`,
-				icon: FileText,
-				action: () => { goto('/work'); close(); }
+		if (shouldIncludeInResults('issue')) {
+			filteredIssues.forEach(i => {
+				results.push({
+					type: 'issue',
+					id: i.id,
+					label: i.title,
+					sublabel: `${i.id} · ${i.type} · P${i.priority}`,
+					icon: FileText,
+					action: () => { goto('/work'); close(); }
+				});
 			});
-		});
+		}
 
 		// Convoys
-		filteredConvoys.forEach(c => {
-			results.push({
-				type: 'convoy',
-				id: c.id,
-				label: c.name,
-				sublabel: `${c.status} · ${c.progress}%`,
-				icon: Truck,
-				action: () => { goto(`/convoys/${c.id}`); close(); }
+		if (shouldIncludeInResults('convoy')) {
+			filteredConvoys.forEach(c => {
+				results.push({
+					type: 'convoy',
+					id: c.id,
+					label: c.name,
+					sublabel: `${c.status} · ${c.progress}%`,
+					icon: Truck,
+					action: () => { goto(`/convoys/${c.id}`); close(); }
+				});
 			});
-		});
+		}
 
 		// Routes
-		filteredRoutes.forEach(r => {
-			results.push({
-				type: 'route',
-				id: r.path,
-				label: r.label,
-				sublabel: r.path,
-				icon: r.icon,
-				action: () => { goto(r.path); close(); }
+		if (shouldIncludeInResults('route')) {
+			filteredRoutes.forEach(r => {
+				results.push({
+					type: 'route',
+					id: r.path,
+					label: r.label,
+					sublabel: r.path,
+					icon: r.icon,
+					action: () => { goto(r.path); close(); }
+				});
 			});
-		});
+		}
 
 		return results;
 	});
@@ -271,9 +310,13 @@
 	}
 
 	function close() {
+		if (query.trim()) {
+			addRecentSearch(query.trim());
+		}
 		isOpen = false;
 		query = '';
 		selectedIndex = 0;
+		filters.type = 'all';
 		// Restore focus to trigger button for accessibility
 		requestAnimationFrame(() => triggerRef?.focus());
 	}
@@ -447,26 +490,72 @@
 			)}
 		>
 			<!-- Search input -->
-			<div class="flex items-center gap-3 px-4 py-3 border-b border-border">
-				<label for="global-search-input" class="sr-only" id="search-dialog-title">
-					Search agents, issues, convoys, or commands
-				</label>
-				<Search class="w-5 h-5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
-				<input
-					bind:this={inputRef}
-					bind:value={query}
-					id="global-search-input"
-					type="text"
-					placeholder={isCommandMode ? 'Type a command...' : 'Search agents, issues, convoys, or type > for commands...'}
-					class="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground outline-none text-base"
-					autocomplete="off"
-					autocorrect="off"
-					autocapitalize="off"
-					spellcheck="false"
-				/>
-				<kbd class="hidden sm:inline-flex items-center px-1.5 py-0.5 text-xs font-mono text-muted-foreground bg-muted rounded border border-border">
-					ESC
-				</kbd>
+			<div class="space-y-3 px-4 py-3 border-b border-border">
+				<div class="flex items-center gap-3">
+					<label for="global-search-input" class="sr-only" id="search-dialog-title">
+						Search agents, issues, convoys, or commands
+					</label>
+					<Search class="w-5 h-5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
+					<input
+						bind:this={inputRef}
+						bind:value={query}
+						id="global-search-input"
+						type="text"
+						placeholder={isCommandMode ? 'Type a command...' : 'Search agents, issues, convoys, or type > for commands...'}
+						class="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground outline-none text-base"
+						autocomplete="off"
+						autocorrect="off"
+						autocapitalize="off"
+						spellcheck="false"
+					/>
+					<kbd class="hidden sm:inline-flex items-center px-1.5 py-0.5 text-xs font-mono text-muted-foreground bg-muted rounded border border-border">
+						ESC
+					</kbd>
+				</div>
+
+				<!-- Filter buttons (show when searching) -->
+				{#if searchQuery}
+					<div class="flex flex-wrap gap-2">
+						{#each [
+							{ label: 'All', value: 'all' },
+							{ label: 'Agents', value: 'agent' },
+							{ label: 'Issues', value: 'issue' },
+							{ label: 'Convoys', value: 'convoy' }
+						] as filterOption}
+							<button
+								type="button"
+								class={cn(
+									'px-3 py-1 text-xs font-medium rounded-md transition-colors',
+									filters.type === filterOption.value
+										? 'bg-primary text-primary-foreground'
+										: 'bg-muted text-muted-foreground hover:bg-muted/80'
+								)}
+								onclick={() => filters.type = filterOption.value as any}
+								aria-pressed={filters.type === filterOption.value}
+							>
+								{filterOption.label}
+							</button>
+						{/each}
+					</div>
+				{/if}
+
+				<!-- Recent searches (show when empty query) -->
+				{#if !searchQuery && !isCommandMode && recentSearches.length > 0}
+					<div class="flex flex-wrap gap-2">
+						<span class="text-xs text-muted-foreground w-full mb-1">Recent:</span>
+						{#each recentSearches as recent}
+							<button
+								type="button"
+								class="px-3 py-1 text-xs rounded-md bg-muted/50 text-muted-foreground hover:bg-muted transition-colors flex items-center gap-1"
+								onclick={() => query = recent}
+								title="Search for '{recent}'"
+							>
+								<Clock class="w-3 h-3" />
+								{recent}
+							</button>
+						{/each}
+					</div>
+				{/if}
 			</div>
 
 			<!-- Results -->

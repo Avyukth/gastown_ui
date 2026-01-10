@@ -60,11 +60,14 @@
 	<!-- Main content wrapper -->
 	<div class="relative z-10 flex flex-col min-h-screen">
 		<!-- Header -->
-		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-4">
-			<div class="container flex items-center justify-between">
-				<div>
-					<h1 class="text-2xl md:text-2xl font-semibold text-foreground">{title}</h1>
-					<p class="text-sm text-muted-foreground">{items.length} items in queue</p>
+		<header class="sticky top-0 z-50 panel-glass px-4 h-[72px] relative">
+			<div class="container h-full flex items-center justify-between lg:pr-44">
+				<div class="flex items-center gap-3">
+					<div class="w-1.5 h-8 bg-primary rounded-sm shadow-glow shrink-0" aria-hidden="true"></div>
+					<div>
+						<h1 class="text-2xl font-display font-semibold text-foreground">{title}</h1>
+						<p class="text-sm text-muted-foreground">{items.length} items in queue</p>
+					</div>
 				</div>
 				{#if actions}
 					<div class="flex items-center gap-2">
@@ -72,6 +75,7 @@
 					</div>
 				{/if}
 			</div>
+			<div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" aria-hidden="true"></div>
 		</header>
 
 		<!-- Queue list -->

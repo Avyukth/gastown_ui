@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { GridPattern, StatusIndicator } from '$lib/components';
+	import { GridPattern, StatusIndicator, PageHeader } from '$lib/components';
 
 	const { data } = $props();
 
@@ -82,17 +82,16 @@
 	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10">
-		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-4">
-			<div class="container">
-				<div class="flex items-center gap-3">
-					<h1 class="text-xl font-semibold text-foreground">System Health</h1>
-					{#if data.health}
-						<StatusIndicator status={getStatusVariant(data.health.overallStatus)} size="lg" />
-					{/if}
-				</div>
-				<p class="text-sm text-muted-foreground">Agent health dashboard for Gas Town</p>
-			</div>
-		</header>
+		<PageHeader
+			title="System Health"
+			subtitle="Agent health dashboard for Gas Town"
+			liveCount={data.health ? {
+				count: data.health.summary.healthyRigs,
+				label: getStatusLabel(data.health.overallStatus).toLowerCase(),
+				status: data.health.overallStatus === 'healthy' ? 'success' : data.health.overallStatus === 'degraded' ? 'warning' : 'error'
+			} : undefined}
+			showAccentBar={true}
+		/>
 
 		<main class="container py-6 space-y-6">
 			{#if data.error}

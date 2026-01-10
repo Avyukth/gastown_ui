@@ -97,7 +97,8 @@
 		}
 	]);
 
-	let activeTab = $state(initialTab);
+	// Track active tab - user can change via swipe, starts at initialTab
+	let activeTab = $state(initialTab as 'agents' | 'flows' | 'queue' | 'logs');
 </script>
 
 <div class={cn('relative min-h-screen bg-background md:hidden', className)}>

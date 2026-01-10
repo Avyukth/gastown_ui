@@ -18,6 +18,27 @@
 		<link rel="apple-touch-icon" href="%sveltekit.assets%/apple-touch-icon.png" />
 		<link rel="manifest" href="%sveltekit.assets%/manifest.json" />
 		%sveltekit.head%
+		<!-- Flash prevention: Apply theme before first paint -->
+		<script>
+			(function() {
+				try {
+					var stored = localStorage.getItem('gastown-theme');
+					// Validate stored value is one of allowed themes
+					var theme = (stored === 'light' || stored === 'dark' || stored === 'system') ? stored : 'system';
+					var effectiveTheme;
+					if (theme === 'system') {
+						effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+					} else {
+						effectiveTheme = theme;
+					}
+					// Only add validated class names
+					document.documentElement.classList.add(effectiveTheme);
+				} catch (e) {
+					// Fallback to dark theme if localStorage unavailable
+					document.documentElement.classList.add('dark');
+				}
+			})();
+		</script>
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>

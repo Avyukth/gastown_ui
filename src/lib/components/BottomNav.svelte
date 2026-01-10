@@ -144,6 +144,7 @@
 		class="fixed bottom-16 left-0 right-0 z-50 pb-safe px-safe"
 		style="animation: slideInUp 300ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards"
 		role="menu"
+		tabindex="0"
 		aria-label="Additional navigation options"
 		ontouchstart={handleTouchStart}
 		ontouchend={handleTouchEnd}

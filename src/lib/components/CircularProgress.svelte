@@ -80,8 +80,8 @@
 	}: Props = $props();
 
 	// SVG calculations
-	const radius = diameter / 2 - strokeWidth / 2;
-	const circumference = 2 * Math.PI * radius;
+	const radius = $derived(diameter / 2 - strokeWidth / 2);
+	const circumference = $derived(2 * Math.PI * radius);
 	const offset = $derived(circumference - (Math.max(0, Math.min(100, progress)) / 100) * circumference);
 
 	// Status colors
@@ -139,12 +139,12 @@
 
 	<!-- Icon in center -->
 	{#if icon}
-		<div 
+		{@const Icon = icon}
+		<div
 			class="absolute inset-0 flex items-center justify-center text-muted-foreground"
 			aria-hidden="true"
 		>
-			<svelte:component 
-				this={icon} 
+			<Icon
 				class="w-3 h-3"
 				strokeWidth={2}
 			/>

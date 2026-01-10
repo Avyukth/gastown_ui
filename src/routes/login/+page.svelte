@@ -117,7 +117,7 @@
 						<circle cx="12" cy="12" r="7" stroke-dasharray="2 2"/>
 					</svg>
 				</div>
-				<h1 class="text-2xl font-bold text-foreground tracking-wide">GAS TOWN</h1>
+				<h1 class="text-2xl font-bold text-foreground tracking-wide">Gas Town</h1>
 				<p class="text-sm text-muted-foreground font-mono mt-1">OPERATOR AUTHENTICATION</p>
 			</div>
 

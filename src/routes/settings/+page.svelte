@@ -2,14 +2,12 @@
 	import { enhance } from '$app/forms';
 	import { GridPattern } from '$lib/components';
 	import { cn } from '$lib/utils';
-	import { browser } from '$app/environment';
+	import { themeStore, type Theme } from '$lib/stores';
 	import { Trash2, Sun, Moon, Monitor, Palette, Bot, Settings, AlertTriangle, Info } from 'lucide-svelte';
 	import type { ComponentType } from 'svelte';
 
 	const { data, form } = $props();
 
-	// Theme state (persisted to localStorage)
-	let theme = $state<'light' | 'dark' | 'system'>('system');
 	let selectedAgent = $state('');
 	let showAddAgent = $state(false);
 
@@ -24,46 +22,15 @@
 	let muteDialogPatrolId = $state<string | null>(null);
 	let muteReason = $state('');
 
-	// Initialize theme from localStorage
-	$effect(() => {
-		if (browser) {
-			const stored = localStorage.getItem('gastown-theme') as 'light' | 'dark' | 'system' | null;
-			theme = stored ?? 'system';
-			applyTheme(theme);
-		}
-	});
-
-	function applyTheme(newTheme: 'light' | 'dark' | 'system') {
-		if (!browser) return;
-
-		const root = document.documentElement;
-		let effectiveTheme: 'light' | 'dark';
-
-		if (newTheme === 'system') {
-			effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-		} else {
-			effectiveTheme = newTheme;
-		}
-
-		root.classList.remove('light', 'dark');
-		root.classList.add(effectiveTheme);
-		localStorage.setItem('gastown-theme', newTheme);
-	}
-
-	function setTheme(newTheme: 'light' | 'dark' | 'system') {
-		theme = newTheme;
-		applyTheme(newTheme);
-	}
-
-	// Theme options
-	const themeOptions: Array<{ value: 'light' | 'dark' | 'system'; label: string; icon: ComponentType }> = [
+	// Theme options using shared store
+	const themeOptions: Array<{ value: Theme; label: string; icon: ComponentType }> = [
 		{ value: 'dark', label: 'Dark', icon: Moon },
 		{ value: 'light', label: 'Light', icon: Sun },
 		{ value: 'system', label: 'System', icon: Monitor }
 	];
 
 	function getThemeIndex() {
-		const index = themeOptions.findIndex((option) => option.value === theme);
+		const index = themeOptions.findIndex((option) => option.value === themeStore.theme);
 		return index === -1 ? 0 : index;
 	}
 </script>
@@ -76,11 +43,15 @@
 	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10">
-		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-4">
-			<div class="container">
-				<h1 class="text-xl font-semibold text-foreground">Settings</h1>
-				<p class="text-sm text-muted-foreground">Configure Gas Town preferences</p>
+		<header class="sticky top-0 z-50 panel-glass px-4 h-[72px] relative">
+			<div class="container h-full flex items-center gap-3">
+				<div class="w-1.5 h-8 bg-primary rounded-sm shadow-glow shrink-0" aria-hidden="true"></div>
+				<div>
+					<h1 class="text-2xl font-display font-semibold text-foreground">Settings</h1>
+					<p class="text-sm text-muted-foreground">Configure Gas Town preferences</p>
+				</div>
 			</div>
+			<div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" aria-hidden="true"></div>
 		</header>
 
 		<main class="container py-6 space-y-6">
@@ -124,12 +95,12 @@
 						{#each themeOptions as option}
 							<button
 								type="button"
-								onclick={() => setTheme(option.value)}
-								aria-pressed={theme === option.value}
+								onclick={() => themeStore.set(option.value)}
+								aria-pressed={themeStore.theme === option.value}
 								class={cn(
 									'relative z-10 flex h-8 w-20 items-center justify-center gap-1 rounded-md px-2 text-xs font-semibold uppercase tracking-wide transition-all',
 									'hover:text-foreground',
-									theme === option.value ? 'text-foreground' : 'text-muted-foreground'
+									themeStore.theme === option.value ? 'text-foreground' : 'text-muted-foreground'
 								)}
 							>
 								<span class="flex items-center justify-center">
@@ -292,7 +263,7 @@
 										class="p-2 text-muted-foreground hover:text-destructive transition-colors"
 										title="Remove agent"
 									>
-tttttttttt<Trash2 class="w-4 h-4" />
+<Trash2 class="w-4 h-4" />
 									</button>
 								</form>
 							{/if}

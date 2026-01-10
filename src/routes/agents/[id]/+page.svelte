@@ -1,276 +1,250 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
-	import { AgentDetailLayout, LogEntry } from '$lib/components';
-	import type { PageData, ActionData } from './$types';
+	import { goto } from '$app/navigation';
+	import { GridPattern, ErrorState, ProgressBar, StatusIndicator } from '$lib/components';
+	import { ArrowLeft, Clock, Zap, Eye, AlertTriangle, RefreshCw, Search, Briefcase, Heart, Shield, Flame, Users, TrendingUp } from 'lucide-svelte';
 
-	let { data, form }: { data: PageData; form: ActionData } = $props();
+	let { data } = $props();
 
 	const agent = $derived(data.agent);
 
-	// Nudge input state
-	let nudgeMessage = $state('');
-	let isSubmitting = $state(false);
+	// Role icons mapping
+	const roleIcons: Record<string, typeof Briefcase> = {
+		coordinator: Briefcase,
+		'health-check': Heart,
+		witness: Shield,
+		refinery: Flame,
+		polecat: Users
+	};
 
-	// Show success/error feedback
-	let feedbackMessage = $state('');
-	let feedbackType = $state<'success' | 'error'>('success');
+	const RoleIcon = $derived(roleIcons[agent.role || ''] || Briefcase);
 
-	function showFeedback(message: string, type: 'success' | 'error' = 'success') {
-		feedbackMessage = message;
-		feedbackType = type;
-		setTimeout(() => {
-			feedbackMessage = '';
-		}, 3000);
+	// Status indicator map
+	const statusIndicatorMap = {
+		running: 'running',
+		idle: 'idle',
+		error: 'error',
+		complete: 'complete'
+	} as const;
+
+	// Status label map
+	const statusLabels = {
+		running: 'Running',
+		idle: 'Idle',
+		error: 'Error',
+		complete: 'Complete'
+	} as const;
+
+	// Role label map
+	const roleLabels: Record<string, string> = {
+		coordinator: 'Coordinator',
+		'health-check': 'Health Check',
+		witness: 'Witness',
+		refinery: 'Refinery',
+		polecat: 'Crew',
+		undefined: 'Unknown'
+	};
+
+	function goBack() {
+		goto('/agents');
 	}
 
-	// Handle form submission results
-	$effect(() => {
-		if (form?.success) {
-			if (form.action === 'nudge') {
-				nudgeMessage = '';
-				showFeedback('Nudge sent successfully');
-			} else if (form.action === 'start') {
-				showFeedback('Session started');
-			} else if (form.action === 'stop') {
-				showFeedback('Session stopped');
-			} else if (form.action === 'restart') {
-				showFeedback('Session restarted');
-			} else if (form.action === 'peek') {
-				showFeedback('Output refreshed');
-			}
-		} else if (form?.error) {
-			showFeedback(form.error, 'error');
-		}
-	});
+	function handleInspect() {
+		console.log('Inspecting agent:', agent.id);
+		// TODO: Implement inspect functionality
+	}
 
-	// Format role for display
-	const displayRole = $derived(() => {
-		if (agent.rig) {
-			return `${agent.rig}/${agent.role}`;
-		}
-		return agent.role;
-	});
+	function handleViewLogs() {
+		console.log('Viewing logs for agent:', agent.id);
+		// TODO: Implement logs view
+	}
 
-	// Parse recent output into log entries
-	const logEntries = $derived.by(() => {
-		if (!agent.recentOutput) return [];
-
-		const lines = agent.recentOutput.split('\n').filter((line) => line.trim());
-		// Take last 50 lines, reverse to show newest first
-		return lines.slice(-50).reverse().map((line, i) => {
-			// Try to detect log level from content
-			let level: 'INF' | 'WRN' | 'ERR' | 'DBG' = 'INF';
-			if (line.toLowerCase().includes('error') || line.toLowerCase().includes('fail')) {
-				level = 'ERR';
-			} else if (line.toLowerCase().includes('warn')) {
-				level = 'WRN';
-			} else if (line.toLowerCase().includes('debug')) {
-				level = 'DBG';
-			}
-
-			return {
-				id: `log-${i}`,
-				timestamp: '',
-				level,
-				message: line.slice(0, 200) // Truncate long lines
-			};
-		});
-	});
+	function handleReboot() {
+		console.log('Rebooting agent:', agent.id);
+		// TODO: Implement reboot functionality
+	}
 </script>
 
-<svelte:head>
-	<title>{agent.name} | Gas Town</title>
-</svelte:head>
+<div class="relative min-h-screen bg-background">
+	<GridPattern variant="dots" opacity={0.03} />
 
-<AgentDetailLayout
-	name={agent.name}
-	status={agent.status}
-	task={agent.hasWork ? agent.firstSubject || 'Working...' : 'No active work'}
-	meta={agent.address}
->
-	{#snippet details()}
-		<dl class="space-y-2 text-sm">
-			<div class="flex justify-between">
-				<dt class="text-muted-foreground">Agent ID</dt>
-				<dd class="font-mono text-foreground">{agent.id}</dd>
-			</div>
-			<div class="flex justify-between">
-				<dt class="text-muted-foreground">Role</dt>
-				<dd class="text-foreground">{displayRole()}</dd>
-			</div>
-			<div class="flex justify-between">
-				<dt class="text-muted-foreground">Session</dt>
-				<dd class="font-mono text-foreground text-xs">{agent.session}</dd>
-			</div>
-			<div class="flex justify-between">
-				<dt class="text-muted-foreground">Status</dt>
-				<dd class="text-foreground capitalize">{agent.status}</dd>
-			</div>
-			{#if agent.unreadMail > 0}
-				<div class="flex justify-between">
-					<dt class="text-muted-foreground">Unread Mail</dt>
-					<dd class="text-foreground">{agent.unreadMail}</dd>
+	<div class="relative z-10">
+		<!-- Header with Back Button -->
+		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-4">
+			<div class="container flex items-center gap-3">
+				<button
+					onclick={goBack}
+					class="p-2 -m-2 hover:bg-muted rounded-lg transition-colors"
+					aria-label="Back to agents"
+					title="Back to agents"
+				>
+					<ArrowLeft class="w-5 h-5 text-foreground" strokeWidth={2} />
+				</button>
+				<div class="flex-1">
+					<h1 class="text-2xl font-semibold text-foreground">{agent.name}</h1>
+					<p class="text-sm text-muted-foreground">{roleLabels[agent.role || 'undefined']}</p>
 				</div>
-			{/if}
-			{#if agent.rig}
-				<div class="flex justify-between">
-					<dt class="text-muted-foreground">Rig</dt>
-					<dd class="text-foreground">{agent.rig}</dd>
+				<StatusIndicator status={statusIndicatorMap[agent.status ?? 'idle']} size="lg" />
+			</div>
+		</header>
+
+		<main class="container py-6 pb-20">
+			<!-- Hero Card Section -->
+			<section class="panel-glass rounded-lg p-8 mx-auto mb-8 max-w-2xl">
+				<div class="flex flex-col sm:flex-row items-center gap-6">
+					<!-- Icon -->
+					<div class="flex-shrink-0">
+						<div class="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
+							<RoleIcon class="w-10 h-10 text-primary" strokeWidth={2} />
+						</div>
+					</div>
+
+					<!-- Info -->
+					<div class="flex-1 text-center sm:text-left">
+						<h2 class="text-3xl font-bold text-foreground mb-2">{agent.name}</h2>
+						<div class="flex items-center gap-2 justify-center sm:justify-start mb-4">
+							<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/15 text-primary text-sm font-medium">
+								<span class="w-2 h-2 rounded-full {agent.status === 'running' ? 'bg-green-500 animate-pulse' : 'bg-muted'}"></span>
+								{statusLabels[agent.status ?? 'idle']}
+							</span>
+						</div>
+						<p class="text-muted-foreground">{agent.task}</p>
+					</div>
 				</div>
+			</section>
+
+			<!-- Quick Stats Grid -->
+			{#if agent.uptimePercent !== undefined || agent.efficiency !== undefined || agent.lastSeen || agent.uptime}
+				<section class="grid grid-cols-2 sm:grid-cols-4 gap-4 mx-auto mb-8 max-w-2xl">
+					{#if agent.uptimePercent !== undefined}
+						<div class="panel-glass rounded-lg p-4">
+							<p class="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">Uptime</p>
+							<p class="text-2xl font-bold text-foreground">{agent.uptimePercent.toFixed(1)}%</p>
+						</div>
+					{/if}
+
+					{#if agent.efficiency !== undefined}
+						<div class="panel-glass rounded-lg p-4">
+							<p class="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">Efficiency</p>
+							<p class="text-2xl font-bold text-foreground">{agent.efficiency}%</p>
+						</div>
+					{/if}
+
+					{#if agent.lastSeen}
+						<div class="panel-glass rounded-lg p-4">
+							<p class="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">Last Seen</p>
+							<p class="text-lg font-semibold text-foreground">{agent.lastSeen}</p>
+						</div>
+					{/if}
+
+					{#if agent.uptime}
+						<div class="panel-glass rounded-lg p-4">
+							<p class="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">Uptime Duration</p>
+							<p class="text-lg font-semibold text-foreground">{agent.uptime}</p>
+						</div>
+					{/if}
+				</section>
 			{/if}
-		</dl>
-	{/snippet}
 
-	{#snippet logs()}
-		{#if logEntries.length > 0}
-			{#each logEntries as entry, i (entry.id)}
-				<LogEntry
-					timestamp={entry.timestamp}
-					level={entry.level}
-					message={entry.message}
-					delay={i * 20}
-				/>
-			{/each}
-		{:else}
-			<div class="p-4 text-center text-muted-foreground">
-				<p>No recent output available</p>
-			</div>
-		{/if}
-	{/snippet}
+			<!-- Agent Details -->
+			<section class="panel-glass rounded-lg p-6 mx-auto mb-8 max-w-2xl">
+				<h3 class="text-lg font-semibold text-foreground mb-6">Agent Details</h3>
 
-	{#snippet logActions()}
-		<form
-			method="POST"
-			action="?/peek"
-			use:enhance={() => {
-				isSubmitting = true;
-				return async ({ update }) => {
-					await update();
-					await invalidateAll();
-					isSubmitting = false;
-				};
-			}}
-		>
-			<button
-				type="submit"
-				disabled={isSubmitting}
-				class="px-2 py-1 text-xs bg-muted hover:bg-muted/80 rounded transition-colors disabled:opacity-50"
-			>
-				{isSubmitting ? 'Refreshing...' : 'Refresh'}
-			</button>
-		</form>
-	{/snippet}
+				<div class="space-y-4">
+					<!-- Name -->
+					<div>
+						<p class="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1">Name</p>
+						<p class="text-foreground">{agent.name}</p>
+					</div>
 
-	{#snippet actions()}
-		<a
-			href="/agents"
-			class="px-3 py-1.5 text-sm bg-muted hover:bg-muted/80 rounded transition-colors"
-		>
-			Back
-		</a>
-		{#if agent.unreadMail > 0}
-			<a
-				href="/mail"
-				class="px-3 py-1.5 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded transition-colors"
-			>
-				View Mail ({agent.unreadMail})
-			</a>
-		{/if}
+					<!-- Role -->
+					{#if agent.role}
+						<div>
+							<p class="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1">Role</p>
+							<div class="flex items-center gap-2">
+								<RoleIcon class="w-4 h-4 text-muted-foreground" strokeWidth={2} />
+								<p class="text-foreground">{roleLabels[agent.role] || agent.role}</p>
+							</div>
+						</div>
+					{/if}
 
-		<!-- Session controls dropdown/buttons -->
-		<div class="flex items-center gap-1">
-			{#if agent.status === 'running' || agent.status === 'idle'}
-				<form method="POST" action="?/stop" use:enhance={() => {
-					isSubmitting = true;
-					return async ({ update }) => {
-						await update();
-						await invalidateAll();
-						isSubmitting = false;
-					};
-				}}>
+					<!-- Status -->
+					<div>
+						<p class="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1">Status</p>
+						<p class="text-foreground">{statusLabels[agent.status ?? 'idle']}</p>
+					</div>
+
+					<!-- Task -->
+					{#if agent.task}
+						<div>
+							<p class="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1">Current Task</p>
+							<p class="text-foreground line-clamp-2">{agent.task}</p>
+						</div>
+					{/if}
+
+					<!-- Address/Meta -->
+					{#if agent.meta}
+						<div>
+							<p class="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1">Address</p>
+							<p class="font-mono text-sm text-foreground">{agent.meta}</p>
+						</div>
+					{/if}
+
+					<!-- Progress (if running) -->
+					{#if agent.status === 'running' && agent.progress > 0}
+						<div>
+							<p class="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">Progress</p>
+							<div class="flex items-center gap-3">
+								<div class="flex-1">
+									<ProgressBar value={agent.progress} size="sm" color="default" />
+								</div>
+								<span class="text-sm font-medium text-foreground min-w-12">{Math.round(agent.progress)}%</span>
+							</div>
+						</div>
+					{/if}
+
+					<!-- Error Message (if error state) -->
+					{#if agent.status === 'error' && agent.errorMessage}
+						<div class="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+							<p class="text-sm text-destructive font-medium flex items-start gap-2">
+								<AlertTriangle class="w-4 h-4 flex-shrink-0 mt-0.5" strokeWidth={2} />
+								{agent.errorMessage}
+							</p>
+						</div>
+					{/if}
+				</div>
+			</section>
+
+			<!-- Action Buttons -->
+			<section class="flex flex-col sm:flex-row gap-3 mx-auto max-w-2xl mb-8">
+				<button
+					onclick={handleInspect}
+					class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
+					aria-label="Inspect agent"
+				>
+					<Search class="w-4 h-4" strokeWidth={2} />
+					Inspect
+				</button>
+
+				<button
+					onclick={handleViewLogs}
+					class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-secondary text-secondary-foreground font-medium rounded-lg hover:bg-secondary/90 transition-colors"
+					aria-label="View logs"
+				>
+					<Clock class="w-4 h-4" strokeWidth={2} />
+					Logs
+				</button>
+
+				{#if agent.status !== 'error'}
 					<button
-						type="submit"
-						disabled={isSubmitting}
-						class="px-3 py-1.5 text-sm bg-destructive/10 text-destructive hover:bg-destructive/20 rounded transition-colors disabled:opacity-50"
+						onclick={handleReboot}
+						class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-destructive/10 text-destructive font-medium rounded-lg hover:bg-destructive/20 transition-colors"
+						aria-label="Reboot agent"
 					>
-						Stop
+						<RefreshCw class="w-4 h-4" strokeWidth={2} />
+						Reboot
 					</button>
-				</form>
-				<form method="POST" action="?/restart" use:enhance={() => {
-					isSubmitting = true;
-					return async ({ update }) => {
-						await update();
-						await invalidateAll();
-						isSubmitting = false;
-					};
-				}}>
-					<button
-						type="submit"
-						disabled={isSubmitting}
-						class="px-3 py-1.5 text-sm bg-warning/10 text-warning hover:bg-warning/20 rounded transition-colors disabled:opacity-50"
-					>
-						Restart
-					</button>
-				</form>
-			{:else}
-				<form method="POST" action="?/start" use:enhance={() => {
-					isSubmitting = true;
-					return async ({ update }) => {
-						await update();
-						await invalidateAll();
-						isSubmitting = false;
-					};
-				}}>
-					<button
-						type="submit"
-						disabled={isSubmitting}
-						class="px-3 py-1.5 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded transition-colors disabled:opacity-50"
-					>
-						Start
-					</button>
-				</form>
-			{/if}
-		</div>
-	{/snippet}
-
-	{#snippet footer()}
-		<!-- Feedback toast -->
-		{#if feedbackMessage}
-			<div
-				class="fixed bottom-4 right-4 px-4 py-2 rounded-md shadow-lg z-50 transition-opacity {feedbackType === 'success' ? 'bg-success text-success-foreground' : 'bg-destructive text-destructive-foreground'}"
-			>
-				{feedbackMessage}
-			</div>
-		{/if}
-
-		<!-- Nudge input -->
-		<form
-			method="POST"
-			action="?/nudge"
-			class="flex gap-2"
-			use:enhance={() => {
-				isSubmitting = true;
-				return async ({ update }) => {
-					await update();
-					isSubmitting = false;
-				};
-			}}
-		>
-			<input
-				type="text"
-				name="message"
-				bind:value={nudgeMessage}
-				placeholder="Send message to session..."
-				class="flex-1 px-3 py-2 text-sm bg-muted border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
-			/>
-			<button
-				type="submit"
-				disabled={isSubmitting || !nudgeMessage.trim()}
-				class="px-4 py-2 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-			>
-				{isSubmitting ? 'Sending...' : 'Nudge'}
-			</button>
-		</form>
-	{/snippet}
-</AgentDetailLayout>
+				{/if}
+			</section>
+		</main>
+	</div>
+</div>

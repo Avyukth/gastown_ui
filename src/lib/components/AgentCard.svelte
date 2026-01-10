@@ -316,7 +316,7 @@
 		<!-- Role Display (with icon) -->
 		{#if RoleIcon}
 			<div class="flex items-center gap-1.5 text-xs text-muted-foreground">
-				<svelte:component this={RoleIcon} class="w-3 h-3" strokeWidth={1.5} />
+				<RoleIcon class="w-3 h-3" strokeWidth={1.5} />
 				<span>{roleLabels[role || '']}</span>
 			</div>
 		{/if}

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { tv } from 'tailwind-variants';
-	import { GridPattern, PullToRefresh, SplitView, SkeletonCard, ErrorState, EmptyState, FloatingActionButton } from '$lib/components';
+	import { GridPattern, PullToRefresh, SplitView, SkeletonCard, ErrorState, EmptyState, FloatingActionButton, PageHeader } from '$lib/components';
 	import { cn } from '$lib/utils';
 	import { Plus, ChevronDown, ChevronRight, Loader2, PenLine } from 'lucide-svelte';
 	import { UnreadDot } from '$lib/components';
@@ -150,28 +150,22 @@
 	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10 flex flex-col h-screen">
-		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-4">
-			<div class="container">
-				<div class="flex items-center justify-between">
-					<div>
-						<h1 class="text-2xl md:text-2xl font-semibold text-foreground">Mail Inbox</h1>
-						<p class="text-sm text-muted-foreground">
-							{data.messages.length} messages
-							{#if data.unreadCount > 0}
-								<span class="text-accent font-medium">({data.unreadCount} unread)</span>
-							{/if}
-						</p>
-					</div>
-					<a
-						href="/mail/compose"
-						class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors"
-					>
-						<Plus class="w-4 h-4" />
-						Compose
-					</a>
-				</div>
-			</div>
-		</header>
+		<PageHeader
+			title="Mail Inbox"
+			subtitle="{data.messages.length} messages"
+			liveCount={data.unreadCount > 0 ? { count: data.unreadCount, label: 'unread', status: 'info' } : undefined}
+			showAccentBar={true}
+		>
+			{#snippet actions()}
+				<a
+					href="/mail/compose"
+					class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors"
+				>
+					<Plus class="w-4 h-4" />
+					Compose
+				</a>
+			{/snippet}
+		</PageHeader>
 
 		<PullToRefresh onRefresh={refresh} class="flex-1 overflow-hidden">
 			<div class="h-full overflow-hidden">
@@ -231,7 +225,7 @@
 												isSelected && 'bg-accent/10'
 											)}
 											onclick={() => selectMessage(message.id)}
-											aria-selected={isSelected}
+											aria-pressed={isSelected}
 										>
 											<div class="flex items-start gap-3">
 												<!-- Unread indicator -->

@@ -31,7 +31,7 @@
 	}: Props = $props();
 
 	// Use button or link based on href
-	const element = href ? 'a' : 'button';
+	const element = $derived(href ? 'a' : 'button');
 </script>
 
 {#if element === 'a'}
@@ -94,11 +94,4 @@
 	</button>
 {/if}
 
-<style>
-	/* Ensure FAB doesn't overlap bottom nav on any device */
-	@supports (bottom: env(safe-area-inset-bottom)) {
-		:global {
-			/* Safe area is already handled in style attribute */
-		}
-	}
-</style>
+
