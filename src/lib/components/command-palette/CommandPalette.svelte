@@ -398,6 +398,16 @@
 				return { icon: Search, label: 'Search', color: 'text-muted-foreground' };
 		}
 	});
+
+	// Generate unique ID for a result option
+	function getResultId(index: number): string {
+		return `cmd-result-${index}`;
+	}
+
+	// Get the currently active descendant ID
+	const activeDescendantId = $derived(
+		allResults.length > 0 && selectedIndex >= 0 ? getResultId(selectedIndex) : undefined
+	);
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -474,6 +484,12 @@
 					bind:value={query}
 					id="command-palette-input"
 					type="text"
+					role="combobox"
+					aria-expanded={allResults.length > 0}
+					aria-haspopup="listbox"
+					aria-controls="command-results-listbox"
+					aria-activedescendant={activeDescendantId}
+					aria-autocomplete="list"
 					placeholder={activeMode === 'command'
 						? 'Type a command...'
 						: activeMode === 'formula'
@@ -498,7 +514,12 @@
 			</div>
 
 			<!-- Results -->
-			<div class="max-h-[60vh] overflow-y-auto overscroll-contain">
+			<div
+				id="command-results-listbox"
+				role="listbox"
+				aria-label="Command palette results"
+				class="max-h-[60vh] overflow-y-auto overscroll-contain"
+			>
 				{#if allResults.length === 0}
 					<div class="px-4 py-8 text-center">
 						{#if searchQuery}
@@ -556,6 +577,9 @@
 									{@const isRecent = item.type === 'recent'}
 									<button
 										type="button"
+										id={getResultId(flatIndex)}
+										role="option"
+										aria-selected={flatIndex === selectedIndex}
 										class={cn(
 											'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left',
 											'transition-all duration-200 ease-out',

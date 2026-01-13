@@ -59,6 +59,8 @@
 	class={`flex flex-col items-center gap-4 ${
 		compact ? 'p-4' : 'p-6'
 	} rounded-lg border border-destructive/30 bg-destructive/5 text-center ${className}`}
+	role="alert"
+	aria-live="assertive"
 >
 	<!-- Error Icon -->
 	<AlertCircle

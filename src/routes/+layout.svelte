@@ -276,7 +276,7 @@
 	<!-- Mobile/Tablet layout with bottom nav (hidden on desktop) -->
 	<div class="lg:hidden flex flex-col min-h-screen">
 		<!-- Mobile header with menu button and search -->
-		<div class="sticky top-0 z-30 flex items-center gap-2 px-4 py-3 bg-card/80 backdrop-blur-xl border-b border-border md:hidden">
+		<header class="sticky top-0 z-30 flex items-center gap-2 px-4 py-3 bg-card/80 backdrop-blur-xl border-b border-border md:hidden">
 			<button
 				onclick={() => mobileDrawerOpen = !mobileDrawerOpen}
 				class="p-2 -ml-2 text-foreground hover:bg-muted/50 rounded-lg transition-colors"
@@ -293,7 +293,7 @@
 			<div class="ml-auto">
 				<GlobalSearch class="rounded-lg" />
 			</div>
-		</div>
+		</header>
 
 		<!-- Mobile drawer backdrop -->
 		{#if mobileDrawerOpen}
@@ -323,7 +323,7 @@
 		</div>
 
 		<!-- Main content area with page transitions -->
-		<div
+		<main
 			bind:this={mainContentRef}
 			id="main-content"
 			tabindex="-1"
@@ -336,7 +336,7 @@
 			<div class="animate-fade-in">
 				{@render children()}
 			</div>
-		</div>
+		</main>
 
 		<!-- Bottom navigation with preload on hover -->
 		<nav class="sr-only">
@@ -359,12 +359,12 @@
 		</div>
 {:else}
 	<!-- Login page - no navigation -->
-	<div
+	<main
 		bind:this={mainContentRef}
 		id="main-content"
 		tabindex="-1"
 		class="min-h-screen min-w-0 overflow-x-hidden outline-none"
 	>
 		{@render children()}
-	</div>
+	</main>
 {/if}
