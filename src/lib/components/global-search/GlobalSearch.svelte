@@ -371,6 +371,16 @@
 		}
 		return 0;
 	}
+
+	// Generate unique ID for a result option
+	function getResultId(index: number): string {
+		return `search-result-${index}`;
+	}
+
+	// Get the currently active descendant ID
+	const activeDescendantId = $derived(
+		allResults.length > 0 && selectedIndex >= 0 ? getResultId(selectedIndex) : undefined
+	);
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -447,6 +457,12 @@
 						bind:value={query}
 						id="global-search-input"
 						type="text"
+						role="combobox"
+						aria-expanded={allResults.length > 0}
+						aria-haspopup="listbox"
+						aria-controls="search-results-listbox"
+						aria-activedescendant={activeDescendantId}
+						aria-autocomplete="list"
 						placeholder={isCommandMode
 							? 'Type a command...'
 							: 'Search agents, issues, convoys, or type > for commands...'}
@@ -504,7 +520,12 @@
 			</div>
 
 			<!-- Results -->
-			<div class="max-h-[60vh] overflow-y-auto overscroll-contain">
+			<div
+				id="search-results-listbox"
+				role="listbox"
+				aria-label="Search results"
+				class="max-h-[60vh] overflow-y-auto overscroll-contain"
+			>
 				{#if allResults.length === 0}
 					<div class="px-4 py-8 text-center">
 						{#if searchQuery}
@@ -564,6 +585,9 @@
 									{@const isRecent = item.type === 'recent'}
 									<button
 										type="button"
+										id={getResultId(flatIndex)}
+										role="option"
+										aria-selected={flatIndex === selectedIndex}
 										class={cn(
 											'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left',
 											'transition-all duration-fast ease-out-expo',
