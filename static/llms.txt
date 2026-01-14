@@ -1,0 +1,156 @@
+# Gastown UI - LLM Context Index
+# Generated: 2026-01-14T17:51:45.580Z
+# Version: 0.1.0
+
+## Project Overview
+
+Gastown UI is the frontend dashboard for the Gas Town orchestration system.
+It provides an operator console for managing AI agents, work convoys, merge
+queues, and system health monitoring.
+
+**Stack**: SvelteKit + Vite, Tailwind CSS, TypeScript, Bun
+**Target**: Mobile-first PWA with offline support
+
+## Quick Start
+
+```bash
+bun install
+bun run dev      # http://localhost:5173
+bun run build    # Production build
+bun run check    # TypeScript check
+```
+
+## Architecture
+
+```
+src/
+├── lib/
+│   ├── components/   # 61 Svelte 5 components
+│   ├── api/          # API client utilities
+│   ├── stores/       # Svelte stores (WebSocket, state)
+│   └── utils/        # Logger, keyboard, gestures
+├── routes/
+│   ├── api/          # SvelteKit API routes
+│   └── [pages]/      # UI pages
+└── static/           # Static assets, PWA manifest
+```
+
+## API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | /api/auth/login | - |
+| POST | /api/auth/logout | - |
+| GET | /api/auth/me | - |
+| POST | /api/auth/refresh | - |
+| GET | /api/gastown/convoys | - |
+| POST | /api/gastown/escalations/:id/resolve | - |
+| GET | /api/gastown/mail | - |
+| GET | /api/gastown/rigs | - |
+| GET | /api/gastown/snapshot | - |
+| GET | /api/gastown/status | - |
+| POST | /api/gastown/work/convoys | - |
+| GET | /api/gastown/work/issues | - |
+| POST | /api/gastown/work/issues | - |
+| POST | /api/gastown/work/sling | - |
+| POST | /api/gastown/workflows/cook | - |
+| GET | /api/gastown/workflows/formulas | - |
+| GET | /api/gastown/workflows/formulas/:name | - |
+| GET | /api/gastown/workflows/molecules | - |
+| POST | /api/gastown/workflows/pour | - |
+
+## UI Pages
+
+| Route | Purpose |
+|-------|---------|
+| / | Dashboard overview |
+| /activity | - |
+| /agents | Agent list and status |
+| /agents/[id] | - |
+| /convoys | Convoy tracking |
+| /convoys/[id] | - |
+| /crew | - |
+| /dogs | - |
+| /escalations | - |
+| /escalations/[id] | - |
+| /health | System health |
+| /issues/[id] | - |
+| /login | Authentication |
+| /login/mobile | - |
+| /logs | System logs |
+| /mail | Notifications |
+| /mail/[id] | - |
+| /mail/compose | - |
+| /queue | Merge queue |
+| /rigs | Rig management |
+| /seance | - |
+| /settings | User settings |
+| /stats | - |
+| /watchdog | - |
+| /work | Work management |
+| /workflows | Workflow management |
+
+## Component Library
+
+### Accessibility
+Announcer, KeyboardHelpDialog, LiveRegion, SkipLink, TouchTarget
+
+### Core
+Badge, Button, Icon, Input, Switch
+
+### Data
+ActivityFeed, AgentCard, DataTable, LogEntry, StatsCard, VirtualList
+
+### Feedback
+ApiError, EmptyState, ErrorBoundary, ErrorState, Toast, ToastContainer
+
+### Layout
+BottomNav, Dashboard, DashboardLayout, PageHeader, SheetNav, Sidebar, SplitView
+
+### Loading
+NavigationLoader, Skeleton, SkeletonCard, SkeletonGroup, SkeletonLoader
+
+### Mobile
+FloatingActionButton, OfflineIndicator, PullToRefresh, SwipeableItem, SwipeableTabs
+
+### Other
+AgentCardSkeleton, AgentDetailLayout, ConnectionLost, DegradedModeBanner, GridPattern, IssueTypeSelector, KnownBugDetector, LogEntrySkeleton, LogsLayout, MobileDashboard, NumberCounter, OperationCenter, QueueLayout, ShimmerText, ThemeToggle, UnreadDot, UpdatePrompt, WorkflowLayout
+
+### Status
+CircularProgress, ProgressBar, StatusBadge, StatusIndicator
+
+## Error Codes
+
+| Code | Meaning |
+|------|---------|
+| AUTH_EXPIRED | Session token expired |
+| AUTH_INVALID | Invalid credentials |
+| RATE_LIMITED | Too many requests |
+| UPSTREAM_TIMEOUT | Backend CLI timeout |
+| BEADS_ERROR | Issue tracker error |
+
+## Security Features
+
+- CSP headers (self + fonts.googleapis.com)
+- CSRF double-submit cookie pattern
+- HttpOnly auth cookies
+- HSTS in production
+
+## Accessibility
+
+- WCAG 2.5.5 AAA touch targets (48px min)
+- Safe area insets for notched devices
+- Screen reader live regions
+- prefers-reduced-motion support
+
+## Environment Variables
+
+```bash
+VITE_WS_URL=ws://localhost:8080/ws
+VITE_MOCK_API=true
+```
+
+## Links
+
+- Repository: https://github.com/Avyukth/gastown_ui
+- Full docs: /llms-full.txt

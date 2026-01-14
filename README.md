@@ -156,6 +156,14 @@ VITE_WS_URL=ws://localhost:8080/ws
 VITE_MOCK_API=true
 ```
 
+## LLM Documentation
+
+AI-friendly documentation is available at:
+- [/llms.txt](static/llms.txt) - Concise index (~150 lines)
+- [/llms-full.txt](static/llms-full.txt) - Comprehensive docs (~700 lines)
+
+Regenerate with: `bun scripts/generate-llms-txt.ts`
+
 ## Notes
 
 - `bun.lockb` is the Bun lockfile.

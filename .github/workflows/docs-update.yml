@@ -1,0 +1,49 @@
+name: Update LLM Documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'README.md'
+      - 'AGENTS.md'
+      - 'src/**/*.ts'
+      - 'src/**/*.svelte'
+      - 'scripts/generate-llms-txt.ts'
+  workflow_dispatch:
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Generate LLM docs
+        run: bun scripts/generate-llms-txt.ts
+
+      - name: Check for changes
+        id: changes
+        run: |
+          git diff --quiet static/llms.txt static/llms-full.txt || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and push
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add static/llms.txt static/llms-full.txt
+          git commit -m "docs: regenerate llms.txt [skip ci]"
+          git push
