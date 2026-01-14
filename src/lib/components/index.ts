@@ -63,6 +63,7 @@ export { default as Toast } from './Toast.svelte';
 export { default as ToastContainer } from './ToastContainer.svelte';
 export { default as OfflineIndicator } from './OfflineIndicator.svelte';
 export { default as ConnectionLost } from './ConnectionLost.svelte';
+export { default as DegradedModeBanner } from './DegradedModeBanner.svelte';
 
 // Search components
 export { GlobalSearch } from './global-search';

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-	import { SkipLink, Announcer, BottomNav, Sidebar, NavigationLoader, GlobalSearch } from '$lib/components';
+	import { SkipLink, Announcer, BottomNav, Sidebar, NavigationLoader, GlobalSearch, DegradedModeBanner } from '$lib/components';
 	import { initializeKeyboardShortcuts, keyboardManager } from '$lib/utils/keyboard';
 	import { preloadRoute } from '$lib/preload';
 	import { page } from '$app/stores';
@@ -237,6 +237,9 @@
 
 <!-- Navigation loading indicator -->
 <NavigationLoader />
+
+<!-- Degraded mode banner -->
+<DegradedModeBanner />
 
 <!-- Skip link for keyboard users -->
 <SkipLink href="main-content" />
