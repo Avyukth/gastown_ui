@@ -45,3 +45,48 @@ export {
 	type CreateOperationConfig,
 	type UpdateOperationOptions
 } from './operations.svelte';
+
+// SWR Cache
+export {
+	swrCache,
+	createSWRCache,
+	CACHE_KEYS,
+	CACHE_TTLS,
+	type CacheEntry,
+	type CacheConfig,
+	type SWROptions
+} from './swr';
+
+// Domain stores with SWR
+export {
+	workStore,
+	useWork,
+	type WorkItem,
+	type WorkFilter
+} from './work.svelte';
+
+export {
+	convoysStore,
+	useConvoys,
+	type Convoy,
+	type ConvoyStatus,
+	type ConvoyFilter
+} from './convoys.svelte';
+
+export {
+	agentsStore,
+	useAgents,
+	type Agent,
+	type AgentStatus,
+	type AgentFilter
+} from './agents.svelte';
+
+export {
+	mailStore,
+	useMail,
+	type MailItem,
+	type MailPriority,
+	type MailStatus,
+	type MailType,
+	type MailFilter
+} from './mail.svelte';
