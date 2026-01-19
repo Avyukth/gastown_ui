@@ -281,17 +281,8 @@
 					</div>
 				</section>
 
-				<section class="space-y-3">
-					<h2 class="text-lg font-semibold text-foreground">Operation Center</h2>
-					<OperationCenter
-						operations={[]}
-						metrics={operationMetrics}
-						activities={operationActivities}
-						actions={operationActions}
-						systemStatus={systemStatus}
-						loading={loading || isRefreshing}
-					/>
-				</section>
+				<!-- OperationCenter is a floating badge/panel - rendered at root level -->
+				<OperationCenter />
 			{:else if loading}
 				<section class="space-y-4">
 					<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
