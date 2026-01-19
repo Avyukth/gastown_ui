@@ -1,9 +1,8 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
-
-const execAsync = promisify(exec);
+import { getProcessSupervisor } from '$lib/server/cli';
+import { randomUUID } from 'node:crypto';
+import { identifyKnownBug } from '$lib/errors/known-bugs';
 
 // GT_ROOT for accessing formulas from the orchestrator level
 const GT_ROOT = '/Users/amrit/Documents/Projects/Rust/mouchak/gastown_exp';
@@ -30,28 +29,33 @@ export interface FormulaDetail {
 
 /** GET: Show formula details */
 export const GET: RequestHandler = async ({ params }) => {
+	const requestId = randomUUID();
 	const { name } = params;
 
 	if (!name) {
 		return json({ error: 'Formula name required' }, { status: 400 });
 	}
 
-	try {
-		const { stdout } = await execAsync(`bd formula show ${name} --json`, {
-			cwd: GT_ROOT
-		});
-		const formula: FormulaDetail = JSON.parse(stdout);
-		return json(formula);
-	} catch (error) {
-		console.error(`Failed to fetch formula ${name}:`, error);
+	const supervisor = getProcessSupervisor();
+	const result = await supervisor.bd<FormulaDetail>(['formula', 'show', name, '--json'], {
+		cwd: GT_ROOT
+	});
 
-		if (error instanceof Error && error.message.includes('not found')) {
-			return json({ error: `Formula "${name}" not found` }, { status: 404 });
+	if (!result.success) {
+		const errorMessage = result.error || 'Failed to fetch formula';
+		const knownBug = identifyKnownBug(errorMessage);
+
+		console.error(`[${requestId}] Failed to fetch formula ${name}:`, errorMessage);
+
+		if (errorMessage.includes('not found')) {
+			return json(
+				{ error: knownBug?.userMessage || `Formula "${name}" not found` },
+				{ status: 404 }
+			);
 		}
 
-		return json(
-			{ error: error instanceof Error ? error.message : 'Failed to fetch formula' },
-			{ status: 500 }
-		);
+		return json({ error: knownBug?.userMessage || errorMessage }, { status: 500 });
 	}
+
+	return json(result.data);
 };

@@ -1,9 +1,8 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
-
-const execAsync = promisify(exec);
+import { getProcessSupervisor } from '$lib/server/cli';
+import { randomUUID } from 'node:crypto';
+import { identifyKnownBug } from '$lib/errors/known-bugs';
 
 // GT_ROOT for accessing formulas from the orchestrator level
 const GT_ROOT = '/Users/amrit/Documents/Projects/Rust/mouchak/gastown_exp';
@@ -26,6 +25,9 @@ export interface CookResponse {
 
 /** POST: Cook a formula into a proto */
 export const POST: RequestHandler = async ({ request }) => {
+	const requestId = randomUUID();
+	const supervisor = getProcessSupervisor();
+
 	try {
 		const body: CookRequest = await request.json();
 		const { formula, mode, vars, dryRun, persist, prefix } = body;
@@ -34,67 +36,78 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ success: false, error: 'Formula name required' }, { status: 400 });
 		}
 
-		// Build command
-		let cmd = `bd cook ${formula}`;
+		// Build args array (shell injection safe)
+		const args: string[] = ['cook', formula];
 
 		if (mode) {
-			cmd += ` --mode=${mode}`;
+			args.push(`--mode=${mode}`);
 		}
 
 		if (vars && Object.keys(vars).length > 0) {
 			for (const [key, value] of Object.entries(vars)) {
-				cmd += ` --var ${key}=${value}`;
+				args.push('--var', `${key}=${value}`);
 			}
 		}
 
 		if (dryRun) {
-			cmd += ' --dry-run';
+			args.push('--dry-run');
 		}
 
 		if (persist) {
-			cmd += ' --persist';
+			args.push('--persist');
 		}
 
 		if (prefix) {
-			cmd += ` --prefix=${prefix}`;
+			args.push(`--prefix=${prefix}`);
 		}
 
-		cmd += ' --json';
+		args.push('--json');
 
-		const { stdout, stderr } = await execAsync(cmd, {
-			cwd: GT_ROOT
+		const result = await supervisor.bd<unknown>(args, { cwd: GT_ROOT });
+
+		if (!result.success) {
+			const errorMessage = result.error || 'Failed to cook formula';
+			const knownBug = identifyKnownBug(errorMessage);
+
+			console.error(`[${requestId}] Failed to cook formula:`, errorMessage);
+
+			if (errorMessage.includes('not found')) {
+				return json(
+					{
+						success: false,
+						error: knownBug?.userMessage || 'Formula not found'
+					},
+					{ status: 404 }
+				);
+			}
+
+			if (errorMessage.includes('missing required variable')) {
+				return json(
+					{
+						success: false,
+						error: knownBug?.userMessage || errorMessage
+					},
+					{ status: 400 }
+				);
+			}
+
+			return json(
+				{
+					success: false,
+					error: knownBug?.userMessage || errorMessage
+				},
+				{ status: 500 }
+			);
+		}
+
+		return json({
+			success: true,
+			output: result.data,
+			protoId: persist ? formula : undefined
 		});
-
-		// Parse output
-		try {
-			const output = JSON.parse(stdout);
-			return json({
-				success: true,
-				output,
-				protoId: persist ? formula : undefined
-			});
-		} catch {
-			// If not JSON, return raw output
-			return json({
-				success: true,
-				output: stdout,
-				protoId: persist ? formula : undefined
-			});
-		}
 	} catch (error) {
-		console.error('Failed to cook formula:', error);
-
+		console.error(`[${requestId}] Failed to cook formula:`, error);
 		const errorMessage = error instanceof Error ? error.message : 'Failed to cook formula';
-
-		// Check for specific errors
-		if (errorMessage.includes('not found')) {
-			return json({ success: false, error: 'Formula not found' }, { status: 404 });
-		}
-
-		if (errorMessage.includes('missing required variable')) {
-			return json({ success: false, error: errorMessage }, { status: 400 });
-		}
-
 		return json({ success: false, error: errorMessage }, { status: 500 });
 	}
 };

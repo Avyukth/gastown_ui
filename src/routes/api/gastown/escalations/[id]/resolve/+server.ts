@@ -1,12 +1,8 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
-
-const execAsync = promisify(exec);
-
-// GT_ROOT for accessing beads from the orchestrator level
-const GT_ROOT = '/Users/amrit/Documents/Projects/Rust/mouchak/gastown_exp';
+import { getProcessSupervisor } from '$lib/server/cli';
+import { randomUUID } from 'node:crypto';
+import { identifyKnownBug, getErrorCategory } from '$lib/errors/known-bugs';
 
 export interface ResolveRequest {
 	selectedOption?: number;
@@ -21,47 +17,35 @@ export interface ResolveResponse {
 /** POST: Resolve an escalation by closing the bead */
 export const POST: RequestHandler = async ({ params, request }) => {
 	const { id } = params;
+	const requestId = randomUUID();
 
 	if (!id) {
 		return json({ success: false, error: 'Escalation ID required' }, { status: 400 });
 	}
 
-	try {
-		const body: ResolveRequest = await request.json();
-		const { selectedOption, resolutionNote } = body;
+	const body: ResolveRequest = await request.json();
+	const { selectedOption, resolutionNote } = body;
 
-		// Build bd close command
-		let cmd = `bd close ${id}`;
+	let comment: string | undefined;
 
-		// Add resolution note if provided
-		if (resolutionNote && resolutionNote.trim()) {
-			// Escape quotes in the note
-			const escapedNote = resolutionNote.replace(/"/g, '\\"');
-			cmd += ` --comment "${escapedNote}"`;
-		}
+	if (selectedOption !== undefined && selectedOption !== null) {
+		const optionNote = `Selected option: ${selectedOption}`;
+		comment = resolutionNote?.trim() ? `${optionNote}\n${resolutionNote}` : optionNote;
+	} else if (resolutionNote?.trim()) {
+		comment = resolutionNote;
+	}
 
-		// If a decision option was selected, add it to the comment
-		if (selectedOption !== undefined && selectedOption !== null) {
-			const optionNote = `Selected option: ${selectedOption}`;
-			if (resolutionNote && resolutionNote.trim()) {
-				const escapedCombined = `${optionNote}\n${resolutionNote}`.replace(/"/g, '\\"');
-				cmd = `bd close ${id} --comment "${escapedCombined}"`;
-			} else {
-				cmd = `bd close ${id} --comment "${optionNote}"`;
-			}
-		}
+	const args = ['close', id];
+	if (comment) {
+		args.push('--comment', comment);
+	}
 
-		const { stdout, stderr } = await execAsync(cmd, {
-			cwd: GT_ROOT
-		});
+	const supervisor = getProcessSupervisor();
+	const result = await supervisor.bd(args);
 
-		return json({ success: true });
-	} catch (error) {
-		console.error(`Failed to resolve escalation ${id}:`, error);
+	if (!result.success) {
+		const errorMessage = result.error || 'Failed to resolve escalation';
 
-		const errorMessage = error instanceof Error ? error.message : 'Failed to resolve escalation';
-
-		// Check for specific errors
 		if (errorMessage.includes('not found')) {
 			return json({ success: false, error: `Escalation "${id}" not found` }, { status: 404 });
 		}
@@ -70,6 +54,32 @@ export const POST: RequestHandler = async ({ params, request }) => {
 			return json({ success: false, error: 'Escalation is already resolved' }, { status: 400 });
 		}
 
-		return json({ success: false, error: errorMessage }, { status: 500 });
+		const knownBug = identifyKnownBug(errorMessage);
+		if (knownBug) {
+			console.error(`[${requestId}] Known issue resolving escalation ${id}:`, knownBug.userMessage);
+			return json(
+				{
+					success: false,
+					error: knownBug.userMessage,
+					workaround: knownBug.workaround,
+					category: knownBug.category
+				},
+				{ status: 500 }
+			);
+		}
+
+		const errorInfo = getErrorCategory(errorMessage);
+		console.error(`[${requestId}] Failed to resolve escalation ${id}:`, errorMessage);
+		return json(
+			{
+				success: false,
+				error: errorInfo.defaultMessage,
+				details: errorMessage,
+				category: errorInfo.category
+			},
+			{ status: 500 }
+		);
 	}
+
+	return json({ success: true });
 };

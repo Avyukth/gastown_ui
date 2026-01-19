@@ -1,9 +1,8 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
-
-const execAsync = promisify(exec);
+import { getProcessSupervisor } from '$lib/server/cli';
+import { randomUUID } from 'node:crypto';
+import { identifyKnownBug } from '$lib/errors/known-bugs';
 
 // GT_ROOT for accessing molecules from the orchestrator level
 const GT_ROOT = '/Users/amrit/Documents/Projects/Rust/mouchak/gastown_exp';
@@ -22,8 +21,16 @@ export interface PourResponse {
 	error?: string;
 }
 
+interface PourOutput {
+	id?: string;
+	mol_id?: string;
+}
+
 /** POST: Pour a proto into a persistent molecule */
 export const POST: RequestHandler = async ({ request }) => {
+	const requestId = randomUUID();
+	const supervisor = getProcessSupervisor();
+
 	try {
 		const body: PourRequest = await request.json();
 		const { proto, vars, assignee, dryRun } = body;
@@ -32,60 +39,80 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ success: false, error: 'Proto name required' }, { status: 400 });
 		}
 
-		// Build command
-		let cmd = `bd mol pour ${proto}`;
+		// Build args array (shell injection safe)
+		const args: string[] = ['mol', 'pour', proto];
 
 		if (vars && Object.keys(vars).length > 0) {
 			for (const [key, value] of Object.entries(vars)) {
-				cmd += ` --var ${key}=${value}`;
+				args.push('--var', `${key}=${value}`);
 			}
 		}
 
 		if (assignee) {
-			cmd += ` --assignee=${assignee}`;
+			args.push(`--assignee=${assignee}`);
 		}
 
 		if (dryRun) {
-			cmd += ' --dry-run';
+			args.push('--dry-run');
 		}
 
-		cmd += ' --json';
+		args.push('--json');
 
-		const { stdout, stderr } = await execAsync(cmd, {
-			cwd: GT_ROOT
+		const result = await supervisor.bd<PourOutput | string>(args, { cwd: GT_ROOT });
+
+		if (!result.success) {
+			const errorMessage = result.error || 'Failed to pour molecule';
+			const knownBug = identifyKnownBug(errorMessage);
+
+			console.error(`[${requestId}] Failed to pour mol:`, errorMessage);
+
+			if (errorMessage.includes('not found')) {
+				return json(
+					{
+						success: false,
+						error: knownBug?.userMessage || 'Proto not found'
+					},
+					{ status: 404 }
+				);
+			}
+
+			if (errorMessage.includes('missing required variable')) {
+				return json(
+					{
+						success: false,
+						error: knownBug?.userMessage || errorMessage
+					},
+					{ status: 400 }
+				);
+			}
+
+			return json(
+				{
+					success: false,
+					error: knownBug?.userMessage || errorMessage
+				},
+				{ status: 500 }
+			);
+		}
+
+		// Extract mol ID from result
+		let molId: string | undefined;
+		if (typeof result.data === 'object' && result.data !== null) {
+			const data = result.data as PourOutput;
+			molId = data.id || data.mol_id;
+		} else if (typeof result.data === 'string') {
+			const match = result.data.match(/([a-z]+-[a-z0-9]+)/);
+			molId = match ? match[1] : undefined;
+		}
+
+		return json({
+			success: true,
+			molId,
+			output: typeof result.data === 'string' ? result.data : JSON.stringify(result.data)
 		});
-
-		// Parse output to extract mol ID
-		try {
-			const output = JSON.parse(stdout);
-			return json({
-				success: true,
-				molId: output.id || output.mol_id,
-				output: stdout
-			});
-		} catch {
-			// Try to extract mol ID from text output
-			const match = stdout.match(/([a-z]+-[a-z0-9]+)/);
-			return json({
-				success: true,
-				molId: match ? match[1] : undefined,
-				output: stdout
-			});
-		}
 	} catch (error) {
-		console.error('Failed to pour mol:', error);
-
+		console.error(`[${requestId}] Failed to pour mol:`, error);
 		const errorMessage = error instanceof Error ? error.message : 'Failed to pour molecule';
-
-		// Check for specific errors
-		if (errorMessage.includes('not found')) {
-			return json({ success: false, error: 'Proto not found' }, { status: 404 });
-		}
-
-		if (errorMessage.includes('missing required variable')) {
-			return json({ success: false, error: errorMessage }, { status: 400 });
-		}
-
 		return json({ success: false, error: errorMessage }, { status: 500 });
 	}
 };

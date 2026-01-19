@@ -6,10 +6,9 @@
 
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
-
-const execAsync = promisify(exec);
+import { getProcessSupervisor } from '$lib/server/cli';
+import { randomUUID } from 'node:crypto';
+import { identifyKnownBug, getErrorCategory } from '$lib/errors/known-bugs';
 
 interface BdBead {
 	id: string;
@@ -126,48 +125,63 @@ function transformBead(bead: BdBead): ConvoyDetail {
 
 export const GET: RequestHandler = async ({ params }) => {
 	const { id } = params;
+	const requestId = randomUUID();
 
 	if (!id || !/^[a-zA-Z0-9_-]+$/.test(id)) {
 		return json({ error: 'Invalid convoy ID' }, { status: 400 });
 	}
 
-	try {
-		const { stdout } = await execAsync(`bd show ${id} --json`, {
-			timeout: 10_000
-		});
+	const supervisor = getProcessSupervisor();
+	const result = await supervisor.bd<BdBead[]>(['show', id, '--json'], { timeout: 10_000 });
 
-		const beads: BdBead[] = JSON.parse(stdout);
-
-		if (!beads || beads.length === 0) {
-			return json({ error: 'Convoy not found' }, { status: 404 });
-		}
-
-		const bead = beads[0];
-
-		if (bead.issue_type !== 'convoy') {
-			return json({ error: 'Not a convoy' }, { status: 400 });
-		}
-
-		const convoy = transformBead(bead);
-
-		return json({
-			convoy,
-			fetchedAt: new Date().toISOString()
-		});
-	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+	if (!result.success) {
+		const errorMessage = result.error || 'Unknown error';
 
 		if (errorMessage.includes('no issue found') || errorMessage.includes('not found')) {
 			return json({ error: 'Convoy not found' }, { status: 404 });
 		}
 
-		console.error(`Failed to fetch convoy ${id}:`, error);
+		const knownBug = identifyKnownBug(errorMessage);
+		if (knownBug) {
+			console.error(`[${requestId}] Known issue fetching convoy ${id}:`, knownBug.userMessage);
+			return json(
+				{
+					error: knownBug.userMessage,
+					workaround: knownBug.workaround,
+					category: knownBug.category
+				},
+				{ status: 500 }
+			);
+		}
+
+		const errorInfo = getErrorCategory(errorMessage);
+		console.error(`[${requestId}] Failed to fetch convoy ${id}:`, errorMessage);
 		return json(
 			{
-				error: 'Failed to fetch convoy',
-				details: errorMessage
+				error: errorInfo.defaultMessage,
+				details: errorMessage,
+				category: errorInfo.category
 			},
 			{ status: 500 }
 		);
 	}
+
+	const beads = result.data;
+
+	if (!beads || beads.length === 0) {
+		return json({ error: 'Convoy not found' }, { status: 404 });
+	}
+
+	const bead = beads[0];
+
+	if (bead.issue_type !== 'convoy') {
+		return json({ error: 'Not a convoy' }, { status: 400 });
+	}
+
+	const convoy = transformBead(bead);
+
+	return json({
+		convoy,
+		fetchedAt: new Date().toISOString()
+	});
 };

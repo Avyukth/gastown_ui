@@ -1,9 +1,8 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
-
-const execAsync = promisify(exec);
+import { getProcessSupervisor } from '$lib/server/cli';
+import { randomUUID } from 'node:crypto';
+import { identifyKnownBug } from '$lib/errors/known-bugs';
 
 // GT_ROOT for accessing formulas from the orchestrator level
 const GT_ROOT = '/Users/amrit/Documents/Projects/Rust/mouchak/gastown_exp';
@@ -19,24 +18,32 @@ export interface Formula {
 
 /** GET: List available formulas */
 export const GET: RequestHandler = async () => {
-	try {
-		const { stdout } = await execAsync('bd formula list --json', {
-			cwd: GT_ROOT
-		});
-		const formulas: Formula[] = JSON.parse(stdout);
-		return json(formulas);
-	} catch (error) {
+	const requestId = randomUUID();
+	const supervisor = getProcessSupervisor();
+
+	const result = await supervisor.bd<Formula[]>(['formula', 'list', '--json'], { cwd: GT_ROOT });
+
+	if (!result.success) {
+		const errorMessage = result.error || 'Failed to fetch formulas';
+
 		// bd formula list returns null/empty when no formulas
-		if (
-			error instanceof Error &&
-			(error.message.includes('null') || error.message.includes('No formulas'))
-		) {
+		if (errorMessage.includes('null') || errorMessage.includes('No formulas')) {
 			return json([]);
 		}
-		console.error('Failed to fetch formulas:', error);
+
+		const knownBug = identifyKnownBug(errorMessage);
+		console.error(`[${requestId}] Failed to fetch formulas:`, errorMessage);
+
 		return json(
-			{ error: error instanceof Error ? error.message : 'Failed to fetch formulas' },
+			{ error: knownBug?.userMessage || errorMessage },
 			{ status: 500 }
 		);
 	}
+
+	// Handle null/empty data as empty array
+	if (!result.data || (Array.isArray(result.data) && result.data.length === 0)) {
+		return json([]);
+	}
+
+	return json(result.data);
 };
