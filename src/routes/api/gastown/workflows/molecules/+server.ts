@@ -40,11 +40,7 @@ export interface MoleculesResponse {
 	}>;
 }
 
-const DEFAULT_STALE: MoleculeStatus = {
-	stale_molecules: [],
-	total_count: 0,
-	blocking_count: 0
-};
+const DEFAULT_STALE: MoleculeStatus = { stale_molecules: [], total_count: 0, blocking_count: 0 };
 
 /** GET: List molecules status (stale, wisps, active) */
 export const GET: RequestHandler = async () => {
@@ -52,32 +48,25 @@ export const GET: RequestHandler = async () => {
 	const supervisor = getProcessSupervisor();
 
 	try {
-		// Fetch all three in parallel
+		// Fetch all data concurrently
 		const [staleResult, wispsResult, activeResult] = await Promise.all([
 			supervisor.bd<MoleculeStatus>(['mol', 'stale', '--json'], { cwd: GT_ROOT }),
 			supervisor.bd<Wisp[]>(['mol', 'wisp', 'list', '--json'], { cwd: GT_ROOT }),
-			supervisor.bd<MoleculesResponse['active']>(
-				['list', '--type=epic', '--status=in_progress', '--json'],
-				{ cwd: GT_ROOT }
-			)
+			supervisor.bd<MoleculesResponse['active']>(['list', '--type=epic', '--status=in_progress', '--json'], { cwd: GT_ROOT })
 		]);
 
-		// Handle stale result with fallback
-		let stale: MoleculeStatus = DEFAULT_STALE;
-		if (staleResult.success && staleResult.data) {
-			stale = staleResult.data;
-		}
+		const stale: MoleculeStatus = staleResult.success && staleResult.data
+			? staleResult.data
+			: DEFAULT_STALE;
 
-		// Handle wisps result with fallback
 		let wisps: Wisp[] = [];
-		if (wispsResult.success && Array.isArray(wispsResult.data)) {
-			wisps = wispsResult.data;
+		if (wispsResult.success && wispsResult.data) {
+			wisps = Array.isArray(wispsResult.data) ? wispsResult.data : [];
 		}
 
-		// Handle active result with fallback
 		let active: MoleculesResponse['active'] = [];
-		if (activeResult.success && Array.isArray(activeResult.data)) {
-			active = activeResult.data;
+		if (activeResult.success && activeResult.data) {
+			active = Array.isArray(activeResult.data) ? activeResult.data : [];
 		}
 
 		const response: MoleculesResponse = {
@@ -86,11 +75,11 @@ export const GET: RequestHandler = async () => {
 			active
 		};
 
-		return json(response);
+		return json({ ...response, requestId });
 	} catch (error) {
-		console.error(`[${requestId}] Failed to fetch molecules:`, error);
+		console.error('Failed to fetch molecules:', error);
 		return json(
-			{ error: error instanceof Error ? error.message : 'Failed to fetch molecules' },
+			{ error: error instanceof Error ? error.message : 'Failed to fetch molecules', requestId },
 			{ status: 500 }
 		);
 	}

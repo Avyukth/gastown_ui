@@ -2,7 +2,9 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getProcessSupervisor } from '$lib/server/cli';
 import { randomUUID } from 'node:crypto';
-import { identifyKnownBug, getErrorCategory } from '$lib/errors/known-bugs';
+
+// GT_ROOT for accessing beads from the orchestrator level
+const GT_ROOT = '/Users/amrit/Documents/Projects/Rust/mouchak/gastown_exp';
 
 export interface ResolveRequest {
 	selectedOption?: number;
@@ -12,74 +14,80 @@ export interface ResolveRequest {
 export interface ResolveResponse {
 	success: boolean;
 	error?: string;
+	requestId?: string;
+}
+
+// Validate bead ID
+function isValidId(id: string): boolean {
+	return /^[a-zA-Z0-9_-]+$/.test(id);
 }
 
 /** POST: Resolve an escalation by closing the bead */
 export const POST: RequestHandler = async ({ params, request }) => {
 	const { id } = params;
 	const requestId = randomUUID();
+	const supervisor = getProcessSupervisor();
 
 	if (!id) {
-		return json({ success: false, error: 'Escalation ID required' }, { status: 400 });
+		return json({ success: false, error: 'Escalation ID required', requestId }, { status: 400 });
 	}
 
-	const body: ResolveRequest = await request.json();
-	const { selectedOption, resolutionNote } = body;
-
-	let comment: string | undefined;
-
-	if (selectedOption !== undefined && selectedOption !== null) {
-		const optionNote = `Selected option: ${selectedOption}`;
-		comment = resolutionNote?.trim() ? `${optionNote}\n${resolutionNote}` : optionNote;
-	} else if (resolutionNote?.trim()) {
-		comment = resolutionNote;
+	if (!isValidId(id)) {
+		return json({ success: false, error: 'Invalid escalation ID', requestId }, { status: 400 });
 	}
 
-	const args = ['close', id];
-	if (comment) {
-		args.push('--comment', comment);
-	}
+	try {
+		const body: ResolveRequest = await request.json();
+		const { selectedOption, resolutionNote } = body;
 
-	const supervisor = getProcessSupervisor();
-	const result = await supervisor.bd(args);
+		// Build args array (safe from injection)
+		const args: string[] = ['close', id];
 
-	if (!result.success) {
-		const errorMessage = result.error || 'Failed to resolve escalation';
+		// Build comment text
+		let comment = '';
+		if (selectedOption !== undefined && selectedOption !== null) {
+			comment = `Selected option: ${selectedOption}`;
+			if (resolutionNote && resolutionNote.trim()) {
+				comment += `\n${resolutionNote.trim()}`;
+			}
+		} else if (resolutionNote && resolutionNote.trim()) {
+			comment = resolutionNote.trim();
+		}
+
+		if (comment) {
+			args.push('--comment', comment);
+		}
+
+		const result = await supervisor.bd<unknown>(args, { cwd: GT_ROOT });
+
+		if (!result.success) {
+			const errorMessage = result.error || 'Failed to resolve escalation';
+
+			if (errorMessage.includes('not found')) {
+				return json({ success: false, error: `Escalation "${id}" not found`, requestId }, { status: 404 });
+			}
+
+			if (errorMessage.includes('already closed')) {
+				return json({ success: false, error: 'Escalation is already resolved', requestId }, { status: 400 });
+			}
+
+			return json({ success: false, error: errorMessage, requestId }, { status: 500 });
+		}
+
+		return json({ success: true, requestId });
+	} catch (error) {
+		console.error(`Failed to resolve escalation ${id}:`, error);
+
+		const errorMessage = error instanceof Error ? error.message : 'Failed to resolve escalation';
 
 		if (errorMessage.includes('not found')) {
-			return json({ success: false, error: `Escalation "${id}" not found` }, { status: 404 });
+			return json({ success: false, error: `Escalation "${id}" not found`, requestId }, { status: 404 });
 		}
 
 		if (errorMessage.includes('already closed')) {
-			return json({ success: false, error: 'Escalation is already resolved' }, { status: 400 });
+			return json({ success: false, error: 'Escalation is already resolved', requestId }, { status: 400 });
 		}
 
-		const knownBug = identifyKnownBug(errorMessage);
-		if (knownBug) {
-			console.error(`[${requestId}] Known issue resolving escalation ${id}:`, knownBug.userMessage);
-			return json(
-				{
-					success: false,
-					error: knownBug.userMessage,
-					workaround: knownBug.workaround,
-					category: knownBug.category
-				},
-				{ status: 500 }
-			);
-		}
-
-		const errorInfo = getErrorCategory(errorMessage);
-		console.error(`[${requestId}] Failed to resolve escalation ${id}:`, errorMessage);
-		return json(
-			{
-				success: false,
-				error: errorInfo.defaultMessage,
-				details: errorMessage,
-				category: errorInfo.category
-			},
-			{ status: 500 }
-		);
+		return json({ success: false, error: errorMessage, requestId }, { status: 500 });
 	}
-
-	return json({ success: true });
 };

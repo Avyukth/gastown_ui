@@ -2,7 +2,6 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getProcessSupervisor } from '$lib/server/cli';
 import { randomUUID } from 'node:crypto';
-import { identifyKnownBug } from '$lib/errors/known-bugs';
 
 // GT_ROOT for accessing formulas from the orchestrator level
 const GT_ROOT = '/Users/amrit/Documents/Projects/Rust/mouchak/gastown_exp';
@@ -27,35 +26,52 @@ export interface FormulaDetail {
 	}>;
 }
 
+// Validate formula name
+function isValidName(name: string): boolean {
+	return /^[a-zA-Z0-9_-]+$/.test(name);
+}
+
 /** GET: Show formula details */
 export const GET: RequestHandler = async ({ params }) => {
-	const requestId = randomUUID();
 	const { name } = params;
+	const requestId = randomUUID();
+	const supervisor = getProcessSupervisor();
 
 	if (!name) {
-		return json({ error: 'Formula name required' }, { status: 400 });
+		return json({ error: 'Formula name required', requestId }, { status: 400 });
 	}
 
-	const supervisor = getProcessSupervisor();
-	const result = await supervisor.bd<FormulaDetail>(['formula', 'show', name, '--json'], {
-		cwd: GT_ROOT
-	});
+	if (!isValidName(name)) {
+		return json({ error: 'Invalid formula name', requestId }, { status: 400 });
+	}
 
-	if (!result.success) {
-		const errorMessage = result.error || 'Failed to fetch formula';
-		const knownBug = identifyKnownBug(errorMessage);
+	try {
+		const result = await supervisor.bd<FormulaDetail>(['formula', 'show', name, '--json'], {
+			cwd: GT_ROOT
+		});
 
-		console.error(`[${requestId}] Failed to fetch formula ${name}:`, errorMessage);
-
-		if (errorMessage.includes('not found')) {
+		if (!result.success) {
+			if (result.error?.includes('not found')) {
+				return json({ error: `Formula "${name}" not found`, requestId }, { status: 404 });
+			}
+			console.error(`Failed to fetch formula ${name}:`, result.error);
 			return json(
-				{ error: knownBug?.userMessage || `Formula "${name}" not found` },
-				{ status: 404 }
+				{ error: result.error || 'Failed to fetch formula', requestId },
+				{ status: 500 }
 			);
 		}
 
-		return json({ error: knownBug?.userMessage || errorMessage }, { status: 500 });
-	}
+		return json({ ...result.data, requestId });
+	} catch (error) {
+		console.error(`Failed to fetch formula ${name}:`, error);
 
-	return json(result.data);
+		if (error instanceof Error && error.message.includes('not found')) {
+			return json({ error: `Formula "${name}" not found`, requestId }, { status: 404 });
+		}
+
+		return json(
+			{ error: error instanceof Error ? error.message : 'Failed to fetch formula', requestId },
+			{ status: 500 }
+		);
+	}
 };
