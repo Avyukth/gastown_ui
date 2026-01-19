@@ -36,6 +36,8 @@ export { default as Dashboard } from './Dashboard.svelte';
 export { default as DashboardLayout } from './DashboardLayout.svelte';
 export { default as LogsLayout } from './LogsLayout.svelte';
 export { default as OperationCenter } from './OperationCenter.svelte';
+export { default as StatusCards } from './StatusCards.svelte';
+export { default as QuickActions } from './QuickActions.svelte';
 export { default as PageHeader, pageHeaderVariants, type BreadcrumbItem, type LiveCount, type PageHeaderProps, type PageHeaderVariants } from './PageHeader.svelte';
 export { default as QueueLayout } from './QueueLayout.svelte';
 export { default as SplitView } from './SplitView.svelte';
