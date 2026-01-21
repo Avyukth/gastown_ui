@@ -1,0 +1,77 @@
+{
+	"name": "gastown",
+	"location": "/Users/dev/.gastown",
+	"overseer": {
+		"name": "Dev User",
+		"email": "dev@example.com",
+		"username": "devuser",
+		"source": "git",
+		"unread_mail": 3
+	},
+	"agents": [
+		{
+			"name": "furiosa",
+			"address": "gastownui/polecats/furiosa",
+			"session": "sess_abc123",
+			"role": "polecat",
+			"running": true,
+			"has_work": true,
+			"state": "active",
+			"unread_mail": 1,
+			"first_subject": "New task assigned"
+		},
+		{
+			"name": "refinery",
+			"address": "gastownui/refinery",
+			"session": "sess_def456",
+			"role": "refinery",
+			"running": true,
+			"has_work": false,
+			"state": "idle",
+			"unread_mail": 0
+		}
+	],
+	"rigs": [
+		{
+			"name": "gastownui",
+			"polecats": ["furiosa", "rictus", "nux"],
+			"polecat_count": 3,
+			"crews": null,
+			"crew_count": 0,
+			"has_witness": true,
+			"has_refinery": true,
+			"hooks": [
+				{
+					"agent": "furiosa",
+					"role": "polecat",
+					"has_work": true
+				},
+				{
+					"agent": "witness",
+					"role": "witness",
+					"has_work": false
+				}
+			],
+			"agents": [
+				{
+					"name": "furiosa",
+					"address": "gastownui/polecats/furiosa",
+					"session": "sess_abc123",
+					"role": "polecat",
+					"running": true,
+					"has_work": true,
+					"state": "active",
+					"unread_mail": 1
+				}
+			]
+		}
+	],
+	"summary": {
+		"rig_count": 1,
+		"polecat_count": 3,
+		"crew_count": 0,
+		"witness_count": 1,
+		"refinery_count": 1,
+		"active_agents": 2
+	}
+}

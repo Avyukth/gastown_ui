@@ -1,0 +1,16 @@
+{
+	"id": "mail-xyz789",
+	"from": "gastownui/witness",
+	"to": "gastownui/polecats/furiosa",
+	"subject": "Work assignment: gu-amx",
+	"body": "You have been assigned to work on gu-amx.\n\nPlease review the requirements and begin implementation.\n\nNote: This is a high-priority task.",
+	"timestamp": "2026-01-20T09:15:00Z",
+	"read": false,
+	"priority": "high",
+	"type": "task",
+	"delivery": "queue",
+	"thread_id": "thread-001",
+	"reply_to": null,
+	"pinned": false,
+	"wisp": false
+}

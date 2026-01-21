@@ -1,0 +1,35 @@
+{
+	"id": "convoy-001",
+	"title": "Q1 2026 Feature Sprint",
+	"description": "Main feature development convoy for Q1.\n\nFocus areas:\n- Authentication system\n- Dashboard improvements\n- Performance optimization",
+	"status": "open",
+	"work_status": "active",
+	"progress": "5/12",
+	"completed": 5,
+	"total": 12,
+	"created_at": "2026-01-01T00:00:00Z",
+	"updated_at": "2026-01-20T16:45:00Z",
+	"tracked_issues": [
+		{
+			"id": "gu-amx",
+			"title": "Implement user authentication",
+			"status": "in_progress",
+			"assignee": "furiosa",
+			"priority": 1
+		},
+		{
+			"id": "gu-bny",
+			"title": "Add dashboard widgets",
+			"status": "open",
+			"assignee": null,
+			"priority": 2
+		},
+		{
+			"id": "gu-coz",
+			"title": "Optimize database queries",
+			"status": "closed",
+			"assignee": "rictus",
+			"priority": 0
+		}
+	]
+}

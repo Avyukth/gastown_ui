@@ -1,0 +1,16 @@
+{
+	"id": "gu-ünïcödé",
+	"title": "国际化支持 - Internationalization Support 🌍",
+	"description": "Add i18n support for:\n- 日本語 (Japanese)\n- 中文 (Chinese)\n- العربية (Arabic)\n- עברית (Hebrew)\n\nEmoji support: 🚀 ✨ 🎉 💯",
+	"status": "open",
+	"priority": 2,
+	"issue_type": "feature",
+	"assignee": "furiosa",
+	"created_at": "2026-01-18T12:00:00Z",
+	"created_by": "田中太郎",
+	"updated_at": "2026-01-18T12:00:00Z",
+	"labels": ["i18n", "国際化", "🌍"],
+	"ephemeral": false,
+	"parent_id": null,
+	"children": []
+}

@@ -1,0 +1,16 @@
+{
+	"id": "gu-amx",
+	"title": "Implement user authentication",
+	"description": "Add OAuth2 authentication flow with Google and GitHub providers.\n\nRequirements:\n- Support multiple providers\n- Store tokens securely\n- Handle token refresh",
+	"status": "in_progress",
+	"priority": 1,
+	"issue_type": "feature",
+	"assignee": "furiosa",
+	"created_at": "2026-01-15T10:30:00Z",
+	"created_by": "devuser",
+	"updated_at": "2026-01-20T14:22:00Z",
+	"labels": ["auth", "security", "backend"],
+	"ephemeral": false,
+	"parent_id": "hq-123",
+	"children": ["gu-amx.1", "gu-amx.2"]
+}
