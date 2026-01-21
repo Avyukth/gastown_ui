@@ -37,8 +37,10 @@
     "vitest": "^4.0.16"
   },
   "dependencies": {
+    "@effect/schema": "^0.75.5",
     "clsx": "^2.1.1",
     "dompurify": "^3.3.1",
+    "effect": "^3.19.14",
     "fuse.js": "^7.1.0",
     "lucide-svelte": "^0.562.0",
     "tailwind-merge": "^3.4.0",
