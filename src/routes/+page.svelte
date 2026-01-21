@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { GridPattern, PageHeader, Button, SkeletonCard, OperationCenter, ActivityFeed } from '$lib/components';
+	import { GridPattern, PageHeader, Button, SkeletonCard, ActivityFeed } from '$lib/components';
 	import StatusCards from '$lib/components/StatusCards.svelte';
 	import QuickActions from '$lib/components/QuickActions.svelte';
 	import { RefreshCw, Server, Users, Layers, Package, HeartPulse, Plus, ClipboardList } from 'lucide-svelte';
@@ -281,8 +281,6 @@
 					</div>
 				</section>
 
-				<!-- OperationCenter is a floating badge/panel - rendered at root level -->
-				<OperationCenter />
 			{:else if loading}
 				<section class="space-y-4">
 					<div class="grid grid-cols-2 md:grid-cols-4 gap-4">

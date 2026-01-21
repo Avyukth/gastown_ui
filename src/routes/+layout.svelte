@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-	import { SkipLink, Announcer, BottomNav, Sidebar, NavigationLoader, GlobalSearch, DegradedModeBanner, KnownBugDetector } from '$lib/components';
+	import { SkipLink, Announcer, BottomNav, Sidebar, NavigationLoader, GlobalSearch, DegradedModeBanner, KnownBugDetector, OperationCenter } from '$lib/components';
 	import { initializeKeyboardShortcuts, keyboardManager } from '$lib/utils/keyboard';
 	import { preloadRoute } from '$lib/preload';
 	import { page } from '$app/stores';
@@ -368,6 +368,9 @@
 			<m.default />
 		{/await}
 		</div>
+
+	<!-- Operation Center FAB - visible on all pages except login -->
+	<OperationCenter />
 {:else}
 	<!-- Login page - no navigation -->
 	<main
