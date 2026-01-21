@@ -2,6 +2,7 @@
  * Server Hooks
  *
  * Handles server-side request processing:
+ * - Rate limiting for API endpoints
  * - Session extraction from HttpOnly cookies
  * - Security headers (CSP, HSTS, etc.)
  * - Request authentication
@@ -12,6 +13,7 @@ import { json, type Handle } from '@sveltejs/kit';
 import { getAccessToken, getRefreshToken } from '$lib/auth/cookies';
 import { ensureCsrfToken, checkCsrfProtection, CSRF_HEADER } from '$lib/auth/csrf.server';
 import type { SessionData } from '$lib/auth/types';
+import { checkRateLimit, getClientId } from '$lib/server/rate-limit';
 
 // Extend App.Locals with session data
 declare global {
@@ -117,6 +119,32 @@ function extractSession(cookies: import('@sveltejs/kit').Cookies): SessionData {
  * Main request handler
  */
 export const handle: Handle = async ({ event, resolve }) => {
+	// Rate limiting for API routes
+	if (event.url.pathname.startsWith('/api/')) {
+		const clientId = getClientId(event.request);
+		const rateLimitResult = checkRateLimit(
+			clientId,
+			event.url.pathname,
+			event.request.method
+		);
+
+		if (!rateLimitResult.allowed) {
+			return json(
+				{
+					error: 'Too many requests',
+					message: 'Rate limit exceeded. Please try again later.',
+					retryAfter: rateLimitResult.retryAfter
+				},
+				{
+					status: 429,
+					headers: {
+						'Retry-After': String(rateLimitResult.retryAfter ?? 1)
+					}
+				}
+			);
+		}
+	}
+
 	// Extract session from cookies
 	event.locals.session = extractSession(event.cookies);
 
