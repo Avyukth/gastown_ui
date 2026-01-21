@@ -4,6 +4,7 @@
 	import { Search, RefreshCw, ChevronDown } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { cn } from '$lib/utils';
+	import { toastStore } from '$lib/stores/toast.svelte';
 
 	const { data } = $props();
 
@@ -67,13 +68,57 @@
 		isLoading = false;
 	});
 
+	// Loading state for reboot actions
+	let rebootingAgents = $state<Set<string>>(new Set());
+
 	// Handler functions for agent actions
 	function handleInspect(agentId: string) {
 		goto(`/agents/${agentId}`);
 	}
 
-	function handleReboot(_agentId: string) {
-		// TODO: Implement reboot API call
+	async function handleReboot(agentId: string) {
+		if (rebootingAgents.has(agentId)) return;
+
+		// Find agent name for display
+		const agent = data.agents.find(a => a.id === agentId);
+		const agentName = agent?.name || agentId;
+
+		// Confirm before reboot
+		const confirmed = confirm(`Are you sure you want to reboot "${agentName}"? This will restart the agent.`);
+		if (!confirmed) return;
+
+		rebootingAgents.add(agentId);
+		rebootingAgents = new Set(rebootingAgents); // Trigger reactivity
+
+		const complete = toastStore.async(`Rebooting ${agentName}...`);
+
+		try {
+			const response = await fetch(`/api/gastown/agents/${encodeURIComponent(agentId)}/reboot`, {
+				method: 'POST'
+			});
+			const result = await response.json();
+
+			if (!response.ok) {
+				complete.error(result.error || 'Reboot failed');
+				return;
+			}
+
+			if (result.demo) {
+				complete.info(result.message);
+			} else {
+				complete.success(result.message || `${agentName} reboot initiated`);
+			}
+
+			// Refresh the page after a short delay to show updated status
+			setTimeout(() => {
+				window.location.reload();
+			}, 2000);
+		} catch (err) {
+			complete.error(err instanceof Error ? err.message : 'Reboot failed');
+		} finally {
+			rebootingAgents.delete(agentId);
+			rebootingAgents = new Set(rebootingAgents); // Trigger reactivity
+		}
 	}
 </script>
 

@@ -13,9 +13,9 @@ interface WorkItem {
 	id: string;
 	title: string;
 	description?: string;
-	status: string;
+	status: 'open' | 'in_progress' | 'done' | 'blocked';
 	priority: number;
-	issueType: string;
+	type: 'task' | 'bug' | 'feature' | 'epic';
 	assignee: string | null;
 	labels: string[];
 	createdAt: string;
@@ -38,14 +38,25 @@ interface BdBead {
 }
 
 function transformBead(bead: BdBead): WorkItem {
+	const allowedTypes = new Set(['task', 'bug', 'feature', 'epic']);
+	const type = allowedTypes.has(bead.issue_type) ? bead.issue_type : 'task';
+	const statusMap: Record<string, WorkItem['status']> = {
+		open: 'open',
+		in_progress: 'in_progress',
+		closed: 'done',
+		hooked: 'in_progress',
+		blocked: 'blocked',
+		done: 'done'
+	};
+
 	return {
 		id: bead.id,
 		title: bead.title,
 		description: bead.description,
-		status: bead.status,
-		priority: bead.priority,
-		issueType: bead.issue_type,
-		assignee: bead.assignee || null,
+		status: statusMap[bead.status] ?? 'open',
+		priority: Math.min(4, Math.max(0, bead.priority)),
+		type,
+		assignee: bead.assignee ?? null,
 		labels: bead.labels || [],
 		createdAt: bead.created_at,
 		updatedAt: bead.updated_at,

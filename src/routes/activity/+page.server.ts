@@ -1,9 +1,23 @@
 import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
 import type { PageServerLoad } from './$types';
 
-// Town root where .events.jsonl lives
-const TOWN_ROOT = '/Users/amrit/Documents/Projects/Rust/mouchak/gastown_exp';
-const EVENTS_FILE = `${TOWN_ROOT}/.events.jsonl`;
+/** Check if demo mode is enabled */
+function isDemoMode(): boolean {
+	const demoMode = process.env.GASTOWN_DEMO_MODE;
+	return demoMode !== 'false';
+}
+
+/** Get the town root directory from environment variables */
+function getTownRoot(): string | undefined {
+	return process.env.GASTOWN_TOWN_ROOT;
+}
+
+/** Get the events file path */
+function getEventsFile(): string | undefined {
+	const townRoot = getTownRoot();
+	return townRoot ? join(townRoot, '.events.jsonl') : undefined;
+}
 
 interface GasTownEvent {
 	ts: string;
@@ -116,22 +130,94 @@ function buildDescription(event: GasTownEvent): string {
 	}
 }
 
+/**
+ * Generate demo activity events
+ */
+function getDemoEvents(): ActivityEvent[] {
+	const now = Date.now();
+	return [
+		{
+			id: 'evt-1',
+			timestamp: new Date(now - 300000).toISOString(),
+			type: 'merge',
+			actor: 'gastown_ui/refinery',
+			actorDisplay: 'Refinery',
+			description: 'Merged branch polecat/rictus-auth to main',
+			icon: 'git-merge'
+		},
+		{
+			id: 'evt-2',
+			timestamp: new Date(now - 600000).toISOString(),
+			type: 'test_pass',
+			actor: 'gastown_ui/refinery',
+			actorDisplay: 'Refinery',
+			description: 'Tests passed for polecat/rictus-auth',
+			icon: 'check'
+		},
+		{
+			id: 'evt-3',
+			timestamp: new Date(now - 900000).toISOString(),
+			type: 'work_completed',
+			actor: 'gastown_ui/polecats/rictus',
+			actorDisplay: 'rictus',
+			description: 'Completed gt-d3a Authentication',
+			icon: 'check-circle'
+		},
+		{
+			id: 'evt-4',
+			timestamp: new Date(now - 1200000).toISOString(),
+			type: 'spawn',
+			actor: 'gastown_ui/witness',
+			actorDisplay: 'Witness',
+			description: 'Spawned polecat rictus in gastown_ui',
+			icon: 'rocket'
+		},
+		{
+			id: 'evt-5',
+			timestamp: new Date(now - 1500000).toISOString(),
+			type: 'session_start',
+			actor: 'gastown_ui/witness',
+			actorDisplay: 'Witness',
+			description: 'Session started: patrol cycle',
+			icon: 'play'
+		}
+	];
+}
+
 export const load: PageServerLoad = async ({ url }) => {
 	const typeFilter = url.searchParams.get('type') || '';
 	const actorFilter = url.searchParams.get('actor') || '';
 
+	// In demo mode, return demo events
+	if (isDemoMode()) {
+		const events = getDemoEvents();
+		const types = [...new Set(events.map((e) => e.type))].sort();
+		const actors = [...new Set(events.map((e) => e.actorDisplay))].sort();
+		return {
+			events,
+			types,
+			actors,
+			error: null,
+			filters: { type: typeFilter, actor: actorFilter },
+			dataSource: 'demo' as const
+		};
+	}
+
 	try {
-		if (!existsSync(EVENTS_FILE)) {
+		const eventsFile = getEventsFile();
+
+		if (!eventsFile || !existsSync(eventsFile)) {
 			return {
 				events: [],
 				types: [],
 				actors: [],
 				error: null,
-				filters: { type: typeFilter, actor: actorFilter }
+				filters: { type: typeFilter, actor: actorFilter },
+				dataSource: 'live' as const
 			};
 		}
 
-		const content = readFileSync(EVENTS_FILE, 'utf-8');
+		const content = readFileSync(eventsFile, 'utf-8');
 		const lines = content.split('\n').filter((line: string) => line.trim());
 
 		const rawEvents: GasTownEvent[] = [];
@@ -176,7 +262,8 @@ export const load: PageServerLoad = async ({ url }) => {
 			types,
 			actors,
 			error: null,
-			filters: { type: typeFilter, actor: actorFilter }
+			filters: { type: typeFilter, actor: actorFilter },
+			dataSource: 'live' as const
 		};
 	} catch (err) {
 		const errorMessage = err instanceof Error ? err.message : 'Unknown error reading events';
@@ -185,7 +272,8 @@ export const load: PageServerLoad = async ({ url }) => {
 			types: [],
 			actors: [],
 			error: errorMessage,
-			filters: { type: typeFilter, actor: actorFilter }
+			filters: { type: typeFilter, actor: actorFilter },
+			dataSource: 'live' as const
 		};
 	}
 };

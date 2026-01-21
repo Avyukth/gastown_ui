@@ -111,7 +111,7 @@
 				sum + (r.agents?.reduce((s: number, a) => s + (a.unread_mail ?? 0), 0) ?? 0), 0) ?? 0;
 			unreadMail += agentMail + rigAgentMail;
 
-			// Escalation count (placeholder - will be implemented when escalations API is ready)
+			// Escalation count from beads CLI (open issues with escalation label)
 			escalationCount = status.escalation_count ?? 0;
 		} catch (e) {
 			console.error('Failed to fetch badge counts:', e);

@@ -17,7 +17,7 @@ export interface WorkItem {
 	type: 'task' | 'bug' | 'feature' | 'epic';
 	status: 'open' | 'in_progress' | 'review' | 'done' | 'blocked';
 	priority: number;
-	assignee?: string;
+	assignee?: string | null;
 	parent?: string;
 	labels: string[];
 	createdAt: string;

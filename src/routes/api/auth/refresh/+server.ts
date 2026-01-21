@@ -3,81 +3,20 @@
  *
  * POST /api/auth/refresh
  * Refreshes access token before expiration using refresh token
+ *
+ * Uses proper JWT verification via jose library.
+ * Rotates refresh tokens on each refresh for security.
  */
 
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getRefreshToken, setAuthCookies, clearAuthCookies } from '$lib/auth/cookies';
 import type { AuthResponse } from '$lib/auth/types';
-
-/** Access token expiry: 15 minutes */
-const ACCESS_TOKEN_EXPIRY = 15 * 60;
-
-/** Refresh token expiry: 7 days */
-const REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60;
-
-/**
- * Mock token refresh - replace with your actual auth backend
- * In production, this would validate the refresh token and issue new tokens
- */
-async function refreshTokens(refreshToken: string): Promise<{
-	success: boolean;
-	accessToken?: string;
-	newRefreshToken?: string;
-	error?: string;
-}> {
-	// TODO: Replace with actual token refresh logic
-	// This is a placeholder that demonstrates the expected interface
-
-	try {
-		// Parse the mock refresh token to get user ID
-		const parts = refreshToken.split('.');
-		if (parts.length !== 3 || parts[0] !== 'demo') {
-			return { success: false, error: 'Invalid refresh token' };
-		}
-
-		const payload = JSON.parse(atob(parts[1]));
-
-		// Check if refresh token is expired
-		if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
-			return { success: false, error: 'Refresh token expired' };
-		}
-
-		// Check if it's actually a refresh token
-		if (payload.type !== 'refresh') {
-			return { success: false, error: 'Invalid token type' };
-		}
-
-		const now = Math.floor(Date.now() / 1000);
-
-		// Create new tokens
-		const accessPayload = {
-			sub: payload.sub,
-			email: `user-${payload.sub.slice(0, 8)}@example.com`, // Mock email
-			roles: ['user'],
-			iat: now,
-			exp: now + ACCESS_TOKEN_EXPIRY
-		};
-
-		const refreshPayload = {
-			sub: payload.sub,
-			type: 'refresh',
-			iat: now,
-			exp: now + REFRESH_TOKEN_EXPIRY
-		};
-
-		const accessToken = `demo.${btoa(JSON.stringify(accessPayload))}.sig`;
-		const newRefreshToken = `demo.${btoa(JSON.stringify(refreshPayload))}.sig`;
-
-		return {
-			success: true,
-			accessToken,
-			newRefreshToken
-		};
-	} catch {
-		return { success: false, error: 'Invalid refresh token format' };
-	}
-}
+import {
+	refreshTokens,
+	ACCESS_TOKEN_EXPIRY_SECONDS,
+	REFRESH_TOKEN_EXPIRY_SECONDS
+} from '$lib/server/auth';
 
 export const POST: RequestHandler = async ({ cookies }) => {
 	const refreshToken = getRefreshToken(cookies);
@@ -87,6 +26,7 @@ export const POST: RequestHandler = async ({ cookies }) => {
 		return json(response, { status: 401 });
 	}
 
+	// Verify and refresh tokens using server auth module (proper JWT verification)
 	const result = await refreshTokens(refreshToken);
 
 	if (!result.success || !result.accessToken || !result.newRefreshToken) {
@@ -97,16 +37,16 @@ export const POST: RequestHandler = async ({ cookies }) => {
 		return json(response, { status: 401 });
 	}
 
-	// Set new cookies
+	// Set new cookies with rotated tokens
 	setAuthCookies(
 		cookies,
 		result.accessToken,
 		result.newRefreshToken,
-		ACCESS_TOKEN_EXPIRY,
-		REFRESH_TOKEN_EXPIRY
+		ACCESS_TOKEN_EXPIRY_SECONDS,
+		REFRESH_TOKEN_EXPIRY_SECONDS
 	);
 
-	const expiresAt = Date.now() + (ACCESS_TOKEN_EXPIRY * 1000);
+	const expiresAt = Date.now() + (ACCESS_TOKEN_EXPIRY_SECONDS * 1000);
 
 	const response: AuthResponse = { success: true, expiresAt };
 	return json(response);

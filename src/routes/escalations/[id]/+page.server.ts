@@ -4,6 +4,17 @@ import type { PageServerLoad } from './$types';
 
 type Severity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 
+/** Check if demo mode is enabled */
+function isDemoMode(): boolean {
+	const demoMode = process.env.GASTOWN_DEMO_MODE;
+	return demoMode !== 'false';
+}
+
+/** Get the beads working directory */
+function getBdCwd(): string | undefined {
+	return process.env.GASTOWN_BD_CWD || process.env.GASTOWN_TOWN_ROOT;
+}
+
 interface DecisionOption {
 	label: string;
 	value: string;
@@ -124,13 +135,82 @@ function cleanTitle(title: string): string {
 	return title.replace(/^\[[^\]]+\]\s*/, '').replace(/^[^:]+:\s*/, '');
 }
 
+/**
+ * Generate demo escalation for a given ID
+ */
+function getDemoEscalation(id: string): Escalation | null {
+	const demoEscalations: Record<string, Escalation> = {
+		'esc-demo-1': {
+			id: 'esc-demo-1',
+			title: 'Merge conflict in authentication module',
+			description: 'Branch polecat/rictus-auth has conflicts with main. Manual resolution required.\n\nConflicting files:\n- src/lib/auth/jwt.ts\n- src/routes/api/auth/login/+server.ts',
+			severity: 'HIGH',
+			category: 'Merge Conflict',
+			timestamp: new Date(Date.now() - 3600000).toISOString(),
+			createdBy: 'gastown_ui/refinery',
+			updatedAt: new Date(Date.now() - 1800000).toISOString(),
+			status: 'open',
+			isDecision: false,
+			labels: ['escalation', 'merge-conflict']
+		},
+		'esc-demo-2': {
+			id: 'esc-demo-2',
+			title: 'Decision required: API versioning strategy',
+			description: 'Question: How should we handle API versioning?\nOptions:\n- URL path: /api/v1/users\n- Header: Accept-Version: v1\n- Query param: /api/users?version=1',
+			severity: 'MEDIUM',
+			category: 'Decision',
+			timestamp: new Date(Date.now() - 7200000).toISOString(),
+			createdBy: 'gastown_ui/polecats/furiosa',
+			updatedAt: new Date(Date.now() - 7200000).toISOString(),
+			status: 'open',
+			isDecision: true,
+			question: 'How should we handle API versioning?',
+			options: [
+				{ label: 'URL path', value: '/api/v1/users' },
+				{ label: 'Header', value: 'Accept-Version: v1' },
+				{ label: 'Query param', value: '/api/users?version=1' }
+			],
+			labels: ['escalation', 'decision']
+		}
+	};
+
+	return demoEscalations[id] || null;
+}
+
 export const load: PageServerLoad = async ({ params }) => {
+	// In demo mode, return demo escalation
+	if (isDemoMode()) {
+		const escalation = getDemoEscalation(params.id);
+		if (escalation) {
+			return { escalation, error: null, dataSource: 'demo' as const };
+		}
+		// Generate generic demo escalation for unknown IDs
+		return {
+			escalation: {
+				id: params.id,
+				title: `Demo Escalation ${params.id}`,
+				description: 'This is a demo escalation. Enable production mode to see real data.',
+				severity: 'LOW' as Severity,
+				category: 'General',
+				timestamp: new Date().toISOString(),
+				createdBy: 'demo',
+				updatedAt: new Date().toISOString(),
+				status: 'open',
+				isDecision: false,
+				labels: ['escalation', 'demo']
+			},
+			error: null,
+			dataSource: 'demo' as const
+		};
+	}
+
 	try {
 		// Use async ProcessSupervisor instead of blocking execSync
 		const supervisor = getProcessSupervisor();
+		const bdCwd = getBdCwd();
 		const result = await supervisor.bd<BeadsIssue>(['show', params.id, '--json'], {
 			timeout: 10000,
-			cwd: '/Users/amrit/Documents/Projects/Rust/mouchak/gastown_exp'
+			cwd: bdCwd
 		});
 
 		if (!result.success || !result.data) {
@@ -156,7 +236,8 @@ export const load: PageServerLoad = async ({ params }) => {
 
 		return {
 			escalation,
-			error: null
+			error: null,
+			dataSource: 'live' as const
 		};
 	} catch (err) {
 		const errorMessage =

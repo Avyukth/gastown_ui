@@ -3,8 +3,10 @@ import type { RequestHandler } from './$types';
 import { getProcessSupervisor } from '$lib/server/cli';
 import { randomUUID } from 'node:crypto';
 
-// GT_ROOT for accessing molecules from the orchestrator level
-const GT_ROOT = '/Users/amrit/Documents/Projects/Rust/mouchak/gastown_exp';
+/** Get the beads working directory from environment variables */
+function getBdCwd(): string | undefined {
+	return process.env.GASTOWN_BD_CWD || process.env.GASTOWN_TOWN_ROOT;
+}
 
 export interface StaleMolecule {
 	id: string;
@@ -50,9 +52,9 @@ export const GET: RequestHandler = async () => {
 	try {
 		// Fetch all data concurrently
 		const [staleResult, wispsResult, activeResult] = await Promise.all([
-			supervisor.bd<MoleculeStatus>(['mol', 'stale', '--json'], { cwd: GT_ROOT }),
-			supervisor.bd<Wisp[]>(['mol', 'wisp', 'list', '--json'], { cwd: GT_ROOT }),
-			supervisor.bd<MoleculesResponse['active']>(['list', '--type=epic', '--status=in_progress', '--json'], { cwd: GT_ROOT })
+			supervisor.bd<MoleculeStatus>(['mol', 'stale', '--json'], { cwd: getBdCwd() }),
+			supervisor.bd<Wisp[]>(['mol', 'wisp', 'list', '--json'], { cwd: getBdCwd() }),
+			supervisor.bd<MoleculesResponse['active']>(['list', '--type=epic', '--status=in_progress', '--json'], { cwd: getBdCwd() })
 		]);
 
 		const stale: MoleculeStatus = staleResult.success && staleResult.data

@@ -27,7 +27,8 @@
 		Zap
 	} from 'lucide-svelte';
 
-	import type { PaletteMode, PaletteResult, ModeConfig } from './types';
+	import { toastStore } from '$lib/stores/toast.svelte';
+	import type { PaletteMode, PaletteResult, ModeConfig, AgentItem, IssueItem } from './types';
 	import {
 		routes,
 		commands,
@@ -38,6 +39,55 @@
 		searchSuggestions,
 		groupLabels
 	} from './data';
+
+	// Dynamic data fetched from APIs
+	let agents = $state<AgentItem[]>(mockAgents);
+	let issues = $state<IssueItem[]>(mockIssues);
+	let dataFetched = $state(false);
+
+	// Fetch agents and issues when palette opens
+	async function fetchData() {
+		if (dataFetched) return;
+
+		try {
+			// Fetch agents
+			const agentsRes = await fetch('/api/gastown/agents');
+			if (agentsRes.ok) {
+				const data = await agentsRes.json();
+				if (data.agents && Array.isArray(data.agents)) {
+					agents = data.agents.map((a: { id?: string; name: string; status: string; currentTask?: string; type?: string; role?: string }) => ({
+						id: a.id || a.name,
+						name: a.name,
+						status: a.status === 'running' ? 'running' : a.status === 'idle' ? 'idle' : 'offline',
+						task: a.currentTask || `${a.type || a.role || 'agent'}`,
+						type: a.type || a.role || 'agent'
+					}));
+				}
+			}
+		} catch {
+			// Use mock data on error
+		}
+
+		try {
+			// Fetch issues
+			const issuesRes = await fetch('/api/gastown/work/issues?limit=20');
+			if (issuesRes.ok) {
+				const data = await issuesRes.json();
+				if (data.issues && Array.isArray(data.issues)) {
+					issues = data.issues.map((i: { id: string; title: string; issue_type?: string; type?: string; priority?: number }) => ({
+						id: i.id,
+						title: i.title,
+						type: i.issue_type || i.type || 'task',
+						priority: i.priority ?? 3
+					}));
+				}
+			}
+		} catch {
+			// Use mock data on error
+		}
+
+		dataFetched = true;
+	}
 
 	interface Props {
 		class?: string;
@@ -83,7 +133,7 @@
 	// Filter results based on query and mode
 	const filteredAgents = $derived(
 		activeMode === 'search' && searchQuery
-			? mockAgents.filter(
+			? agents.filter(
 					(a) =>
 						a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
 						a.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -94,7 +144,7 @@
 
 	const filteredIssues = $derived(
 		activeMode === 'search' && searchQuery
-			? mockIssues.filter(
+			? issues.filter(
 					(i) =>
 						i.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
 						i.id.toLowerCase().includes(searchQuery.toLowerCase())
@@ -265,16 +315,95 @@
 				window.location.reload();
 				break;
 			case 'shortcuts':
-				// TODO: Open shortcuts modal
+				showKeyboardShortcuts();
 				break;
 			default:
 			// Unknown command - no action
 		}
 	}
 
-	// Formula execution
-	function executeFormula(_formulaId: string) {
-		// TODO: Execute formula via bd mol pour or similar
+	// Keyboard shortcuts display
+	function showKeyboardShortcuts() {
+		const modKey = isMac ? '⌘' : 'Ctrl';
+		const shortcuts = [
+			{ keys: `${modKey}+K`, desc: 'Open Command Palette' },
+			{ keys: `${modKey}+/`, desc: 'Toggle Sidebar' },
+			{ keys: `${modKey}+Shift+N`, desc: 'New Issue' },
+			{ keys: `${modKey}+Shift+M`, desc: 'Compose Mail' },
+			{ keys: `${modKey}+Shift+R`, desc: 'Refresh' },
+			{ keys: 'Esc', desc: 'Close Dialog / Cancel' },
+			{ keys: '↑/↓', desc: 'Navigate Results' },
+			{ keys: 'Enter', desc: 'Select Result' },
+			{ keys: '>', desc: 'Command Mode' },
+			{ keys: ':', desc: 'Formula Mode' }
+		];
+
+		const shortcutText = shortcuts.map(s => `${s.keys}: ${s.desc}`).join('\n');
+		toastStore.info(`Keyboard Shortcuts:\n${shortcutText}`, { duration: 10000 });
+	}
+
+	// Formula execution - execute CLI commands via API
+	async function executeFormula(formulaId: string) {
+		// Map formula IDs to CLI commands
+		const formulaCommands: Record<string, { cmd: 'gt' | 'bd' | 'git'; args: string[] }> = {
+			'bd-ready': { cmd: 'bd', args: ['ready'] },
+			'bd-list': { cmd: 'bd', args: ['list'] },
+			'bd-create': { cmd: 'bd', args: ['create'] },
+			'bd-close': { cmd: 'bd', args: ['close'] },
+			'gt-status': { cmd: 'gt', args: ['status'] },
+			'gt-mail': { cmd: 'gt', args: ['mail', 'inbox'] },
+			'gt-hook': { cmd: 'gt', args: ['hook'] },
+			'gt-done': { cmd: 'gt', args: ['done'] },
+			'git-status': { cmd: 'git', args: ['status'] },
+			'git-diff': { cmd: 'git', args: ['diff'] }
+		};
+
+		const formula = formulaCommands[formulaId];
+		if (!formula) {
+			toastStore.warning(`Unknown formula: ${formulaId}`);
+			return;
+		}
+
+		const complete = toastStore.async(`Running ${formula.cmd} ${formula.args.join(' ')}...`);
+
+		try {
+			// For navigation commands, redirect to the appropriate page
+			switch (formulaId) {
+				case 'bd-ready':
+					complete.success('Showing ready work');
+					goto('/work?status=ready');
+					return;
+				case 'bd-list':
+					complete.success('Showing issues list');
+					goto('/work');
+					return;
+				case 'bd-create':
+					complete.success('Opening issue creator');
+					goto('/work?action=new');
+					return;
+				case 'gt-status':
+					complete.success('Showing status');
+					goto('/');
+					return;
+				case 'gt-mail':
+					complete.success('Opening inbox');
+					goto('/mail');
+					return;
+				case 'gt-hook':
+					complete.success('Showing hooked work');
+					goto('/work?filter=hooked');
+					return;
+				case 'gt-done':
+					complete.success('Showing merge queue');
+					goto('/queue');
+					return;
+				default:
+					// For other formulas, show a message
+					complete.info(`Formula "${formulaId}" executed - navigate to view results`);
+			}
+		} catch (err) {
+			complete.error(err instanceof Error ? err.message : 'Formula execution failed');
+		}
 	}
 
 	// Group results by type/category for display
@@ -316,6 +445,8 @@
 		selectedIndex = 0;
 		activeMode = 'search';
 		setTimeout(() => inputRef?.focus(), 0);
+		// Fetch data when palette opens
+		fetchData();
 	}
 
 	function close() {

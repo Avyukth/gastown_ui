@@ -56,7 +56,7 @@ export function getConvoyStatusConfig(status: ConvoyStatus): ConvoyStatusConfig 
 // Issue Status
 // =============================================================================
 
-export type IssueStatus = 'open' | 'in_progress' | 'blocked' | 'completed';
+export type IssueStatus = 'open' | 'in_progress' | 'blocked' | 'completed' | 'closed';
 
 export interface IssueStatusConfig {
 	indicatorStatus: 'running' | 'idle' | 'error' | 'warning' | 'complete';
@@ -89,6 +89,12 @@ export const issueStatusConfig: Record<IssueStatus, IssueStatusConfig> = {
 		label: 'Completed',
 		bgClass: 'bg-success/10 text-success',
 		borderClass: 'border-success/30'
+	},
+	closed: {
+		indicatorStatus: 'complete',
+		label: 'Closed',
+		bgClass: 'bg-muted/50 text-muted-foreground',
+		borderClass: 'border-muted'
 	}
 };
 

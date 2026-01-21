@@ -13,6 +13,78 @@
 
 	let isLoading = $state(true);
 
+	type LocalIssueStatus = 'open' | 'in_progress' | 'done' | 'blocked';
+	type LocalIssueType = 'task' | 'bug' | 'feature' | 'epic';
+	type LocalIssue = {
+		id: string;
+		title: string;
+		type: LocalIssueType;
+		status: LocalIssueStatus;
+		priority: 0 | 1 | 2 | 3 | 4;
+		assignee?: string;
+		description?: string;
+		created?: string;
+		updated?: string;
+	};
+
+	type RawIssue = Partial<LocalIssue> & {
+		issue_type?: string;
+		created_at?: string;
+		updated_at?: string;
+		createdAt?: string;
+		updatedAt?: string;
+		assignee?: string | null;
+		description?: string;
+	};
+
+	const issueStatusMap: Record<string, LocalIssueStatus> = {
+		open: 'open',
+		in_progress: 'in_progress',
+		closed: 'done',
+		hooked: 'in_progress',
+		blocked: 'blocked',
+		done: 'done'
+	};
+	const allowedIssueTypes = new Set<LocalIssueType>(['task', 'bug', 'feature', 'epic']);
+
+	function normalizeIssue(raw: RawIssue): LocalIssue | null {
+		if (!raw?.id || !raw?.title) return null;
+
+		const rawType = typeof raw.type === 'string' ? raw.type : raw.issue_type;
+		const type = allowedIssueTypes.has(rawType as LocalIssueType) ? (rawType as LocalIssueType) : 'task';
+		const rawStatus = typeof raw.status === 'string' ? raw.status : 'open';
+		const status = issueStatusMap[rawStatus] ?? 'open';
+		const priority = Math.min(4, Math.max(0, Number(raw.priority ?? 2) || 2)) as 0 | 1 | 2 | 3 | 4;
+		const created =
+			typeof raw.created === 'string'
+				? raw.created
+				: typeof raw.created_at === 'string'
+					? raw.created_at
+					: typeof raw.createdAt === 'string'
+						? raw.createdAt
+						: undefined;
+		const updated =
+			typeof raw.updated === 'string'
+				? raw.updated
+				: typeof raw.updated_at === 'string'
+					? raw.updated_at
+					: typeof raw.updatedAt === 'string'
+						? raw.updatedAt
+						: undefined;
+
+		return {
+			id: String(raw.id),
+			title: String(raw.title),
+			type,
+			status,
+			priority,
+			assignee: raw.assignee || undefined,
+			description: raw.description,
+			created,
+			updated
+		};
+	}
+
 	// Issue creation form state
 	let issueTitle = $state('');
 	let issueType = $state('task');
@@ -57,7 +129,7 @@
 	let slingErrors = $state<Record<string, string>>({});
 
 	// Local copy of issues that updates after creation
-	let localIssues = $state<typeof data.issues>([]);
+	let localIssues = $state<LocalIssue[]>([]);
 
 	// Search state with debouncing
 	let searchQuery = $state('');
@@ -259,7 +331,10 @@
 
 	// Sync with server data
 	$effect(() => {
-		localIssues = [...data.issues];
+		const normalized = (data.issues || [])
+			.map((issue: RawIssue) => normalizeIssue(issue))
+			.filter((issue): issue is LocalIssue => Boolean(issue));
+		localIssues = normalized;
 	});
 
 	const issueTypes = [
@@ -311,19 +386,26 @@
 				})
 			});
 
-			const data = await res.json();
+		const payload = await res.json();
 
-			if (!res.ok) {
-				throw new Error(data.error || 'Failed to create issue');
-			}
+		if (!res.ok) {
+			throw new Error(payload.error || 'Failed to create issue');
+		}
 
-			hapticSuccess();
-			issueMessage = { type: 'success', text: `Created issue: ${data.id}` };
-			localIssues = [...localIssues, data];
-			issueTitle = '';
-			issueType = 'task';
-			issuePriority = 2;
-		} catch (error) {
+		const created = normalizeIssue((payload.data ?? payload) as RawIssue);
+
+		hapticSuccess();
+		issueMessage = {
+			type: 'success',
+			text: created?.id ? `Created issue: ${created.id}` : 'Issue created'
+		};
+		if (created) {
+			localIssues = [...localIssues, created];
+		}
+		issueTitle = '';
+		issueType = 'task';
+		issuePriority = 2;
+	} catch (error) {
 			hapticError();
 			issueMessage = { type: 'error', text: error instanceof Error ? error.message : 'Failed to create issue' };
 		} finally {
@@ -363,17 +445,17 @@
 				})
 			});
 
-			const data = await res.json();
+		const payload = await res.json();
 
-			if (!res.ok) {
-				throw new Error(data.error || 'Failed to create convoy');
-			}
+		if (!res.ok) {
+			throw new Error(payload.error || 'Failed to create convoy');
+		}
 
-			hapticSuccess();
-			convoyMessage = { type: 'success', text: data.message || 'Convoy created successfully' };
-			convoyName = '';
-			selectedIssues = [];
-		} catch (error) {
+		hapticSuccess();
+		convoyMessage = { type: 'success', text: payload.message || 'Convoy created successfully' };
+		convoyName = '';
+		selectedIssues = [];
+	} catch (error) {
 			hapticError();
 			convoyMessage = { type: 'error', text: error instanceof Error ? error.message : 'Failed to create convoy' };
 		} finally {
@@ -404,26 +486,29 @@
 		hapticMedium();
 
 		try {
-			const res = await fetch('/api/gastown/work/sling', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					issue: slingIssue,
-					rig: slingRig
-				})
-			});
+		const res = await fetch('/api/gastown/work/sling', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				beadId: slingIssue,
+				agentId: slingRig
+			})
+		});
 
-			const data = await res.json();
+		const payload = await res.json();
 
-			if (!res.ok) {
-				throw new Error(data.error || 'Failed to sling work');
-			}
+		if (!res.ok) {
+			throw new Error(payload.error || payload.details || 'Failed to sling work');
+		}
 
-			hapticSuccess();
-			slingMessage = { type: 'success', text: data.message || 'Work slung successfully' };
-			slingIssue = '';
-			slingRig = '';
-		} catch (error) {
+		hapticSuccess();
+		slingMessage = {
+			type: 'success',
+			text: payload.data?.message || payload.message || 'Work slung successfully'
+		};
+		slingIssue = '';
+		slingRig = '';
+	} catch (error) {
 			hapticError();
 			slingMessage = { type: 'error', text: error instanceof Error ? error.message : 'Failed to sling work' };
 		} finally {

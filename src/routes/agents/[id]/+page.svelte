@@ -1,11 +1,16 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { GridPattern, ErrorState, ProgressBar, StatusIndicator } from '$lib/components';
-	import { ArrowLeft, Clock, Zap, Eye, AlertTriangle, RefreshCw, Search, Briefcase, Heart, Shield, Flame, Users, TrendingUp } from 'lucide-svelte';
+	import { toastStore } from '$lib/stores/toast.svelte';
+	import { ArrowLeft, Clock, Zap, Eye, AlertTriangle, RefreshCw, Search, Briefcase, Heart, Shield, Flame, Users, TrendingUp, Loader2 } from 'lucide-svelte';
 
 	let { data } = $props();
 
 	const agent = $derived(data.agent);
+
+	// Loading states for actions
+	let isRebooting = $state(false);
+	let isLoadingLogs = $state(false);
 
 	// Role icons mapping
 	const roleIcons: Record<string, typeof Briefcase> = {
@@ -49,15 +54,77 @@
 	}
 
 	function handleInspect() {
-		// TODO: Implement inspect functionality
+		// Navigate to agent detail with full status inspection
+		// This page IS the inspect view - show a toast indicating this
+		toastStore.info(`Viewing inspection for ${agent.name}`);
 	}
 
-	function handleViewLogs() {
-		// TODO: Implement logs view
+	async function handleViewLogs() {
+		isLoadingLogs = true;
+		const complete = toastStore.async('Loading logs...');
+
+		try {
+			const response = await fetch(`/api/gastown/agents/${encodeURIComponent(agent.id || agent.name)}/logs`);
+			const result = await response.json();
+
+			if (!response.ok) {
+				complete.error(result.error || 'Failed to load logs');
+				return;
+			}
+
+			// Navigate to logs view with agent context
+			// For now, show logs in a toast since we don't have a dedicated logs page
+			if (result.logs && result.logs.length > 0) {
+				const recentLog = result.logs[0];
+				complete.success(`Latest: ${recentLog.message}`);
+				// Future: Navigate to /agents/[id]/logs page
+				// goto(`/agents/${agent.id}/logs`);
+			} else {
+				complete.info('No recent logs available');
+			}
+		} catch (err) {
+			complete.error(err instanceof Error ? err.message : 'Failed to load logs');
+		} finally {
+			isLoadingLogs = false;
+		}
 	}
 
-	function handleReboot() {
-		// TODO: Implement reboot functionality
+	async function handleReboot() {
+		if (isRebooting) return;
+
+		// Confirm before reboot
+		const confirmed = confirm(`Are you sure you want to reboot "${agent.name}"? This will restart the agent.`);
+		if (!confirmed) return;
+
+		isRebooting = true;
+		const complete = toastStore.async(`Rebooting ${agent.name}...`);
+
+		try {
+			const response = await fetch(`/api/gastown/agents/${encodeURIComponent(agent.id || agent.name)}/reboot`, {
+				method: 'POST'
+			});
+			const result = await response.json();
+
+			if (!response.ok) {
+				complete.error(result.error || 'Reboot failed');
+				return;
+			}
+
+			if (result.demo) {
+				complete.info(result.message);
+			} else {
+				complete.success(result.message || `${agent.name} reboot initiated`);
+			}
+
+			// Refresh the page after a short delay to show updated status
+			setTimeout(() => {
+				goto(`/agents/${agent.id || agent.name}`, { invalidateAll: true });
+			}, 2000);
+		} catch (err) {
+			complete.error(err instanceof Error ? err.message : 'Reboot failed');
+		} finally {
+			isRebooting = false;
+		}
 	}
 </script>
 
@@ -224,20 +291,30 @@
 
 				<button
 					onclick={handleViewLogs}
-					class="touch-target-interactive flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-secondary text-secondary-foreground font-medium rounded-lg hover:bg-secondary/90 transition-colors"
+					disabled={isLoadingLogs}
+					class="touch-target-interactive flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-secondary text-secondary-foreground font-medium rounded-lg hover:bg-secondary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 					aria-label="View logs"
 				>
-					<Clock class="w-4 h-4" strokeWidth={2} />
+					{#if isLoadingLogs}
+						<Loader2 class="w-4 h-4 animate-spin" strokeWidth={2} />
+					{:else}
+						<Clock class="w-4 h-4" strokeWidth={2} />
+					{/if}
 					Logs
 				</button>
 
 				{#if agent.status !== 'error'}
 					<button
 						onclick={handleReboot}
-						class="touch-target-interactive flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-destructive/10 text-destructive font-medium rounded-lg hover:bg-destructive/20 transition-colors"
+						disabled={isRebooting}
+						class="touch-target-interactive flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-destructive/10 text-destructive font-medium rounded-lg hover:bg-destructive/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 						aria-label="Reboot agent"
 					>
-						<RefreshCw class="w-4 h-4" strokeWidth={2} />
+						{#if isRebooting}
+							<Loader2 class="w-4 h-4 animate-spin" strokeWidth={2} />
+						{:else}
+							<RefreshCw class="w-4 h-4" strokeWidth={2} />
+						{/if}
 						Reboot
 					</button>
 				{/if}

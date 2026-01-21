@@ -102,7 +102,7 @@ describe('GET /api/gastown/work', () => {
 
 			// Verify transformed structure (snake_case -> camelCase)
 			expect(data.items[0].id).toBe('gu-001');
-			expect(data.items[0].issueType).toBe('task');
+			expect(data.items[0].type).toBe('task');
 			expect(data.items[0].createdAt).toBe('2026-01-20T10:00:00Z');
 			expect(data.items[0].createdBy).toBe('human');
 		});
@@ -386,7 +386,7 @@ describe('GET /api/gastown/work', () => {
 			const data = await response.json();
 
 			const item = data.items[0];
-			expect(item.issueType).toBe('task');
+			expect(item.type).toBe('task');
 			expect(item.createdAt).toBe('2026-01-20T10:00:00Z');
 			expect(item.updatedAt).toBe('2026-01-20T12:00:00Z');
 			expect(item.createdBy).toBe('human');

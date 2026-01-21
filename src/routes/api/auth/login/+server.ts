@@ -3,80 +3,21 @@
  *
  * POST /api/auth/login
  * Authenticates user and sets secure HttpOnly cookies
+ *
+ * Authentication modes:
+ * - Demo mode (GASTOWN_DEMO_MODE=true): Accepts password "demo" for any email
+ * - Production mode: Verifies CLI access and accepts valid credentials
  */
 
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { setAuthCookies } from '$lib/auth/cookies';
 import type { AuthResponse, LoginCredentials } from '$lib/auth/types';
-
-/** Access token expiry: 15 minutes */
-const ACCESS_TOKEN_EXPIRY = 15 * 60;
-
-/** Refresh token expiry: 7 days */
-const REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60;
-
-/**
- * Mock authentication - replace with your actual auth backend
- * In production, this would call your authentication service
- */
-async function authenticateUser(credentials: LoginCredentials): Promise<{
-	success: boolean;
-	user?: { id: string; email: string; name?: string; roles?: string[] };
-	accessToken?: string;
-	refreshToken?: string;
-	error?: string;
-}> {
-	// TODO: Replace with actual authentication logic
-	// This is a placeholder that demonstrates the expected interface
-
-	// Simulate network delay
-	await new Promise((resolve) => setTimeout(resolve, 100));
-
-	// Demo: Accept any email with password "demo"
-	if (credentials.password === 'demo') {
-		const userId = crypto.randomUUID();
-		const now = Math.floor(Date.now() / 1000);
-
-		// Create mock JWT tokens (in production, use proper JWT library)
-		const accessPayload = {
-			sub: userId,
-			email: credentials.email,
-			name: credentials.email.split('@')[0],
-			roles: ['user'],
-			iat: now,
-			exp: now + ACCESS_TOKEN_EXPIRY
-		};
-
-		const refreshPayload = {
-			sub: userId,
-			type: 'refresh',
-			iat: now,
-			exp: now + REFRESH_TOKEN_EXPIRY
-		};
-
-		// Base64 encode (not a real JWT - just for demo)
-		const accessToken = `demo.${btoa(JSON.stringify(accessPayload))}.sig`;
-		const refreshToken = `demo.${btoa(JSON.stringify(refreshPayload))}.sig`;
-
-		return {
-			success: true,
-			user: {
-				id: userId,
-				email: credentials.email,
-				name: credentials.email.split('@')[0],
-				roles: ['user']
-			},
-			accessToken,
-			refreshToken
-		};
-	}
-
-	return {
-		success: false,
-		error: 'Invalid credentials'
-	};
-}
+import {
+	authenticateUser,
+	ACCESS_TOKEN_EXPIRY_SECONDS,
+	REFRESH_TOKEN_EXPIRY_SECONDS
+} from '$lib/server/auth';
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	try {
@@ -92,24 +33,24 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return json(response, { status: 400 });
 		}
 
-		// Authenticate
-		const result = await authenticateUser(credentials);
+		// Authenticate using server auth module (handles demo vs production mode)
+		const result = await authenticateUser(credentials.email, credentials.password);
 
 		if (!result.success || !result.user || !result.accessToken || !result.refreshToken) {
 			const response: AuthResponse = { success: false, error: result.error ?? 'Authentication failed' };
 			return json(response, { status: 401 });
 		}
 
-		// Set secure cookies
+		// Set secure cookies with proper JWT tokens
 		setAuthCookies(
 			cookies,
 			result.accessToken,
 			result.refreshToken,
-			ACCESS_TOKEN_EXPIRY,
-			REFRESH_TOKEN_EXPIRY
+			ACCESS_TOKEN_EXPIRY_SECONDS,
+			REFRESH_TOKEN_EXPIRY_SECONDS
 		);
 
-		const expiresAt = Date.now() + (ACCESS_TOKEN_EXPIRY * 1000);
+		const expiresAt = Date.now() + (ACCESS_TOKEN_EXPIRY_SECONDS * 1000);
 
 		const response: AuthResponse = {
 			success: true,

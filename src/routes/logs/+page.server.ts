@@ -1,9 +1,23 @@
 import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
 import type { PageServerLoad } from './$types';
 
-// Town root where .events.jsonl lives
-const TOWN_ROOT = '/Users/amrit/Documents/Projects/Rust/mouchak/gastown_exp';
-const EVENTS_FILE = `${TOWN_ROOT}/.events.jsonl`;
+/** Check if demo mode is enabled */
+function isDemoMode(): boolean {
+	const demoMode = process.env.GASTOWN_DEMO_MODE;
+	return demoMode !== 'false';
+}
+
+/** Get the town root directory from environment variables */
+function getTownRoot(): string | undefined {
+	return process.env.GASTOWN_TOWN_ROOT;
+}
+
+/** Get the events file path */
+function getEventsFile(): string | undefined {
+	const townRoot = getTownRoot();
+	return townRoot ? join(townRoot, '.events.jsonl') : undefined;
+}
 
 interface GasTownEvent {
 	ts: string;
@@ -111,19 +125,83 @@ function buildMessage(event: GasTownEvent): string {
 	}
 }
 
+/**
+ * Generate demo log entries
+ */
+function getDemoLogs(): LogEntry[] {
+	const now = Date.now();
+	return [
+		{
+			id: '1',
+			timestamp: new Date(now - 300000).toISOString(),
+			level: 'INF',
+			message: '[Refinery] Merged branch polecat/rictus-auth to main',
+			actor: 'gastown_ui/refinery',
+			type: 'merge'
+		},
+		{
+			id: '2',
+			timestamp: new Date(now - 600000).toISOString(),
+			level: 'INF',
+			message: '[Refinery] Tests passed for polecat/rictus-auth',
+			actor: 'gastown_ui/refinery',
+			type: 'test_pass'
+		},
+		{
+			id: '3',
+			timestamp: new Date(now - 900000).toISOString(),
+			level: 'INF',
+			message: '[rictus] Completed gt-d3a Authentication',
+			actor: 'gastown_ui/polecats/rictus',
+			type: 'work_completed'
+		},
+		{
+			id: '4',
+			timestamp: new Date(now - 1200000).toISOString(),
+			level: 'DBG',
+			message: '[Witness] Nudged rictus: check-in',
+			actor: 'gastown_ui/witness',
+			type: 'nudge'
+		},
+		{
+			id: '5',
+			timestamp: new Date(now - 1500000).toISOString(),
+			level: 'INF',
+			message: '[Witness] Session started (patrol cycle)',
+			actor: 'gastown_ui/witness',
+			type: 'session_start'
+		}
+	];
+}
+
 export const load: PageServerLoad = async () => {
+	// In demo mode, return demo logs
+	if (isDemoMode()) {
+		const logs = getDemoLogs();
+		const sources = [...new Set(logs.map((l) => formatActor(l.actor)))].sort();
+		return {
+			logs,
+			error: null,
+			sources,
+			dataSource: 'demo' as const
+		};
+	}
+
 	try {
+		const eventsFile = getEventsFile();
+
 		// Check if file exists
-		if (!existsSync(EVENTS_FILE)) {
+		if (!eventsFile || !existsSync(eventsFile)) {
 			return {
 				logs: [],
 				error: null,
-				sources: []
+				sources: [],
+				dataSource: 'live' as const
 			};
 		}
 
 		// Read and parse JSONL file
-		const content = readFileSync(EVENTS_FILE, 'utf-8');
+		const content = readFileSync(eventsFile, 'utf-8');
 		const lines = content.split('\n').filter((line: string) => line.trim());
 
 		const events: GasTownEvent[] = [];
@@ -155,14 +233,16 @@ export const load: PageServerLoad = async () => {
 		return {
 			logs: recentLogs,
 			error: null,
-			sources
+			sources,
+			dataSource: 'live' as const
 		};
 	} catch (err) {
 		const errorMessage = err instanceof Error ? err.message : 'Unknown error reading events';
 		return {
 			logs: [],
 			error: errorMessage,
-			sources: []
+			sources: [],
+			dataSource: 'live' as const
 		};
 	}
 };

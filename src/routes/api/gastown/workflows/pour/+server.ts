@@ -3,8 +3,10 @@ import type { RequestHandler } from './$types';
 import { getProcessSupervisor } from '$lib/server/cli';
 import { randomUUID } from 'node:crypto';
 
-// GT_ROOT for accessing molecules from the orchestrator level
-const GT_ROOT = '/Users/amrit/Documents/Projects/Rust/mouchak/gastown_exp';
+/** Get the beads working directory from environment variables */
+function getBdCwd(): string | undefined {
+	return process.env.GASTOWN_BD_CWD || process.env.GASTOWN_TOWN_ROOT;
+}
 
 export interface PourRequest {
 	proto: string;
@@ -70,7 +72,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		args.push('--json');
 
-		const result = await supervisor.bd<{ id?: string; mol_id?: string }>(args, { cwd: GT_ROOT });
+		const result = await supervisor.bd<{ id?: string; mol_id?: string }>(args, { cwd: getBdCwd() });
 
 		if (!result.success) {
 			const errorMessage = result.error || 'Failed to pour molecule';

@@ -3,8 +3,10 @@ import type { RequestHandler } from './$types';
 import { getProcessSupervisor } from '$lib/server/cli';
 import { randomUUID } from 'node:crypto';
 
-// GT_ROOT for accessing formulas from the orchestrator level
-const GT_ROOT = '/Users/amrit/Documents/Projects/Rust/mouchak/gastown_exp';
+/** Get the beads working directory from environment variables */
+function getBdCwd(): string | undefined {
+	return process.env.GASTOWN_BD_CWD || process.env.GASTOWN_TOWN_ROOT;
+}
 
 export interface FormulaDetail {
 	name: string;
@@ -47,7 +49,7 @@ export const GET: RequestHandler = async ({ params }) => {
 
 	try {
 		const result = await supervisor.bd<FormulaDetail>(['formula', 'show', name, '--json'], {
-			cwd: GT_ROOT
+			cwd: getBdCwd()
 		});
 
 		if (!result.success) {

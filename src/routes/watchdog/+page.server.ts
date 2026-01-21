@@ -1,5 +1,6 @@
 import { exec } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
 import { promisify } from 'node:util';
 import type { PageServerLoad } from './$types';
 
@@ -86,8 +87,8 @@ function formatTimeSince(timestamp: string | null): string {
 
 async function readHeartbeat(): Promise<HeartbeatData | null> {
 	try {
-		const homedir = process.env.HOME || '/Users/amrit';
-		const heartbeatPath = `${homedir}/gt/deacon/heartbeat.json`;
+		const home = process.env.HOME || homedir();
+		const heartbeatPath = `${home}/gt/deacon/heartbeat.json`;
 		const content = await readFile(heartbeatPath, 'utf-8');
 		return JSON.parse(content);
 	} catch {
@@ -97,8 +98,8 @@ async function readHeartbeat(): Promise<HeartbeatData | null> {
 
 async function readBootStatus(): Promise<{ timestamp: string; status: string } | null> {
 	try {
-		const homedir = process.env.HOME || '/Users/amrit';
-		const bootPath = `${homedir}/gt/boot/status.json`;
+		const home = process.env.HOME || homedir();
+		const bootPath = `${home}/gt/boot/status.json`;
 		const content = await readFile(bootPath, 'utf-8');
 		return JSON.parse(content);
 	} catch {

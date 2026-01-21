@@ -3,6 +3,17 @@ import type { PageServerLoad } from './$types';
 
 type Severity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 
+/** Check if demo mode is enabled */
+function isDemoMode(): boolean {
+	const demoMode = process.env.GASTOWN_DEMO_MODE;
+	return demoMode !== 'false';
+}
+
+/** Get the beads working directory */
+function getBdCwd(): string | undefined {
+	return process.env.GASTOWN_BD_CWD || process.env.GASTOWN_TOWN_ROOT;
+}
+
 interface BeadsIssue {
 	id: string;
 	title: string;
@@ -131,15 +142,67 @@ function cleanTitle(title: string): string {
 	return title.replace(/^\[[^\]]+\]\s*/, '').replace(/^[^:]+:\s*/, '');
 }
 
+/**
+ * Generate demo escalations for demo mode
+ */
+function getDemoEscalations(): Escalation[] {
+	return [
+		{
+			id: 'esc-demo-1',
+			title: 'Merge conflict in authentication module',
+			description: 'Branch polecat/rictus-auth has conflicts with main. Manual resolution required.',
+			severity: 'HIGH',
+			category: 'Merge Conflict',
+			timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+			createdBy: 'gastown_ui/refinery',
+			isDecision: false
+		},
+		{
+			id: 'esc-demo-2',
+			title: 'Decision required: API versioning strategy',
+			description: 'Question: How should we handle API versioning?\nOptions:\n- URL path: /api/v1/users\n- Header: Accept-Version: v1\n- Query param: /api/users?version=1',
+			severity: 'MEDIUM',
+			category: 'Decision',
+			timestamp: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
+			createdBy: 'gastown_ui/polecats/furiosa',
+			isDecision: true,
+			question: 'How should we handle API versioning?',
+			options: [
+				{ label: 'URL path', value: '/api/v1/users' },
+				{ label: 'Header', value: 'Accept-Version: v1' },
+				{ label: 'Query param', value: '/api/users?version=1' }
+			]
+		}
+	];
+}
+
 export const load: PageServerLoad = async () => {
+	// In demo mode, return demo escalations directly
+	if (isDemoMode()) {
+		const escalations = getDemoEscalations();
+		return {
+			escalations,
+			error: null,
+			counts: {
+				critical: escalations.filter((e) => e.severity === 'CRITICAL').length,
+				high: escalations.filter((e) => e.severity === 'HIGH').length,
+				medium: escalations.filter((e) => e.severity === 'MEDIUM').length,
+				low: escalations.filter((e) => e.severity === 'LOW').length,
+				total: escalations.length
+			},
+			dataSource: 'demo' as const
+		};
+	}
+
 	try {
 		// Run bd list to get escalations using async ProcessSupervisor
 		const supervisor = getProcessSupervisor();
+		const bdCwd = getBdCwd();
 		const result = await supervisor.bd<BeadsIssue[]>(
 			['list', '--status=open', '--label', 'escalation', '--json'],
 			{
 				timeout: 10000,
-				cwd: '/Users/amrit/Documents/Projects/Rust/mouchak/gastown_exp'
+				cwd: bdCwd
 			}
 		);
 
@@ -184,7 +247,8 @@ export const load: PageServerLoad = async () => {
 				medium: escalations.filter((e) => e.severity === 'MEDIUM').length,
 				low: escalations.filter((e) => e.severity === 'LOW').length,
 				total: escalations.length
-			}
+			},
+			dataSource: 'live' as const
 		};
 	} catch (err) {
 		const errorMessage =
@@ -199,7 +263,8 @@ export const load: PageServerLoad = async () => {
 				medium: 0,
 				low: 0,
 				total: 0
-			}
+			},
+			dataSource: 'live' as const
 		};
 	}
 };
