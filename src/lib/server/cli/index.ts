@@ -9,13 +9,33 @@
  */
 
 export * from './contracts';
+export * from './parse';
 export * from './process-supervisor';
 export * from './concurrency-limiter';
 export * from './circuit-breaker';
 export * from './capabilities';
 export * from './validation';
 
-// Effect.ts CLI Layer
-export * from './effect-errors';
-export * from './effect-circuit-breaker';
+// Effect.ts CLI Layer - explicit exports to avoid conflicts
+export {
+	CLIError,
+	ParseError as EffectParseError,
+	TimeoutError as EffectTimeoutError,
+	CircuitOpenError,
+	SchemaError,
+	SpawnError,
+	type EffectCLIError,
+	isEffectCLIError,
+	generateRequestId
+} from './effect-errors';
+
+export {
+	// CircuitState already exported from circuit-breaker.ts
+	type CircuitBreakerConfig,
+	DEFAULT_CIRCUIT_CONFIG,
+	type EffectCircuitBreaker,
+	makeCircuitBreaker,
+	createCircuitBreakerSync
+} from './effect-circuit-breaker';
+
 export * from './effect-cli';
