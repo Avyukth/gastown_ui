@@ -4,33 +4,9 @@
  * Tests that all /api/gastown/* routes require authentication.
  * TDD RED phase: tests for route guard behavior.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { Cookies, RequestEvent } from '@sveltejs/kit';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { Cookies } from '@sveltejs/kit';
 import { createAccessToken, type UserPayload } from '$lib/server/auth';
-
-// Mock the CLI to prevent actual calls
-vi.mock('$lib/server/cli', () => ({
-	getProcessSupervisor: vi.fn(() => ({
-		gt: vi.fn().mockResolvedValue({
-			success: true,
-			data: {},
-			error: null,
-			exitCode: 0,
-			duration: 10,
-			command: 'mock'
-		}),
-		bd: vi.fn().mockResolvedValue({
-			success: true,
-			data: [],
-			error: null,
-			exitCode: 0,
-			duration: 10,
-			command: 'mock'
-		})
-	}))
-}));
-
-// Import after mocking
 import { load } from '../+layout.server';
 
 // =============================================================================
@@ -85,10 +61,6 @@ function createMockEvent(cookies: Cookies): Parameters<typeof load>[0] {
 describe('API Auth Guard (/api/gastown/+layout.server.ts)', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-	});
-
-	afterEach(() => {
-		vi.resetAllMocks();
 	});
 
 	describe('Authentication Required', () => {
