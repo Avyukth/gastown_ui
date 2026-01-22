@@ -69,7 +69,7 @@ describe('API Auth Guard (/api/gastown/+layout.server.ts)', () => {
 			const cookies = createMockCookies({ access: accessToken });
 			const event = createMockEvent(cookies);
 
-			const result = await load(event);
+			const result = await load(event) as { user: UserPayload };
 
 			expect(result).toBeDefined();
 			expect(result.user).toBeDefined();
@@ -115,7 +115,7 @@ describe('API Auth Guard (/api/gastown/+layout.server.ts)', () => {
 			const cookies = createMockCookies({ access: accessToken });
 			const event = createMockEvent(cookies);
 
-			const result = await load(event);
+			const result = await load(event) as { user: UserPayload };
 
 			expect(result.user.id).toBe(TEST_USER.id);
 		});
@@ -125,7 +125,7 @@ describe('API Auth Guard (/api/gastown/+layout.server.ts)', () => {
 			const cookies = createMockCookies({ access: accessToken });
 			const event = createMockEvent(cookies);
 
-			const result = await load(event);
+			const result = await load(event) as { user: UserPayload };
 
 			expect(result.user.email).toBe(TEST_USER.email);
 		});
@@ -135,7 +135,7 @@ describe('API Auth Guard (/api/gastown/+layout.server.ts)', () => {
 			const cookies = createMockCookies({ access: accessToken });
 			const event = createMockEvent(cookies);
 
-			const result = await load(event);
+			const result = await load(event) as { user: UserPayload };
 
 			expect(result.user.roles).toEqual(TEST_USER.roles);
 		});
