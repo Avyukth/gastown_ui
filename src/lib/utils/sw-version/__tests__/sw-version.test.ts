@@ -276,14 +276,24 @@ describe('checkForUpdate', () => {
 		expect(result).toBe('critical-update');
 	});
 
-	it('returns update-available when critical version is below cached', () => {
+	it('returns update-available when critical version is below cached (minor update)', () => {
+		const config: SWVersionConfig = {
+			currentVersion: '1.8.0',
+			criticalVersions: ['1.0.0']
+		};
+
+		const result = checkForUpdate('1.5.0', config);
+		expect(result).toBe('update-available');
+	});
+
+	it('returns major-update when critical version is below cached but major version changed', () => {
 		const config: SWVersionConfig = {
 			currentVersion: '2.0.0',
 			criticalVersions: ['1.0.0']
 		};
 
 		const result = checkForUpdate('1.5.0', config);
-		expect(result).toBe('update-available');
+		expect(result).toBe('major-update');
 	});
 
 	it('returns up-to-date when cached version is ahead of current', () => {
