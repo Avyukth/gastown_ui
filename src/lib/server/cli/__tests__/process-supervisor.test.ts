@@ -536,4 +536,128 @@ describe('ProcessSupervisor', () => {
 			logger.success('cwd option handled');
 		});
 	});
+
+	describe('Process Tracking and Cleanup', () => {
+		it('tracks active processes count', async () => {
+			stepCount++;
+			logger.step('Verify active processes are tracked');
+
+			const trackingStats = supervisor.getProcessStats();
+			logger.info('Initial stats', trackingStats);
+
+			expect(trackingStats.activeProcesses).toBe(0);
+			expect(trackingStats.totalSpawned).toBe(0);
+
+			await supervisor.execute({
+				command: 'gt',
+				args: ['--version']
+			});
+
+			const statsAfter = supervisor.getProcessStats();
+			logger.info('Stats after execution', statsAfter);
+
+			expect(statsAfter.totalSpawned).toBeGreaterThan(0);
+			expect(statsAfter.activeProcesses).toBe(0);
+			logger.success('Process tracking works');
+		});
+
+		it('destroy() kills all active processes', async () => {
+			stepCount++;
+			logger.step('Verify destroy kills all processes');
+
+			const destroySupervisor = new ProcessSupervisor({
+				defaultTimeout: 30000,
+				maxConcurrency: 4,
+				circuitBreakerThreshold: 5,
+				circuitBreakerResetTime: 1000
+			});
+
+			const promise = destroySupervisor.execute({
+				command: 'sleep',
+				args: ['10']
+			});
+
+			await new Promise((r) => setTimeout(r, 50));
+
+			const statsBefore = destroySupervisor.getProcessStats();
+			logger.info('Stats before destroy', statsBefore);
+			expect(statsBefore.activeProcesses).toBe(1);
+
+			destroySupervisor.destroy();
+
+			const statsAfter = destroySupervisor.getProcessStats();
+			logger.info('Stats after destroy', statsAfter);
+			expect(statsAfter.activeProcesses).toBe(0);
+
+			const result = await promise;
+			expect(result.success).toBe(false);
+			expect(result.error).toContain('killed');
+			logger.success('destroy() kills all processes');
+		});
+
+		it('cleans up process on timeout', async () => {
+			stepCount++;
+			logger.step('Verify process cleanup on timeout');
+
+			const timeoutSupervisor = new ProcessSupervisor({
+				defaultTimeout: 100,
+				maxConcurrency: 4,
+				circuitBreakerThreshold: 10,
+				circuitBreakerResetTime: 1000
+			});
+
+			const result = await timeoutSupervisor.execute({
+				command: 'sleep',
+				args: ['5']
+			});
+
+			logger.info('Timeout result', {
+				success: result.success,
+				error: result.error
+			});
+
+			expect(result.success).toBe(false);
+
+			const stats = timeoutSupervisor.getProcessStats();
+			logger.info('Stats after timeout', stats);
+			expect(stats.activeProcesses).toBe(0);
+			logger.success('Process cleaned up on timeout');
+		});
+
+		it('isDestroyed returns correct state', () => {
+			stepCount++;
+			logger.step('Verify isDestroyed flag');
+
+			const tempSupervisor = new ProcessSupervisor();
+
+			expect(tempSupervisor.isDestroyed()).toBe(false);
+
+			tempSupervisor.destroy();
+
+			expect(tempSupervisor.isDestroyed()).toBe(true);
+			logger.success('isDestroyed flag works');
+		});
+
+		it('rejects new requests after destroy', async () => {
+			stepCount++;
+			logger.step('Verify requests rejected after destroy');
+
+			const tempSupervisor = new ProcessSupervisor();
+			tempSupervisor.destroy();
+
+			const result = await tempSupervisor.execute({
+				command: 'gt',
+				args: ['--version']
+			});
+
+			logger.info('Result after destroy', {
+				success: result.success,
+				error: result.error
+			});
+
+			expect(result.success).toBe(false);
+			expect(result.error).toContain('destroyed');
+			logger.success('Requests rejected after destroy');
+		});
+	});
 });
