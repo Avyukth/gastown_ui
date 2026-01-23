@@ -8,9 +8,10 @@
  * - Concurrency limiting
  * - Circuit breaker for failure protection
  * - Request deduplication
+ * - Process tracking with cleanup on destroy
  */
 
-import { execFile } from 'node:child_process';
+import { execFile, type ChildProcess } from 'node:child_process';
 import type { CLIResult, CLICommandConfig, ProcessSupervisorConfig } from './contracts';
 import { DEFAULT_CONFIG } from './contracts';
 import { ConcurrencyLimiter } from './concurrency-limiter';
@@ -20,6 +21,9 @@ export class ProcessSupervisor {
 	private readonly config: ProcessSupervisorConfig;
 	private readonly limiter: ConcurrencyLimiter;
 	private readonly circuitBreaker: CircuitBreaker;
+	private readonly activeProcesses: Map<string, ChildProcess> = new Map();
+	private totalSpawned = 0;
+	private destroyed = false;
 
 	constructor(config: Partial<ProcessSupervisorConfig> = {}) {
 		this.config = { ...DEFAULT_CONFIG, ...config };
@@ -31,6 +35,17 @@ export class ProcessSupervisor {
 	}
 
 	async execute<T = unknown>(commandConfig: CLICommandConfig): Promise<CLIResult<T>> {
+		if (this.destroyed) {
+			return {
+				success: false,
+				data: null,
+				error: 'Process supervisor has been destroyed',
+				exitCode: -1,
+				duration: 0,
+				command: this.formatCommand(commandConfig)
+			};
+		}
+
 		if (!this.circuitBreaker.canExecute()) {
 			return {
 				success: false,
@@ -52,6 +67,9 @@ export class ProcessSupervisor {
 			const startTime = Date.now();
 			const timeout = config.timeout ?? this.config.defaultTimeout;
 			const command = this.formatCommand(config);
+			const processId = crypto.randomUUID();
+
+			this.totalSpawned++;
 
 			const child = execFile(
 				config.command,
@@ -63,15 +81,19 @@ export class ProcessSupervisor {
 					env: process.env
 				},
 				(error, stdout, stderr) => {
+					this.activeProcesses.delete(processId);
 					const duration = Date.now() - startTime;
 
 					if (error) {
 						this.circuitBreaker.recordFailure();
 
 						const isTimeout = error.killed || error.message.includes('ETIMEDOUT');
-						const errorMessage = isTimeout
-							? `Command timed out after ${timeout}ms`
-							: stderr || error.message;
+						const wasKilled = error.killed;
+						const errorMessage = wasKilled
+							? 'Process was killed'
+							: isTimeout
+								? `Command timed out after ${timeout}ms`
+								: stderr || error.message;
 
 						resolve({
 							success: false,
@@ -104,7 +126,10 @@ export class ProcessSupervisor {
 				}
 			);
 
+			this.activeProcesses.set(processId, child);
+
 			child.on('error', (err) => {
+				this.activeProcesses.delete(processId);
 				this.circuitBreaker.recordFailure();
 				resolve({
 					success: false,
@@ -150,6 +175,26 @@ export class ProcessSupervisor {
 
 	resetCircuitBreaker(): void {
 		this.circuitBreaker.reset();
+	}
+
+	getProcessStats(): { activeProcesses: number; totalSpawned: number } {
+		return {
+			activeProcesses: this.activeProcesses.size,
+			totalSpawned: this.totalSpawned
+		};
+	}
+
+	destroy(): void {
+		this.destroyed = true;
+		for (const [id, process] of this.activeProcesses) {
+			process.kill('SIGKILL');
+			this.activeProcesses.delete(id);
+		}
+		this.limiter.clear();
+	}
+
+	isDestroyed(): boolean {
+		return this.destroyed;
 	}
 }
 
