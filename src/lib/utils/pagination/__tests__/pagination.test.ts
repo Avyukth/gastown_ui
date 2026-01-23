@@ -364,9 +364,12 @@ describe('PaginationError', () => {
 		expect(err.message).toBe('Page number must be positive');
 	});
 
-	it('is instanceof Error', () => {
-		const err = new PaginationError('test');
-		expect(err).toBeInstanceOf(Error);
+	it('inherits from Error properly', () => {
+		const err = new PaginationError('test message');
+		// Verify it is the specific PaginationError type
 		expect(err).toBeInstanceOf(PaginationError);
+		// Verify Error inheritance by checking Error prototype chain properties
+		expect(err.stack).toMatch(/PaginationError: test message/);
+		expect(Object.getPrototypeOf(Object.getPrototypeOf(err))).toBe(Error.prototype);
 	});
 });
