@@ -54,11 +54,15 @@ describe('Vim Module Split', () => {
 	});
 
 	describe('Bindings module (vim/bindings.ts)', () => {
-		it('exports VimShortcut type (module loads)', async () => {
+		it('exports expected binding arrays and types', async () => {
 			// TypeScript will verify the type export at compile time
-			// Runtime check that the module loads
+			// Runtime check that the module exports the expected binding arrays
 			const bindings = await import('../bindings');
-			expect(bindings).toBeDefined();
+			expect(Object.keys(bindings).sort()).toEqual([
+				'DEFAULT_ACTION_BINDINGS',
+				'DEFAULT_LIST_BINDINGS',
+				'DEFAULT_NAVIGATION_BINDINGS'
+			]);
 		});
 
 		it('exports DEFAULT_NAVIGATION_BINDINGS', async () => {
