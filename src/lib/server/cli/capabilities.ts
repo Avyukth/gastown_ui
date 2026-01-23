@@ -6,14 +6,34 @@
  * - CLI version (gt --version, bd --version)
  * - Available features based on version
  * - CLI availability
+ * - Version compatibility with minimum requirements
  */
 
 import type { CapabilitiesResult } from './contracts';
 import { getProcessSupervisor } from './process-supervisor';
 
+export const MIN_GT_VERSION = '0.3.0';
+export const MIN_BD_VERSION = '0.47.0';
+
 let cachedCapabilities: CapabilitiesResult | null = null;
 let cacheTime = 0;
 const CACHE_TTL = 60_000;
+
+export interface VersionCompatibility {
+	compatible: boolean;
+	gtCompatible: boolean;
+	bdCompatible: boolean;
+}
+
+export interface InstallOptions {
+	gtMissing: boolean;
+	bdMissing: boolean;
+}
+
+export interface UpgradeOptions {
+	gtOutdated: boolean;
+	bdOutdated: boolean;
+}
 
 export async function probeCapabilities(forceRefresh = false): Promise<CapabilitiesResult> {
 	const now = Date.now();
@@ -77,4 +97,46 @@ function compareVersions(a: string, b: string): number {
 export function clearCapabilitiesCache(): void {
 	cachedCapabilities = null;
 	cacheTime = 0;
+}
+
+export function checkVersionCompatibility(
+	gtVersion: string | null,
+	bdVersion: string | null
+): VersionCompatibility {
+	const gtCompatible = gtVersion !== null && compareVersions(gtVersion, MIN_GT_VERSION) >= 0;
+	const bdCompatible = bdVersion !== null && compareVersions(bdVersion, MIN_BD_VERSION) >= 0;
+
+	return {
+		compatible: gtCompatible && bdCompatible,
+		gtCompatible,
+		bdCompatible
+	};
+}
+
+export function getInstallInstructions(options: InstallOptions): string {
+	const instructions: string[] = [];
+
+	if (options.gtMissing) {
+		instructions.push(`Install gt: cargo install gastown`);
+	}
+
+	if (options.bdMissing) {
+		instructions.push(`Install bd: cargo install beads`);
+	}
+
+	return instructions.join('\n');
+}
+
+export function getUpgradeInstructions(options: UpgradeOptions): string {
+	const instructions: string[] = [];
+
+	if (options.gtOutdated) {
+		instructions.push(`Upgrade gt to ${MIN_GT_VERSION}+: cargo install gastown --force`);
+	}
+
+	if (options.bdOutdated) {
+		instructions.push(`Upgrade bd to ${MIN_BD_VERSION}+: cargo install beads --force`);
+	}
+
+	return instructions.join('\n');
 }

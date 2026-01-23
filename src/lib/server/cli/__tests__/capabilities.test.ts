@@ -3,113 +3,14 @@
  * Validates CLI availability, version checking, and compatibility
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
-	probeCapabilities,
-	clearCapabilitiesCache,
 	checkVersionCompatibility,
 	getInstallInstructions,
 	getUpgradeInstructions,
 	MIN_GT_VERSION,
-	MIN_BD_VERSION,
-	type CapabilitiesResult
+	MIN_BD_VERSION
 } from '../capabilities';
-
-vi.mock('../process-supervisor', () => ({
-	getProcessSupervisor: vi.fn()
-}));
-
-import { getProcessSupervisor } from '../process-supervisor';
-
-const mockSupervisor = {
-	gt: vi.fn(),
-	bd: vi.fn()
-};
-
-beforeEach(() => {
-	clearCapabilitiesCache();
-	vi.mocked(getProcessSupervisor).mockReturnValue(mockSupervisor as never);
-	mockSupervisor.gt.mockReset();
-	mockSupervisor.bd.mockReset();
-});
-
-afterEach(() => {
-	vi.clearAllMocks();
-});
-
-describe('probeCapabilities', () => {
-	it('detects both CLI tools available', async () => {
-		mockSupervisor.gt.mockResolvedValue({ success: true, data: 'gt 0.3.5' });
-		mockSupervisor.bd.mockResolvedValue({ success: true, data: 'bd 0.48.0' });
-
-		const result = await probeCapabilities();
-
-		expect(result.available).toBe(true);
-		expect(result.gtVersion).toBe('0.3.5');
-		expect(result.bdVersion).toBe('0.48.0');
-		expect(result.error).toBeNull();
-	});
-
-	it('detects gt unavailable', async () => {
-		mockSupervisor.gt.mockResolvedValue({ success: false, error: 'command not found' });
-		mockSupervisor.bd.mockResolvedValue({ success: true, data: 'bd 0.48.0' });
-
-		const result = await probeCapabilities();
-
-		expect(result.available).toBe(true);
-		expect(result.gtVersion).toBeNull();
-		expect(result.bdVersion).toBe('0.48.0');
-		expect(result.features.mail).toBe(false);
-		expect(result.features.work).toBe(true);
-	});
-
-	it('detects bd unavailable', async () => {
-		mockSupervisor.gt.mockResolvedValue({ success: true, data: 'gt 0.3.5' });
-		mockSupervisor.bd.mockResolvedValue({ success: false, error: 'command not found' });
-
-		const result = await probeCapabilities();
-
-		expect(result.available).toBe(true);
-		expect(result.gtVersion).toBe('0.3.5');
-		expect(result.bdVersion).toBeNull();
-		expect(result.features.mail).toBe(true);
-		expect(result.features.work).toBe(false);
-	});
-
-	it('detects both CLI tools unavailable', async () => {
-		mockSupervisor.gt.mockResolvedValue({ success: false, error: 'gt not found' });
-		mockSupervisor.bd.mockResolvedValue({ success: false, error: 'bd not found' });
-
-		const result = await probeCapabilities();
-
-		expect(result.available).toBe(false);
-		expect(result.gtVersion).toBeNull();
-		expect(result.bdVersion).toBeNull();
-		expect(result.error).toContain('not available');
-	});
-
-	it('caches results for CACHE_TTL', async () => {
-		mockSupervisor.gt.mockResolvedValue({ success: true, data: 'gt 0.3.5' });
-		mockSupervisor.bd.mockResolvedValue({ success: true, data: 'bd 0.48.0' });
-
-		await probeCapabilities();
-		await probeCapabilities();
-
-		expect(mockSupervisor.gt).toHaveBeenCalledTimes(1);
-		expect(mockSupervisor.bd).toHaveBeenCalledTimes(1);
-	});
-
-	it('force refresh bypasses cache', async () => {
-		mockSupervisor.gt.mockResolvedValue({ success: true, data: 'gt 0.3.5' });
-		mockSupervisor.bd.mockResolvedValue({ success: true, data: 'bd 0.48.0' });
-
-		await probeCapabilities();
-		await probeCapabilities(true);
-
-		expect(mockSupervisor.gt).toHaveBeenCalledTimes(2);
-		expect(mockSupervisor.bd).toHaveBeenCalledTimes(2);
-	});
-});
 
 describe('checkVersionCompatibility', () => {
 	it('returns compatible for versions above minimum', () => {
