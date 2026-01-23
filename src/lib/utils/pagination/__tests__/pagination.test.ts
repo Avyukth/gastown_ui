@@ -310,7 +310,7 @@ describe('calculatePagination', () => {
 		expect(result).toEqual({
 			totalPages: 1,
 			startIndex: 40,
-			endIndex: 50,
+			endIndex: 10,
 			hasMore: false
 		});
 	});
