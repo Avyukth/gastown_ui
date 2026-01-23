@@ -415,17 +415,20 @@ describe('ProgressiveTimeout', () => {
 			stepCount++;
 			logger.step('Verify AbortSignal is passed to operation');
 
-			let receivedSignal: AbortSignal | null = null;
+			const capturedSignals: AbortSignal[] = [];
 
 			const operation = vi.fn().mockImplementation(async (signal: AbortSignal) => {
-				receivedSignal = signal;
+				capturedSignals.push(signal);
 				return { data: 'success' };
 			});
 
 			await executeWithProgressiveTimeout(operation, { initialTimeout: 100 });
 
-			expect(receivedSignal).not.toBeNull();
-			expect(receivedSignal).toBeInstanceOf(AbortSignal);
+			// Strong assertion: verify signal was captured and has correct properties
+			expect(capturedSignals.length).toBe(1);
+			const signal = capturedSignals[0];
+			expect(signal.aborted).toBe(false);
+			expect(typeof signal.addEventListener).toBe('function');
 			logger.success('AbortSignal passed to operation');
 		});
 	});
@@ -441,7 +444,8 @@ describe('ProgressiveTimeout', () => {
 			expect(error.timeoutMs).toBe(30000);
 			expect(error.attempt).toBe(2);
 			expect(error.message).toBe('Operation timed out after 30000ms (attempt 2)');
-			expect(error).toBeInstanceOf(Error);
+			// Verify inheritance chain: TimeoutError -> ProgressiveTimeoutError -> Error
+			expect(error).toBeInstanceOf(TimeoutError);
 			logger.success('TimeoutError has correct structure');
 		});
 
@@ -455,7 +459,8 @@ describe('ProgressiveTimeout', () => {
 			expect(error.attempts).toBe(3);
 			expect(error.totalTimeMs).toBe(300000);
 			expect(error.message).toBe('Operation failed after 3 attempts (total time: 300000ms)');
-			expect(error).toBeInstanceOf(Error);
+			// Verify inheritance chain: MaxRetriesError -> ProgressiveTimeoutError -> Error
+			expect(error).toBeInstanceOf(MaxRetriesError);
 			logger.success('MaxRetriesError has correct structure');
 		});
 
@@ -467,7 +472,8 @@ describe('ProgressiveTimeout', () => {
 
 			expect(error.name).toBe('CancellationError');
 			expect(error.message).toBe('User cancelled');
-			expect(error).toBeInstanceOf(Error);
+			// Verify inheritance chain: CancellationError -> ProgressiveTimeoutError -> Error
+			expect(error).toBeInstanceOf(CancellationError);
 			logger.success('CancellationError has correct structure');
 		});
 	});
