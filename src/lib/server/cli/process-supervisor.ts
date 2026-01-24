@@ -17,6 +17,33 @@ import { DEFAULT_CONFIG } from './contracts';
 import { ConcurrencyLimiter } from './concurrency-limiter';
 import { CircuitBreaker } from './circuit-breaker';
 
+/**
+ * Build the PATH environment variable that includes gt and bd CLI locations.
+ * Prepends common install locations to ensure CLIs are found.
+ */
+function getEnvWithPath(): NodeJS.ProcessEnv {
+	const homedir = process.env.HOME || '';
+	const additionalPaths = [
+		`${homedir}/.local/bin`, // bd default install location
+		`${homedir}/go/bin` // gt default install location (go install)
+	];
+	const currentPath = process.env.PATH || '';
+	const newPath = [...additionalPaths, currentPath].join(':');
+
+	return {
+		...process.env,
+		PATH: newPath
+	};
+}
+
+/**
+ * Get the town directory from GT_TOWN environment variable.
+ * This is required for bd and gt commands to operate on the correct town.
+ */
+function getTownCwd(): string | undefined {
+	return process.env.GT_TOWN || undefined;
+}
+
 export class ProcessSupervisor {
 	private readonly config: ProcessSupervisorConfig;
 	private readonly limiter: ConcurrencyLimiter;
@@ -77,8 +104,8 @@ export class ProcessSupervisor {
 				{
 					timeout,
 					maxBuffer: 10 * 1024 * 1024,
-					cwd: config.cwd,
-					env: process.env
+					cwd: config.cwd || getTownCwd(),
+					env: getEnvWithPath()
 				},
 				(error, stdout, stderr) => {
 					this.activeProcesses.delete(processId);

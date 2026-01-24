@@ -93,6 +93,14 @@ export const GET: RequestHandler = async ({ url }) => {
 	const requestId = randomUUID();
 	const now = Date.now();
 	const forceRefresh = url.searchParams.get('refresh') === 'true';
+	const resetCircuit = url.searchParams.get('reset-circuit') === 'true';
+
+	// Reset circuit breaker if requested
+	if (resetCircuit) {
+		const supervisor = getProcessSupervisor();
+		supervisor.resetCircuitBreaker();
+		return json({ message: 'Circuit breaker reset', requestId });
+	}
 
 	if (!forceRefresh && cachedResponse && now - cacheTimestamp < CACHE_TTL_MS) {
 		return json({ ...cachedResponse, requestId });
