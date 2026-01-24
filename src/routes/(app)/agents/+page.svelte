@@ -192,7 +192,7 @@
 							>
 								<AgentCard
 									name={agent.name}
-									role={agent.role as any}
+									role={agent.role}
 									task={agent.task}
 									status={agent.status}
 									progress={agent.progress}
@@ -224,7 +224,7 @@
 						<a href="/agents/{agent.id}" class="hidden md:block transition-transform hover:scale-[1.02]">
 							<AgentCard
 								name={agent.name}
-								role={agent.role as any}
+								role={agent.role}
 								task={agent.task}
 								status={agent.status}
 								progress={agent.progress}

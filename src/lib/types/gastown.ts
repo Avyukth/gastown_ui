@@ -78,6 +78,27 @@ export type GtAgentStatus = 'active' | 'busy' | 'parked' | 'stuck' | 'orphaned';
 /** Agent health levels */
 export type GtAgentHealth = 'healthy' | 'warning' | 'critical';
 
+/**
+ * Agent role type for UI styling (color-coded borders, icons)
+ * Maps to gastown agent roles from `gt status --json`
+ */
+export type AgentRole = 'coordinator' | 'health-check' | 'witness' | 'refinery' | 'crew';
+
+/**
+ * Type guard to check if a string is a valid AgentRole
+ */
+export function isAgentRole(role: string | undefined): role is AgentRole {
+	if (!role) return false;
+	return ['coordinator', 'health-check', 'witness', 'refinery', 'crew'].includes(role);
+}
+
+/**
+ * Safely convert a string to AgentRole, returns undefined for invalid values
+ */
+export function toAgentRole(role: string | undefined): AgentRole | undefined {
+	return isAgentRole(role) ? role : undefined;
+}
+
 /** Agent summary in status response */
 export interface GtAgentSummary {
 	name: string;

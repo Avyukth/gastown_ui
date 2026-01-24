@@ -332,7 +332,7 @@
 	// Sync with server data
 	$effect(() => {
 		const normalized = (data.issues || [])
-			.map((issue: RawIssue) => normalizeIssue(issue))
+			.map((issue) => normalizeIssue(issue as RawIssue))
 			.filter((issue): issue is LocalIssue => Boolean(issue));
 		localIssues = normalized;
 	});

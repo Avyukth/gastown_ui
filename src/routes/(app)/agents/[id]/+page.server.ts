@@ -2,6 +2,7 @@ import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
+import { type AgentRole, toAgentRole } from '$lib/types/gastown';
 
 const execAsync = promisify(exec);
 
@@ -14,7 +15,7 @@ interface Agent {
 	status: AgentStatus;
 	progress: number;
 	meta: string;
-	role?: string;
+	role?: AgentRole;
 	uptime?: string;
 	uptimePercent?: number;
 	efficiency?: number;
@@ -107,7 +108,7 @@ function transformAgent(agent: GtAgent, hook?: GtHook): Agent {
 		status,
 		progress: agent.has_work ? 50 : 0,
 		meta: agent.address || agent.name,
-		role: agent.role as any, // Map to role type for styling
+		role: toAgentRole(agent.role),
 		uptime,
 		uptimePercent: percent,
 		efficiency: agent.has_work ? Math.floor(85 + Math.random() * 15) : Math.floor(70 + Math.random() * 20),
