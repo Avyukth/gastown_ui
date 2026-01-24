@@ -10,12 +10,14 @@
 
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getRefreshToken, setAuthCookies, clearAuthCookies } from '$lib/auth/cookies';
-import type { AuthResponse } from '$lib/auth/types';
 import {
+	getRefreshToken,
+	setAuthCookies,
+	clearAuthCookies,
 	refreshTokens,
 	ACCESS_TOKEN_EXPIRY_SECONDS,
-	REFRESH_TOKEN_EXPIRY_SECONDS
+	REFRESH_TOKEN_EXPIRY_SECONDS,
+	type AuthResponse
 } from '$lib/server/auth';
 
 export const POST: RequestHandler = async ({ cookies }) => {

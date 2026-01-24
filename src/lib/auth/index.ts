@@ -1,38 +1,32 @@
 /**
- * Secure Authentication Module
+ * Authentication Module (Backwards Compatibility)
  *
- * Provides secure authentication with:
- * - HttpOnly cookies for token storage
- * - Secure flag in production
- * - SameSite=strict for CSRF protection
- * - Automatic token refresh before expiration
- * - Complete logout clearing all tokens
+ * This module provides backwards compatibility for existing imports.
+ *
+ * RECOMMENDED: Use the new split modules:
+ * - Client code: import from '$lib/client/auth'
+ * - Server code: import from '$lib/server/auth'
+ *
+ * This module re-exports client-safe code from $lib/client/auth.
+ * For server-side cookie/CSRF functions, import from $lib/server/auth.
  */
 
-// Types
-export type {
-	User,
-	AuthState,
-	LoginCredentials,
-	SessionData,
-	AuthResponse
-} from './types';
-
-// Cookie utilities (server-side)
+// Re-export everything from the client module for backwards compatibility
 export {
+	// Types
+	type User,
+	type AuthState,
+	type LoginCredentials,
+	type SessionData,
+	type AuthResponse,
+
+	// Constants
 	AUTH_COOKIES,
-	setAccessToken,
-	setRefreshToken,
-	setAuthState,
-	getAccessToken,
-	getRefreshToken,
-	clearAuthCookies,
-	setAuthCookies,
-	parseAuthStateCookie
-} from './cookies';
+	CSRF_COOKIES,
+	CSRF_HEADER,
+	parseAuthStateCookie,
 
-// Auth store (client-side)
-export {
+	// Store functions
 	getAuthState,
 	isAuthenticated,
 	getUser,
@@ -43,10 +37,24 @@ export {
 	forceRefresh,
 	getAuthHealth,
 	createAuthStore
-} from './store.svelte';
+} from '$lib/client/auth';
 
-// CSRF constants (safe for client-side import)
-export { CSRF_COOKIES, CSRF_HEADER } from './csrf.constants';
-
-// Note: Server-only CSRF functions (generateCsrfToken, validateCsrfToken, etc.)
-// should be imported directly from '$lib/auth/csrf.server' in server-side code
+// NOTE: Server-only functions are NOT exported here to prevent bundle leakage.
+// For server-side auth operations, import from '$lib/server/auth':
+//
+// import {
+//   setAccessToken,
+//   setRefreshToken,
+//   setAuthState,
+//   getAccessToken,
+//   getRefreshToken,
+//   clearAuthCookies,
+//   setAuthCookies,
+//   generateCsrfToken,
+//   setCsrfToken,
+//   getCsrfToken,
+//   clearCsrfTokens,
+//   ensureCsrfToken,
+//   validateCsrfToken,
+//   checkCsrfProtection
+// } from '$lib/server/auth';

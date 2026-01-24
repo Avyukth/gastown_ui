@@ -7,7 +7,7 @@
 
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import type { AuthResponse } from '$lib/auth/types';
+import type { AuthResponse } from '$lib/server/auth';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const { session } = locals;

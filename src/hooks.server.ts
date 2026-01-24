@@ -10,9 +10,14 @@
  */
 
 import { json, type Handle } from '@sveltejs/kit';
-import { getAccessToken, getRefreshToken } from '$lib/auth/cookies';
-import { ensureCsrfToken, checkCsrfProtection, CSRF_HEADER } from '$lib/auth/csrf.server';
-import type { SessionData } from '$lib/auth/types';
+import {
+	getAccessToken,
+	getRefreshToken,
+	ensureCsrfToken,
+	checkCsrfProtection,
+	CSRF_HEADER,
+	type SessionData
+} from '$lib/server/auth';
 import { checkRateLimit, getClientId } from '$lib/server/rate-limit';
 
 // Extend App.Locals with session data

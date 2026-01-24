@@ -7,9 +7,7 @@
 
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { clearAuthCookies } from '$lib/auth/cookies';
-import { clearCsrfTokens } from '$lib/auth/csrf.server';
-import type { AuthResponse } from '$lib/auth/types';
+import { clearAuthCookies, clearCsrfTokens, type AuthResponse } from '$lib/server/auth';
 
 export const POST: RequestHandler = async ({ cookies }) => {
 	// Clear all auth cookies
