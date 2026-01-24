@@ -6,188 +6,164 @@
  *
  * NOTE: In Svelte 5, components are exported as functions (component constructors).
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+
+// Pre-load the module once to avoid timeout on first test
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let layoutModule: typeof import('./index');
+
+beforeAll(async () => {
+	layoutModule = await import('./index');
+}, 30000); // 30 second timeout for initial module load
 
 describe('Layout Components Module Exports', () => {
 	describe('Navigation components', () => {
-		it('exports BottomNav component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.BottomNav).toBe('function');
+		it('exports BottomNav component as a function', () => {
+			expect(typeof layoutModule.BottomNav).toBe('function');
 		});
 
-		it('exports Sidebar component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.Sidebar).toBe('function');
+		it('exports Sidebar component as a function', () => {
+			expect(typeof layoutModule.Sidebar).toBe('function');
 		});
 
-		it('exports SheetNav component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.SheetNav).toBe('function');
+		it('exports SheetNav component as a function', () => {
+			expect(typeof layoutModule.SheetNav).toBe('function');
 		});
 
-		it('exports NavigationLoader component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.NavigationLoader).toBe('function');
+		it('exports NavigationLoader component as a function', () => {
+			expect(typeof layoutModule.NavigationLoader).toBe('function');
 		});
 	});
 
 	describe('Page structure components', () => {
-		it('exports PageHeader component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.PageHeader).toBe('function');
+		it('exports PageHeader component as a function', () => {
+			expect(typeof layoutModule.PageHeader).toBe('function');
 		});
 
-		it('exports pageHeaderVariants as callable function', async () => {
-			const { pageHeaderVariants } = await import('./index');
-			expect(typeof pageHeaderVariants).toBe('function');
+		it('exports pageHeaderVariants as callable function', () => {
+			expect(typeof layoutModule.pageHeaderVariants).toBe('function');
 		});
 
-		it('exports DashboardLayout component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.DashboardLayout).toBe('function');
+		it('exports DashboardLayout component as a function', () => {
+			expect(typeof layoutModule.DashboardLayout).toBe('function');
 		});
 
-		it('exports Dashboard component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.Dashboard).toBe('function');
+		it('exports Dashboard component as a function', () => {
+			expect(typeof layoutModule.Dashboard).toBe('function');
 		});
 
-		it('exports MobileDashboard component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.MobileDashboard).toBe('function');
+		it('exports MobileDashboard component as a function', () => {
+			expect(typeof layoutModule.MobileDashboard).toBe('function');
 		});
 	});
 
 	describe('Specialized layout components', () => {
-		it('exports LogsLayout component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.LogsLayout).toBe('function');
+		it('exports LogsLayout component as a function', () => {
+			expect(typeof layoutModule.LogsLayout).toBe('function');
 		});
 
-		it('exports QueueLayout component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.QueueLayout).toBe('function');
+		it('exports QueueLayout component as a function', () => {
+			expect(typeof layoutModule.QueueLayout).toBe('function');
 		});
 
-		it('exports WorkflowLayout component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.WorkflowLayout).toBe('function');
+		it('exports WorkflowLayout component as a function', () => {
+			expect(typeof layoutModule.WorkflowLayout).toBe('function');
 		});
 
-		it('exports SplitView component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.SplitView).toBe('function');
+		it('exports SplitView component as a function', () => {
+			expect(typeof layoutModule.SplitView).toBe('function');
 		});
 
-		it('exports AgentDetailLayout component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.AgentDetailLayout).toBe('function');
+		it('exports AgentDetailLayout component as a function', () => {
+			expect(typeof layoutModule.AgentDetailLayout).toBe('function');
 		});
 	});
 
 	describe('Accessibility components', () => {
-		it('exports SkipLink component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.SkipLink).toBe('function');
+		it('exports SkipLink component as a function', () => {
+			expect(typeof layoutModule.SkipLink).toBe('function');
 		});
 
-		it('exports Announcer component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.Announcer).toBe('function');
+		it('exports Announcer component as a function', () => {
+			expect(typeof layoutModule.Announcer).toBe('function');
 		});
 
-		it('exports LiveRegion component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.LiveRegion).toBe('function');
+		it('exports LiveRegion component as a function', () => {
+			expect(typeof layoutModule.LiveRegion).toBe('function');
 		});
 	});
 
 	describe('Status and indicator components', () => {
-		it('exports OperationCenter component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.OperationCenter).toBe('function');
+		it('exports OperationCenter component as a function', () => {
+			expect(typeof layoutModule.OperationCenter).toBe('function');
 		});
 
-		it('exports StatusCards component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.StatusCards).toBe('function');
+		it('exports StatusCards component as a function', () => {
+			expect(typeof layoutModule.StatusCards).toBe('function');
 		});
 
-		it('exports QuickActions component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.QuickActions).toBe('function');
+		it('exports QuickActions component as a function', () => {
+			expect(typeof layoutModule.QuickActions).toBe('function');
 		});
 
-		it('exports ActivityFeed component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.ActivityFeed).toBe('function');
+		it('exports ActivityFeed component as a function', () => {
+			expect(typeof layoutModule.ActivityFeed).toBe('function');
 		});
 	});
 
 	describe('Network status components', () => {
-		it('exports OfflineIndicator component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.OfflineIndicator).toBe('function');
+		it('exports OfflineIndicator component as a function', () => {
+			expect(typeof layoutModule.OfflineIndicator).toBe('function');
 		});
 
-		it('exports ConnectionLost component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.ConnectionLost).toBe('function');
+		it('exports ConnectionLost component as a function', () => {
+			expect(typeof layoutModule.ConnectionLost).toBe('function');
 		});
 
-		it('exports DegradedModeBanner component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.DegradedModeBanner).toBe('function');
+		it('exports DegradedModeBanner component as a function', () => {
+			expect(typeof layoutModule.DegradedModeBanner).toBe('function');
 		});
 	});
 
 	describe('PWA components', () => {
-		it('exports UpdatePrompt component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.UpdatePrompt).toBe('function');
+		it('exports UpdatePrompt component as a function', () => {
+			expect(typeof layoutModule.UpdatePrompt).toBe('function');
 		});
 	});
 
 	describe('Keyboard components', () => {
-		it('exports KeyboardHelpDialog component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.KeyboardHelpDialog).toBe('function');
+		it('exports KeyboardHelpDialog component as a function', () => {
+			expect(typeof layoutModule.KeyboardHelpDialog).toBe('function');
 		});
 
-		it('exports VimSequenceIndicator component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.VimSequenceIndicator).toBe('function');
+		it('exports VimSequenceIndicator component as a function', () => {
+			expect(typeof layoutModule.VimSequenceIndicator).toBe('function');
 		});
 	});
 
 	describe('Search components', () => {
-		it('exports GlobalSearch component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.GlobalSearch).toBe('function');
+		it('exports GlobalSearch component as a function', () => {
+			expect(typeof layoutModule.GlobalSearch).toBe('function');
 		});
 
-		it('exports CommandPalette component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.CommandPalette).toBe('function');
+		it('exports CommandPalette component as a function', () => {
+			expect(typeof layoutModule.CommandPalette).toBe('function');
 		});
 	});
 
 	describe('Log components', () => {
-		it('exports LogEntry component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.LogEntry).toBe('function');
+		it('exports LogEntry component as a function', () => {
+			expect(typeof layoutModule.LogEntry).toBe('function');
 		});
 
-		it('exports LogEntrySkeleton component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.LogEntrySkeleton).toBe('function');
+		it('exports LogEntrySkeleton component as a function', () => {
+			expect(typeof layoutModule.LogEntrySkeleton).toBe('function');
 		});
 	});
 
 	describe('Module Structure', () => {
-		it('exports all expected layout component keys', async () => {
-			const indexModule = await import('./index');
-			const exportKeys = Object.keys(indexModule);
+		it('exports all expected layout component keys', () => {
+			const exportKeys = Object.keys(layoutModule);
 
 			// Navigation
 			expect(exportKeys).toContain('BottomNav');

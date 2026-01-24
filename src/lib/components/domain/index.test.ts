@@ -6,82 +6,77 @@
  *
  * NOTE: In Svelte 5, components are exported as functions (component constructors).
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+
+// Pre-load the module once to avoid timeout on first test
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let domainModule: typeof import('./index');
+
+beforeAll(async () => {
+	domainModule = await import('./index');
+}, 30000); // 30 second timeout for initial module load
 
 describe('Domain Components Module Exports', () => {
 	describe('Work domain', () => {
-		it('exports WorkFilters component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.WorkFilters).toBe('function');
+		it('exports WorkFilters component as a function', () => {
+			expect(typeof domainModule.WorkFilters).toBe('function');
 		});
 
-		it('exports WorkList component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.WorkList).toBe('function');
+		it('exports WorkList component as a function', () => {
+			expect(typeof domainModule.WorkList).toBe('function');
 		});
 
-		it('exports WorkCreateForm component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.WorkCreateForm).toBe('function');
+		it('exports WorkCreateForm component as a function', () => {
+			expect(typeof domainModule.WorkCreateForm).toBe('function');
 		});
 
-		it('exports WorkSlingForm component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.WorkSlingForm).toBe('function');
+		it('exports WorkSlingForm component as a function', () => {
+			expect(typeof domainModule.WorkSlingForm).toBe('function');
 		});
 
-		it('exports WorkItemCard component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.WorkItemCard).toBe('function');
+		it('exports WorkItemCard component as a function', () => {
+			expect(typeof domainModule.WorkItemCard).toBe('function');
 		});
 
-		it('exports WorkItemDetail component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.WorkItemDetail).toBe('function');
+		it('exports WorkItemDetail component as a function', () => {
+			expect(typeof domainModule.WorkItemDetail).toBe('function');
 		});
 
-		it('exports workFiltersVariants as callable function with expected slots', async () => {
-			const { workFiltersVariants } = await import('./index');
-			expect(typeof workFiltersVariants).toBe('function');
-			const result = workFiltersVariants();
+		it('exports workFiltersVariants as callable function with expected slots', () => {
+			expect(typeof domainModule.workFiltersVariants).toBe('function');
+			const result = domainModule.workFiltersVariants();
 			expect(result).toHaveProperty('container');
 		});
 
-		it('exports workListVariants as callable function with expected slots', async () => {
-			const { workListVariants } = await import('./index');
-			expect(typeof workListVariants).toBe('function');
-			const result = workListVariants();
+		it('exports workListVariants as callable function with expected slots', () => {
+			expect(typeof domainModule.workListVariants).toBe('function');
+			const result = domainModule.workListVariants();
 			expect(result).toHaveProperty('container');
 		});
 
-		it('exports workCreateFormVariants as callable function with expected slots', async () => {
-			const { workCreateFormVariants } = await import('./index');
-			expect(typeof workCreateFormVariants).toBe('function');
-			const result = workCreateFormVariants();
+		it('exports workCreateFormVariants as callable function with expected slots', () => {
+			expect(typeof domainModule.workCreateFormVariants).toBe('function');
+			const result = domainModule.workCreateFormVariants();
 			expect(result).toHaveProperty('container');
 		});
 
-		it('exports workSlingFormVariants as callable function with expected slots', async () => {
-			const { workSlingFormVariants } = await import('./index');
-			expect(typeof workSlingFormVariants).toBe('function');
-			const result = workSlingFormVariants();
+		it('exports workSlingFormVariants as callable function with expected slots', () => {
+			expect(typeof domainModule.workSlingFormVariants).toBe('function');
+			const result = domainModule.workSlingFormVariants();
 			expect(result).toHaveProperty('container');
 		});
 
-		it('exports workItemCardVariants as callable function', async () => {
-			const { workItemCardVariants } = await import('./index');
-			expect(typeof workItemCardVariants).toBe('function');
+		it('exports workItemCardVariants as callable function', () => {
+			expect(typeof domainModule.workItemCardVariants).toBe('function');
 		});
 
-		it('exports workItemDetailVariants as callable function', async () => {
-			const { workItemDetailVariants } = await import('./index');
-			expect(typeof workItemDetailVariants).toBe('function');
+		it('exports workItemDetailVariants as callable function', () => {
+			expect(typeof domainModule.workItemDetailVariants).toBe('function');
 		});
 
-		it('exports issueSchema validation with safeParse method', async () => {
-			const { issueSchema } = await import('./index');
-			expect(typeof issueSchema.safeParse).toBe('function');
-			const validResult = issueSchema.safeParse({
+		it('exports issueSchema validation with safeParse method', () => {
+			expect(typeof domainModule.issueSchema.safeParse).toBe('function');
+			const validResult = domainModule.issueSchema.safeParse({
 				title: 'Test Issue',
 				type: 'task',
 				priority: 2
@@ -89,15 +84,13 @@ describe('Domain Components Module Exports', () => {
 			expect(validResult.success).toBe(true);
 		});
 
-		it('exports convoySchema validation with safeParse method', async () => {
-			const { convoySchema } = await import('./index');
-			expect(typeof convoySchema.safeParse).toBe('function');
+		it('exports convoySchema validation with safeParse method', () => {
+			expect(typeof domainModule.convoySchema.safeParse).toBe('function');
 		});
 
-		it('exports slingSchema validation with safeParse method', async () => {
-			const { slingSchema } = await import('./index');
-			expect(typeof slingSchema.safeParse).toBe('function');
-			const validResult = slingSchema.safeParse({
+		it('exports slingSchema validation with safeParse method', () => {
+			expect(typeof domainModule.slingSchema.safeParse).toBe('function');
+			const validResult = domainModule.slingSchema.safeParse({
 				issue: 'bd-123',
 				rig: 'gastownui'
 			});
@@ -106,55 +99,46 @@ describe('Domain Components Module Exports', () => {
 	});
 
 	describe('Agents domain', () => {
-		it('exports AgentCard component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.AgentCard).toBe('function');
+		it('exports AgentCard component as a function', () => {
+			expect(typeof domainModule.AgentCard).toBe('function');
 		});
 
-		it('exports AgentCardSkeleton component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.AgentCardSkeleton).toBe('function');
+		it('exports AgentCardSkeleton component as a function', () => {
+			expect(typeof domainModule.AgentCardSkeleton).toBe('function');
 		});
 	});
 
 	describe('Seance domain', () => {
-		it('exports SeanceControls component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.SeanceControls).toBe('function');
+		it('exports SeanceControls component as a function', () => {
+			expect(typeof domainModule.SeanceControls).toBe('function');
 		});
 
-		it('exports SeanceOutput component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.SeanceOutput).toBe('function');
+		it('exports SeanceOutput component as a function', () => {
+			expect(typeof domainModule.SeanceOutput).toBe('function');
 		});
 
-		it('exports SeanceHistory component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.SeanceHistory).toBe('function');
+		it('exports SeanceHistory component as a function', () => {
+			expect(typeof domainModule.SeanceHistory).toBe('function');
 		});
 	});
 
 	describe('Workflows domain', () => {
-		it('exports WorkflowFilters component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.WorkflowFilters).toBe('function');
+		it('exports WorkflowFilters component as a function', () => {
+			expect(typeof domainModule.WorkflowFilters).toBe('function');
 		});
 
-		it('exports WorkflowList component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.WorkflowList).toBe('function');
+		it('exports WorkflowList component as a function', () => {
+			expect(typeof domainModule.WorkflowList).toBe('function');
 		});
 
-		it('exports WorkflowDetail component as a function', async () => {
-			const module = await import('./index');
-			expect(typeof module.WorkflowDetail).toBe('function');
+		it('exports WorkflowDetail component as a function', () => {
+			expect(typeof domainModule.WorkflowDetail).toBe('function');
 		});
 	});
 
 	describe('Module Structure', () => {
-		it('exports all expected domain component keys', async () => {
-			const indexModule = await import('./index');
-			const exportKeys = Object.keys(indexModule);
+		it('exports all expected domain component keys', () => {
+			const exportKeys = Object.keys(domainModule);
 
 			// Work domain
 			expect(exportKeys).toContain('WorkFilters');
@@ -190,9 +174,8 @@ describe('Domain Components Module Exports', () => {
 	});
 
 	describe('Schema Validation', () => {
-		it('issueSchema rejects empty title', async () => {
-			const { issueSchema } = await import('./index');
-			const result = issueSchema.safeParse({
+		it('issueSchema rejects empty title', () => {
+			const result = domainModule.issueSchema.safeParse({
 				title: '',
 				type: 'task',
 				priority: 2
@@ -200,9 +183,8 @@ describe('Domain Components Module Exports', () => {
 			expect(result.success).toBe(false);
 		});
 
-		it('issueSchema rejects title less than 3 chars', async () => {
-			const { issueSchema } = await import('./index');
-			const result = issueSchema.safeParse({
+		it('issueSchema rejects title less than 3 chars', () => {
+			const result = domainModule.issueSchema.safeParse({
 				title: 'ab',
 				type: 'task',
 				priority: 2
@@ -210,9 +192,8 @@ describe('Domain Components Module Exports', () => {
 			expect(result.success).toBe(false);
 		});
 
-		it('issueSchema rejects invalid type', async () => {
-			const { issueSchema } = await import('./index');
-			const result = issueSchema.safeParse({
+		it('issueSchema rejects invalid type', () => {
+			const result = domainModule.issueSchema.safeParse({
 				title: 'Test Issue',
 				type: 'invalid',
 				priority: 2
@@ -220,9 +201,8 @@ describe('Domain Components Module Exports', () => {
 			expect(result.success).toBe(false);
 		});
 
-		it('issueSchema rejects priority out of range', async () => {
-			const { issueSchema } = await import('./index');
-			const result = issueSchema.safeParse({
+		it('issueSchema rejects priority out of range', () => {
+			const result = domainModule.issueSchema.safeParse({
 				title: 'Test Issue',
 				type: 'task',
 				priority: 5
@@ -230,18 +210,16 @@ describe('Domain Components Module Exports', () => {
 			expect(result.success).toBe(false);
 		});
 
-		it('slingSchema rejects empty issue', async () => {
-			const { slingSchema } = await import('./index');
-			const result = slingSchema.safeParse({
+		it('slingSchema rejects empty issue', () => {
+			const result = domainModule.slingSchema.safeParse({
 				issue: '',
 				rig: 'gastownui'
 			});
 			expect(result.success).toBe(false);
 		});
 
-		it('slingSchema rejects empty rig', async () => {
-			const { slingSchema } = await import('./index');
-			const result = slingSchema.safeParse({
+		it('slingSchema rejects empty rig', () => {
+			const result = domainModule.slingSchema.safeParse({
 				issue: 'bd-123',
 				rig: ''
 			});
