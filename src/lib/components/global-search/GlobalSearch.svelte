@@ -34,9 +34,11 @@
 
 	interface Props {
 		class?: string;
+		/** Whether this instance should handle global keyboard shortcuts (Cmd+K) */
+		handleGlobalShortcuts?: boolean;
 	}
 
-	let { class: className = '' }: Props = $props();
+	let { class: className = '', handleGlobalShortcuts = true }: Props = $props();
 
 	// State
 	let isOpen = $state(false);
@@ -64,11 +66,29 @@
 				console.error('Failed to parse recent searches:', e);
 			}
 		}
-		// Listen for open-search event from keyboard shortcuts
-		window.addEventListener('open-search', open);
-		return () => {
-			window.removeEventListener('open-search', open);
-		};
+		// Only listen for events if this instance handles global shortcuts
+		if (handleGlobalShortcuts) {
+			window.addEventListener('open-search', open);
+
+			// Add capture-phase handler for Cmd/Ctrl+K to intercept before browser
+			const handleCmdK = (e: KeyboardEvent) => {
+				if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+					e.preventDefault();
+					e.stopPropagation();
+					if (isOpen) {
+						close();
+					} else {
+						open();
+					}
+				}
+			};
+			document.addEventListener('keydown', handleCmdK, true); // capture phase
+
+			return () => {
+				window.removeEventListener('open-search', open);
+				document.removeEventListener('keydown', handleCmdK, true);
+			};
+		}
 	});
 
 	// Command palette mode (when query starts with '>')
@@ -251,30 +271,33 @@
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
-		// Global shortcut: Cmd/Ctrl + K
-		if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-			e.preventDefault();
-			if (isOpen) {
-				close();
-			} else {
-				open();
-			}
-			return;
-		}
-
-		// Global shortcut: '/' to open search (when not in input)
-		if (e.key === '/' && !isOpen) {
-			const target = e.target as HTMLElement;
-			const isInputElement =
-				target instanceof HTMLInputElement ||
-				target instanceof HTMLTextAreaElement ||
-				target instanceof HTMLSelectElement ||
-				target?.contentEditable === 'true';
-
-			if (!isInputElement) {
+		// Global shortcuts only if this instance handles them
+		if (handleGlobalShortcuts) {
+			// Global shortcut: Cmd/Ctrl + K
+			if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
 				e.preventDefault();
-				open();
+				if (isOpen) {
+					close();
+				} else {
+					open();
+				}
 				return;
+			}
+
+			// Global shortcut: '/' to open search (when not in input)
+			if (e.key === '/' && !isOpen) {
+				const target = e.target as HTMLElement;
+				const isInputElement =
+					target instanceof HTMLInputElement ||
+					target instanceof HTMLTextAreaElement ||
+					target instanceof HTMLSelectElement ||
+					target?.contentEditable === 'true';
+
+				if (!isInputElement) {
+					e.preventDefault();
+					open();
+					return;
+				}
 			}
 		}
 

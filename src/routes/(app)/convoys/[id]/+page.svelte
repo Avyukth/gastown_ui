@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { GridPattern, ProgressBar, StatusIndicator } from '$lib/components';
+	import { GridPattern, ProgressBar, StatusIndicator, PageHeader } from '$lib/components';
 	import {
 		formatDate,
 		convoyStatusConfig,
@@ -23,23 +23,19 @@
 	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10">
-		<!-- Header -->
-		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-4">
-			<div class="container">
-				<div class="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-					<a href="/convoys" class="hover:text-foreground transition-colors">Convoys</a>
-					<span>/</span>
-					<span class="font-mono">{convoy.id}</span>
-				</div>
-				<div class="flex items-center gap-3">
-					<StatusIndicator status={config.indicatorStatus} size="md" />
-					<h1 class="text-xl font-semibold text-foreground">{convoy.title}</h1>
-					<span class="text-xs font-medium px-2 py-0.5 rounded-full {config.bgClass}">
-						{config.label}
-					</span>
-				</div>
-			</div>
-		</header>
+		<PageHeader
+			title={convoy.title}
+			subtitle={convoy.id}
+			backLink={{ label: 'Back to Convoys', href: '/convoys' }}
+			showAccentBar={true}
+		>
+			{#snippet titleExtras()}
+				<StatusIndicator status={config.indicatorStatus} size="md" />
+				<span class="text-xs font-medium px-2 py-0.5 rounded-full {config.bgClass}">
+					{config.label}
+				</span>
+			{/snippet}
+		</PageHeader>
 
 		<main class="container py-6 space-y-6">
 			{#if data.error}
@@ -152,15 +148,6 @@
 					{/if}
 				</section>
 
-				<!-- Actions -->
-				<div class="flex justify-start gap-3">
-					<a
-						href="/convoys"
-						class="px-4 py-2 text-sm bg-muted hover:bg-muted/80 rounded-lg transition-colors"
-					>
-						Back to Convoys
-					</a>
-				</div>
 			{/if}
 		</main>
 	</div>

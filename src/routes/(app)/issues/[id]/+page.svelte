@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { GridPattern, StatusIndicator } from '$lib/components';
+	import { GridPattern, StatusIndicator, PageHeader } from '$lib/components';
 	import {
 		formatDate,
 		formatRelativeTime,
@@ -68,29 +68,25 @@
 	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10">
-		<!-- Header -->
-		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-4">
-			<div class="container">
-				<div class="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-					<a href="/work" class="hover:text-foreground transition-colors">Work</a>
-					<span>/</span>
-					<span class="font-mono">{issue.id}</span>
-				</div>
-				<div class="flex items-center gap-3 flex-wrap">
-					<StatusIndicator status={config.indicatorStatus} size="md" />
-					<h1 class="text-xl font-semibold text-foreground">{issue.title}</h1>
-					<span class="text-xs font-medium px-2 py-0.5 rounded-full {config.bgClass}">
-						{config.label}
-					</span>
-					<span class="text-xs font-medium px-2 py-0.5 rounded-full {priorityLabels[issue.priority].class}">
-						{priorityLabels[issue.priority].label}
-					</span>
-					<span class="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">
-						{issue.issue_type}
-					</span>
-				</div>
-			</div>
-		</header>
+		<PageHeader
+			title={issue.title}
+			subtitle={issue.id}
+			backLink={{ label: 'Back to Work', href: '/work' }}
+			showAccentBar={true}
+		>
+			{#snippet titleExtras()}
+				<StatusIndicator status={config.indicatorStatus} size="md" />
+				<span class="text-xs font-medium px-2 py-0.5 rounded-full {config.bgClass}">
+					{config.label}
+				</span>
+				<span class="text-xs font-medium px-2 py-0.5 rounded-full {priorityLabels[issue.priority].class}">
+					{priorityLabels[issue.priority].label}
+				</span>
+				<span class="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">
+					{issue.issue_type}
+				</span>
+			{/snippet}
+		</PageHeader>
 
 		<main class="container py-6">
 			<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -317,15 +313,6 @@
 				</div>
 			</div>
 
-			<!-- Back Navigation -->
-			<div class="mt-6 flex justify-start gap-3">
-				<a
-					href="/work"
-					class="px-4 py-2 text-sm bg-muted hover:bg-muted/80 rounded-lg transition-colors"
-				>
-					Back to Work
-				</a>
-			</div>
 		</main>
 	</div>
 </div>

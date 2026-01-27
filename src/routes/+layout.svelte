@@ -314,7 +314,7 @@
 			</button>
 			<span class="text-sm font-semibold text-foreground">Navigation</span>
 			<div class="ml-auto">
-				<GlobalSearch class="rounded-lg" />
+				<GlobalSearch class="rounded-lg" handleGlobalShortcuts={false} />
 			</div>
 		</header>
 

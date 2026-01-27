@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { GridPattern, ErrorState, ProgressBar, StatusIndicator } from '$lib/components';
+	import { GridPattern, ErrorState, ProgressBar, StatusIndicator, PageHeader } from '$lib/components';
 	import { toastStore } from '$lib/stores/toast.svelte';
-	import { ArrowLeft, Clock, Zap, Eye, AlertTriangle, RefreshCw, Search, Briefcase, Heart, Shield, Flame, Users, TrendingUp, Loader2 } from 'lucide-svelte';
+	import { Clock, Zap, Eye, AlertTriangle, RefreshCw, Search, Briefcase, Heart, Shield, Flame, Users, TrendingUp, Loader2 } from 'lucide-svelte';
 
 	let { data } = $props();
 
@@ -48,10 +48,6 @@
 		polecat: 'Crew',
 		undefined: 'Unknown'
 	};
-
-	function goBack() {
-		goto('/agents');
-	}
 
 	function handleInspect() {
 		// Navigate to agent detail with full status inspection
@@ -132,24 +128,16 @@
 	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10">
-		<!-- Header with Back Button -->
-		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-4">
-			<div class="container flex items-center gap-3">
-				<button
-					onclick={goBack}
-					class="touch-target-interactive p-2 -m-2 hover:bg-muted rounded-lg transition-colors"
-					aria-label="Back to agents"
-					title="Back to agents"
-				>
-					<ArrowLeft class="w-5 h-5 text-foreground" strokeWidth={2} />
-				</button>
-				<div class="flex-1">
-					<h1 class="text-2xl font-semibold text-foreground">{agent.name}</h1>
-					<p class="text-sm text-muted-foreground">{roleLabels[agent.role || 'undefined']}</p>
-				</div>
+		<PageHeader
+			title={agent.name}
+			subtitle={roleLabels[agent.role || 'undefined']}
+			backLink={{ label: 'Back to Agents', href: '/agents' }}
+			showAccentBar={true}
+		>
+			{#snippet titleExtras()}
 				<StatusIndicator status={statusIndicatorMap[agent.status ?? 'idle']} size="lg" />
-			</div>
-		</header>
+			{/snippet}
+		</PageHeader>
 
 		<main class="container py-6 pb-20">
 			<!-- Hero Card Section -->

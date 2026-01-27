@@ -6,7 +6,7 @@
 		escalationSeverityConfig,
 		type EscalationSeverity
 	} from '$lib/utils';
-	import { GridPattern } from '$lib/components';
+	import { GridPattern, PageHeader } from '$lib/components';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -59,20 +59,34 @@
 	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10 flex flex-col min-h-screen">
-		<!-- Header -->
-		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-4">
-			<div class="container">
-				<div class="flex items-center gap-4">
-					<a
-						href="/escalations"
-						class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-					>
-						<span aria-hidden="true">&larr;</span>
-						Back to Escalations
-					</a>
-				</div>
-			</div>
-		</header>
+		<PageHeader
+			title={escalation.title}
+			subtitle={escalation.id}
+			backLink={{ label: 'Back to Escalations', href: '/escalations' }}
+			showAccentBar={true}
+		>
+			{#snippet titleExtras()}
+				<span
+					class={cn(
+						'text-xs font-medium px-2 py-0.5 rounded',
+						config.bg,
+						config.text
+					)}
+				>
+					{escalation.severity}
+				</span>
+				<span
+					class={cn(
+						'text-xs px-2 py-0.5 rounded',
+						escalation.status === 'open'
+							? 'bg-warning/20 text-warning'
+							: 'bg-success/20 text-success'
+					)}
+				>
+					{escalation.status}
+				</span>
+			{/snippet}
+		</PageHeader>
 
 		<!-- Main content -->
 		<main class="flex-1 container py-6">

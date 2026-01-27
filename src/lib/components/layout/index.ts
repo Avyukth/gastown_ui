@@ -15,6 +15,7 @@ export { default as NavigationLoader } from './NavigationLoader.svelte';
 export {
 	default as PageHeader,
 	pageHeaderVariants,
+	type BackLink,
 	type BreadcrumbItem,
 	type LiveCount,
 	type PageHeaderProps,

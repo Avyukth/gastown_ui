@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { tv } from 'tailwind-variants';
-	import { GridPattern } from '$lib/components';
+	import { GridPattern, PageHeader } from '$lib/components';
 	import type { PageData } from './$types';
-	import { ArrowLeft, Reply, Forward } from 'lucide-svelte';
+	import { Reply, Forward } from 'lucide-svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -93,73 +93,65 @@
 	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10">
-		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-4">
-			<div class="container">
-				<div class="flex items-center gap-4">
-					<a
-						href="/mail"
-						class="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+		<PageHeader
+			title={data.message.subject}
+			subtitle="From {formatAddress(data.message.from).name}"
+			backLink={{ label: 'Back to Inbox', href: '/mail' }}
+			showAccentBar={true}
+		>
+			{#snippet titleExtras()}
+				<span class={typeBadgeVariants({ type: getBadgeType(data.message.messageType) })}>
+					{data.message.messageType}
+				</span>
+				{#if data.message.priority !== 'normal'}
+					<span
+						class={priorityBadgeVariants({
+							priority: data.message.priority as 'high' | 'normal' | 'low'
+						})}
 					>
-						<ArrowLeft class="w-5 h-5" />
-						<span class="text-sm font-medium">Back to Inbox</span>
-					</a>
-				</div>
-			</div>
-		</header>
+						{data.message.priority}
+					</span>
+				{/if}
+			{/snippet}
+			{#snippet actions()}
+				<a
+					href="/mail/compose?to={encodeURIComponent(data.message.from)}&subject={encodeURIComponent('Re: ' + data.message.subject)}"
+					class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground bg-muted/30 hover:bg-muted/50 rounded-md transition-colors"
+				>
+					<Reply class="w-4 h-4" />
+					Reply
+				</a>
+			{/snippet}
+		</PageHeader>
 
 		<main class="container py-6 animate-blur-fade-up">
 			<div class="panel-glass overflow-hidden">
-				<!-- Message Header -->
+				<!-- Message Metadata -->
 				<div class="p-6 border-b border-border">
-					<div class="flex items-start gap-4">
-						<div class="flex-1 min-w-0">
-							<!-- Type Badge and Subject -->
-							<div class="flex items-center gap-3 mb-3">
-								<span class={typeBadgeVariants({ type: getBadgeType(data.message.messageType) })}>
-									{data.message.messageType}
-								</span>
-								{#if data.message.priority !== 'normal'}
-									<span
-										class={priorityBadgeVariants({
-											priority: data.message.priority as 'high' | 'normal' | 'low'
-										})}
-									>
-										{data.message.priority}
-									</span>
-								{/if}
-							</div>
-
-							<h1 class="text-xl font-semibold text-foreground mb-4">
-								{data.message.subject}
-							</h1>
-
-							<!-- Sender/Recipient Info -->
-							<div class="space-y-2">
-								<div class="flex items-center gap-2 text-sm">
-									<span class="text-muted-foreground w-16">From:</span>
-									<span class="font-medium text-foreground">
-										{formatAddress(data.message.from).name}
-									</span>
-									<span class="text-muted-foreground text-xs">
-										({data.message.from})
-									</span>
-								</div>
-								<div class="flex items-center gap-2 text-sm">
-									<span class="text-muted-foreground w-16">To:</span>
-									<span class="font-medium text-foreground">
-										{formatAddress(data.message.to).name}
-									</span>
-									<span class="text-muted-foreground text-xs">
-										({data.message.to})
-									</span>
-								</div>
-								<div class="flex items-center gap-2 text-sm">
-									<span class="text-muted-foreground w-16">Date:</span>
-									<span class="text-foreground">
-										{formatTime(data.message.timestamp)}
-									</span>
-								</div>
-							</div>
+					<div class="grid grid-cols-2 gap-4 text-sm">
+						<div>
+							<span class="text-muted-foreground">From:</span>
+							<span class="font-medium text-foreground ml-2">
+								{formatAddress(data.message.from).name}
+							</span>
+							<span class="text-muted-foreground text-xs ml-1">
+								({data.message.from})
+							</span>
+						</div>
+						<div>
+							<span class="text-muted-foreground">To:</span>
+							<span class="font-medium text-foreground ml-2">
+								{formatAddress(data.message.to).name}
+							</span>
+							<span class="text-muted-foreground text-xs ml-1">
+								({data.message.to})
+							</span>
+						</div>
+						<div class="col-span-2">
+							<span class="text-muted-foreground">Date:</span>
+							<span class="text-foreground ml-2">
+								{formatTime(data.message.timestamp)}
+							</span>
 						</div>
 					</div>
 				</div>
@@ -185,13 +177,6 @@
 
 				<!-- Actions -->
 				<div class="px-6 py-4 border-t border-border flex items-center gap-3">
-					<a
-						href="/mail/compose?to={encodeURIComponent(data.message.from)}&subject={encodeURIComponent('Re: ' + data.message.subject)}"
-						class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground bg-muted/30 hover:bg-muted/50 rounded-md transition-colors"
-					>
-						<Reply class="w-4 h-4" />
-						Reply
-					</a>
 					<button
 						type="button"
 						class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground bg-muted/30 hover:bg-muted/50 rounded-md transition-colors"

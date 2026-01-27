@@ -2,9 +2,10 @@
 	import { tv } from 'tailwind-variants';
 	import { enhance } from '$app/forms';
 	import { GridPattern } from '$lib/components';
+	import { ArrowLeft } from 'lucide-svelte';
 	import type { PageData, ActionData } from './$types';
 	import type { AgentAddress } from './+page.server';
-	import { ArrowLeft, Loader2, Send } from 'lucide-svelte';
+	import { Loader2, Send } from 'lucide-svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -137,17 +138,16 @@
 	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10">
-		<header class="sticky top-0 z-50 panel-glass border-b border-border px-4 py-4">
-			<div class="container">
-				<div class="flex items-center gap-4">
-					<a
-						href="/mail"
-						class="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-					>
-						<ArrowLeft class="w-5 h-5" />
-						<span class="text-sm font-medium">Back to Inbox</span>
-					</a>
-				</div>
+		<!-- Simple header for compose page -->
+		<header class="sticky top-0 z-50 panel-glass">
+			<div class="container h-16 flex items-center gap-4">
+				<a
+					href="/mail"
+					class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+				>
+					<ArrowLeft class="w-4 h-4" />
+					Back to Inbox
+				</a>
 			</div>
 		</header>
 
@@ -157,9 +157,7 @@
 					<!-- Header -->
 					<div class="p-6 border-b border-border">
 						<h1 class="text-xl font-semibold text-foreground">Compose Message</h1>
-						<p class="text-sm text-muted-foreground mt-1">
-							Send a message to Gas Town agents
-						</p>
+						<p class="text-sm text-muted-foreground mt-1">Send a message to Gas Town agents</p>
 					</div>
 
 					{#if data.error}

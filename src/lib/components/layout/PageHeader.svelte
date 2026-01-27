@@ -87,6 +87,12 @@
 		status?: 'success' | 'warning' | 'error' | 'info' | 'muted';
 	}
 
+	/** Back link configuration for subpages */
+	export interface BackLink {
+		label: string;
+		href: string;
+	}
+
 	export interface PageHeaderProps {
 		/** Page title (24px font-display) */
 		title: string;
@@ -102,6 +108,8 @@
 		sticky?: boolean;
 		/** Show vertical accent bar with glow next to title */
 		showAccentBar?: boolean;
+		/** Back link for subpages (replaces breadcrumbs) */
+		backLink?: BackLink;
 		/** Additional container classes */
 		class?: string;
 	}
@@ -110,12 +118,14 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
 	import { buttonVariants } from '../core/Button.svelte';
-	import { ChevronRight } from 'lucide-svelte';
+	import { ChevronRight, ArrowLeft } from 'lucide-svelte';
 	import type { Snippet } from 'svelte';
 
 	interface Props extends PageHeaderProps {
 		/** Action buttons slot */
 		actions?: Snippet;
+		/** Title extras slot (for badges, status indicators next to title) */
+		titleExtras?: Snippet;
 	}
 
 	let {
@@ -126,8 +136,10 @@
 		liveCounts = [],
 		sticky = true,
 		showAccentBar = false,
+		backLink,
 		class: className = '',
-		actions
+		actions,
+		titleExtras
 	}: Props = $props();
 
 	// Combine single liveCount with liveCounts array
@@ -179,8 +191,19 @@
 			{/if}
 
 			<div class={showAccentBar ? 'min-w-0 flex-1' : ''}>
+				<!-- Back Link (for subpages) -->
+				{#if backLink}
+					<nav class={styles.breadcrumb()} aria-label="Back navigation">
+						<a
+							href={backLink.href}
+							class={cn(styles.breadcrumbItem(), 'inline-flex items-center gap-1.5')}
+						>
+							<ArrowLeft class="w-3.5 h-3.5" aria-hidden="true" />
+							{backLink.label}
+						</a>
+					</nav>
 				<!-- Breadcrumb Trail -->
-				{#if breadcrumbs.length > 0}
+				{:else if breadcrumbs.length > 0}
 					<nav class={styles.breadcrumb()} aria-label="Breadcrumb">
 						{#each breadcrumbs as crumb, i}
 							{#if i > 0}
@@ -199,10 +222,15 @@
 					</nav>
 				{/if}
 
-				<!-- Title -->
-				<h1 class={styles.title()}>
-					{title}
-				</h1>
+				<!-- Title with optional extras -->
+				<div class="flex items-center gap-3 flex-wrap">
+					<h1 class={styles.title()}>
+						{title}
+					</h1>
+					{#if titleExtras}
+						{@render titleExtras()}
+					{/if}
+				</div>
 
 				<!-- Subtitle / Live Counts -->
 				{#if subtitle || allCounts.length > 0}
