@@ -5,7 +5,7 @@
 		escalationSeverityConfig,
 		type EscalationSeverity
 	} from '$lib/utils';
-	import { GridPattern } from '$lib/components';
+	import { GridPattern, PageHeader } from '$lib/components';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -20,45 +20,36 @@
 
 	<div class="relative z-10 flex flex-col min-h-screen">
 		<!-- Header -->
-		<header class="sticky top-0 z-50 panel-glass px-4 h-[72px] relative">
-			<div class="container h-full flex items-center justify-between lg:pr-44">
-				<div class="flex items-center gap-3">
-					<div class="w-1.5 h-8 bg-primary rounded-sm shadow-glow shrink-0" aria-hidden="true"></div>
-					<div>
-						<h1 class="text-2xl font-display font-semibold text-foreground">Escalations</h1>
-						<p class="text-sm text-muted-foreground">
-							{data.counts.total} pending {data.counts.total === 1 ? 'escalation' : 'escalations'}
-						</p>
-					</div>
-				</div>
-
+		<PageHeader
+			title="Escalations"
+			subtitle="{data.counts.total} pending {data.counts.total === 1 ? 'escalation' : 'escalations'}"
+			showAccentBar={true}
+		>
+			{#snippet actions()}
 				<!-- Severity counts -->
-				<div class="flex items-center gap-2">
-					{#if data.counts.critical > 0}
-						<span
-							class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-destructive/20 text-destructive"
-						>
-							{data.counts.critical} CRITICAL
-						</span>
-					{/if}
-					{#if data.counts.high > 0}
-						<span
-							class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-warning/20 text-warning"
-						>
-							{data.counts.high} HIGH
-						</span>
-					{/if}
-					{#if data.counts.medium > 0}
-						<span
-							class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-status-pending/20 text-status-pending"
-						>
-							{data.counts.medium} MED
-						</span>
-					{/if}
-				</div>
-			</div>
-			<div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" aria-hidden="true"></div>
-		</header>
+				{#if data.counts.critical > 0}
+					<span
+						class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-destructive/20 text-destructive"
+					>
+						{data.counts.critical} CRITICAL
+					</span>
+				{/if}
+				{#if data.counts.high > 0}
+					<span
+						class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-warning/20 text-warning"
+					>
+						{data.counts.high} HIGH
+					</span>
+				{/if}
+				{#if data.counts.medium > 0}
+					<span
+						class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-status-pending/20 text-status-pending"
+					>
+						{data.counts.medium} MED
+					</span>
+				{/if}
+			{/snippet}
+		</PageHeader>
 
 		<!-- Main content -->
 		<main class="flex-1 container py-6">

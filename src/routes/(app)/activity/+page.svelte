@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { cn } from '$lib/utils';
-	import { GridPattern, PullToRefresh } from '$lib/components';
+	import { GridPattern, PullToRefresh, PageHeader } from '$lib/components';
 	import { onMount, onDestroy } from 'svelte';
 	import type { ActivityEvent } from './+page.server';
 	import { RefreshCw, Activity } from 'lucide-svelte';
@@ -151,44 +151,36 @@
 
 	<div class="relative z-10 flex flex-col min-h-screen">
 		<!-- Header (clean, minimal) -->
-		<header class="sticky top-0 z-50 panel-glass px-4 h-[72px] relative">
-			<div class="container h-full flex items-center justify-between gap-4 lg:pr-44">
-				<div class="flex items-center gap-3">
-					<div class="w-1.5 h-8 bg-primary rounded-sm shadow-glow shrink-0" aria-hidden="true"></div>
-					<h1 class="text-2xl font-display font-semibold text-foreground">Activity Feed</h1>
-					<span class="text-xs text-muted-foreground">
-						{data.events.length} events
-					</span>
-				</div>
-
+		<PageHeader
+			title="Activity Feed"
+			subtitle="{data.events.length} events"
+			showAccentBar={true}
+		>
+			{#snippet actions()}
 				<!-- Auto-refresh controls -->
-				<div class="flex items-center gap-4">
-					<span class="text-xs text-muted-foreground">
-						Last: {formatTime(lastRefresh.toISOString())}
-					</span>
-					<button
-						onclick={refresh}
-						class="p-2 text-muted-foreground hover:text-foreground transition-colors"
-						title="Refresh now"
-					>
-						<RefreshCw class="w-4 h-4" />
-					</button>
-					<button
-						onclick={toggleAutoRefresh}
-						class={cn(
-							'px-3 py-1.5 text-xs font-medium rounded-full transition-colors',
-							autoRefresh
-								? 'bg-success/20 text-success'
-								: 'bg-muted text-muted-foreground hover:bg-muted/80'
-						)}
-					>
-						{autoRefresh ? 'Live' : 'Paused'}
-					</button>
-				</div>
-			</div>
-			<!-- Bottom gradient border -->
-			<div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" aria-hidden="true"></div>
-		</header>
+				<span class="text-xs text-muted-foreground">
+					Last: {formatTime(lastRefresh.toISOString())}
+				</span>
+				<button
+					onclick={refresh}
+					class="p-2 text-muted-foreground hover:text-foreground transition-colors"
+					title="Refresh now"
+				>
+					<RefreshCw class="w-4 h-4" />
+				</button>
+				<button
+					onclick={toggleAutoRefresh}
+					class={cn(
+						'px-3 py-1.5 text-xs font-medium rounded-full transition-colors',
+						autoRefresh
+							? 'bg-success/20 text-success'
+							: 'bg-muted text-muted-foreground hover:bg-muted/80'
+					)}
+				>
+					{autoRefresh ? 'Live' : 'Paused'}
+				</button>
+			{/snippet}
+		</PageHeader>
 
 		<!-- Filter bar (separate, sticky below header) -->
 		<div class="sticky top-[72px] z-40 panel-glass border-b border-border px-4 py-3">

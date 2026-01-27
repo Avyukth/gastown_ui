@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { GridPattern, IssueTypeSelector, SkeletonCard, ErrorState, EmptyState, FloatingActionButton, WorkItemCard, WorkItemDetail, type WorkItem } from '$lib/components';
+	import { GridPattern, IssueTypeSelector, SkeletonCard, ErrorState, EmptyState, FloatingActionButton, WorkItemCard, WorkItemDetail, PageHeader, type WorkItem } from '$lib/components';
 	import { ClipboardList, PenLine, Target, Truck, ChevronDown, ChevronUp, CheckSquare, Bug, Lightbulb, BookOpen, Plus, Search, X, ArrowUpDown } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { hapticMedium, hapticSuccess, hapticError, hapticLight } from '$lib/utils/haptics';
@@ -562,16 +562,11 @@
 	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10">
-		<header class="sticky top-0 z-50 panel-glass px-4 h-[72px] relative">
-			<div class="container h-full flex items-center gap-3">
-				<div class="w-1.5 h-8 bg-primary rounded-sm shadow-glow shrink-0" aria-hidden="true"></div>
-				<div>
-					<h1 class="text-2xl font-display font-semibold text-foreground">Work Items</h1>
-					<p class="text-sm text-muted-foreground">Manage issues, convoys, and assignments</p>
-				</div>
-			</div>
-			<div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" aria-hidden="true"></div>
-		</header>
+		<PageHeader
+			title="Work Items"
+			subtitle="Manage issues, convoys, and assignments"
+			showAccentBar={true}
+		/>
 
 		<main class="container py-6 space-y-6">
 			<!-- Search Bar -->

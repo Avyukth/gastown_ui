@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { GridPattern, ProgressBar, StatusIndicator, EmptyState } from '$lib/components';
+	import { GridPattern, ProgressBar, StatusIndicator, EmptyState, PageHeader } from '$lib/components';
 	import {
 		formatDate,
 		convoyStatusConfig,
@@ -28,16 +28,11 @@
 	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10">
-		<header class="sticky top-0 z-50 panel-glass px-4 h-[72px] relative">
-			<div class="container h-full flex items-center gap-3">
-				<div class="w-1.5 h-8 bg-primary rounded-sm shadow-glow shrink-0" aria-hidden="true"></div>
-				<div>
-					<h1 class="text-2xl font-display font-semibold text-foreground">Convoys</h1>
-					<p class="text-sm text-muted-foreground">Track batched work across Gas Town</p>
-				</div>
-			</div>
-			<div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" aria-hidden="true"></div>
-		</header>
+		<PageHeader
+			title="Convoys"
+			subtitle="Track batched work across Gas Town"
+			showAccentBar={true}
+		/>
 
 		<main class="container py-6">
 			{#if data.error}

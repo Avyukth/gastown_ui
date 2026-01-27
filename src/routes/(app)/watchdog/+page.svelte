@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { GridPattern, StatusIndicator } from '$lib/components';
+	import { GridPattern, StatusIndicator, PageHeader } from '$lib/components';
 	import { ArrowDown } from 'lucide-svelte';
 
 	const { data } = $props();
@@ -81,24 +81,20 @@
 	<GridPattern variant="dots" opacity={0.03} />
 
 	<div class="relative z-10">
-		<header class="sticky top-0 z-50 panel-glass px-4 h-[72px] relative">
-			<div class="container h-full flex items-center justify-between lg:pr-44">
-				<div class="flex items-center gap-3">
-					<div class="w-1.5 h-8 bg-primary rounded-sm shadow-glow shrink-0" aria-hidden="true"></div>
-					<div>
-						<h1 class="text-2xl font-display font-semibold text-foreground">Watchdog</h1>
-						<p class="text-sm text-muted-foreground">Daemon → Boot → Deacon chain monitor</p>
-					</div>
-				</div>
+		<PageHeader
+			title="Watchdog"
+			subtitle="Daemon → Boot → Deacon chain monitor"
+			showAccentBar={true}
+		>
+			{#snippet actions()}
 				{#if data.watchdog}
 					<StatusIndicator
 						status={data.watchdog.chainHealthy ? 'running' : 'error'}
 						size="lg"
 					/>
 				{/if}
-			</div>
-			<div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" aria-hidden="true"></div>
-		</header>
+			{/snippet}
+		</PageHeader>
 
 		<main class="container py-6 space-y-6">
 			{#if data.error}
