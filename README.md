@@ -342,6 +342,12 @@ VITE v6.4.1  ready in 817 ms
 - Follow the testing policy (no Playwright)
 - Prefer reusable components in `src/lib/components`
 
+## Support This Project
+
+If you find this project useful, consider supporting its development:
+
+[![Donate with Razorpay](https://img.shields.io/badge/Donate-Razorpay-blue?style=for-the-badge&logo=razorpay)](https://razorpay.me/@pathshalainc)
+
 ## Related Projects
 
 - [Gas Town](https://github.com/steveyegge/gastown) - Multi-agent orchestration system
