@@ -1,3 +1,5 @@
+
+
 # Gastown UI
 
 [![Contract Tests](https://github.com/Avyukth/gastown_ui/actions/workflows/contract-tests.yml/badge.svg)](https://github.com/Avyukth/gastown_ui/actions/workflows/contract-tests.yml)
@@ -246,19 +248,19 @@ Semantic tokens in `src/app.css` following shadcn conventions:
 
 ### Policy
 
-**Playwright is not used.** All UI verification uses **Claude in Chrome** browser automation tools.
+**Playwright** is configured for E2E testing, alongside Vitest for unit and integration tests.
 
 ### Running Tests
 
 ```bash
 # Unit tests (Vitest)
-bun test
+bun run test:unit
 
-# With coverage
-bun test:coverage
+# Playwright E2E tests
+bun run test
 
-# Watch mode
-bun test --watch
+# Integration tests
+bun run test:integration
 ```
 
 ### E2E Testing
